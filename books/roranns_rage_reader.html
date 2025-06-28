@@ -37,6 +37,15 @@
             flex-direction: column;
         }
 
+        /* Mobile-first: full width on small screens */
+        @media (max-width: 768px) {
+            .book-reader {
+                max-width: 100%;
+                margin: 0;
+                padding: 0;
+            }
+        }
+
         /* Header */
         .reader-header {
             background: white;
@@ -273,6 +282,22 @@
             margin-bottom: 2rem;
         }
 
+        /* Mobile reader adjustments */
+        @media (max-width: 768px) {
+            .reader-main {
+                padding: 0;
+                margin: 0;
+            }
+
+            .book-container {
+                border-radius: 0;
+                margin: 0;
+                box-shadow: none;
+                width: 100%;
+                max-width: 100%;
+            }
+        }
+
         .dark-theme .book-container {
             background: #2d2d2d;
         }
@@ -283,6 +308,51 @@
             animation: fadeIn 0.3s ease;
             position: relative;
             z-index: 1;
+        }
+
+        /* Mobile chapter page - full width usage */
+        @media (max-width: 768px) {
+            .chapter-page {
+                padding: 1rem;
+                margin: 0;
+                width: 100%;
+                max-width: 100%;
+                box-sizing: border-box;
+                min-height: auto;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .chapter-page {
+                padding: 0.75rem;
+            }
+
+            /* Ensure full width usage on very small screens */
+            body {
+                margin: 0;
+                padding: 0;
+                width: 100%;
+                overflow-x: hidden;
+            }
+
+            .book-reader {
+                width: 100%;
+                max-width: 100%;
+                margin: 0;
+                padding: 0;
+            }
+
+            .reader-main {
+                width: 100%;
+                padding: 0;
+            }
+
+            .book-container {
+                width: 100%;
+                max-width: 100%;
+                margin: 0;
+                border-radius: 0;
+            }
         }
 
         .chapter-page[style*="block"] {
@@ -455,13 +525,7 @@
                 min-width: 44px;
             }
 
-            .chapter-page {
-                padding: 1rem 0.75rem;
-                margin: 0;
-                width: 100%;
-                box-sizing: border-box;
-                overflow-x: hidden;
-            }
+            /* Chapter page styling moved to earlier section for better organization */
 
             .chapter-title {
                 font-size: 1.8rem;
@@ -473,16 +537,19 @@
             }
 
             .chapter-content {
-                font-size: 1rem;
-                line-height: 1.6;
-                padding: 0 0.25rem;
+                font-size: 1.1rem;
+                line-height: 1.7;
+                padding: 0.5rem;
                 margin: 0;
                 width: 100%;
+                max-width: 100%;
                 box-sizing: border-box;
                 word-wrap: break-word;
                 overflow-wrap: break-word;
                 hyphens: auto;
                 overflow-x: hidden;
+                background: transparent;
+                text-align: left;
             }
 
             .chapter-content p {
