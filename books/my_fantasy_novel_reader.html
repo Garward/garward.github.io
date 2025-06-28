@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0, user-scalable=no, shrink-to-fit=no">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="mobile-web-app-capable" content="yes">
@@ -14,6 +14,18 @@
             margin: 0;
             padding: 0;
             box-sizing: border-box;
+        }
+
+        /* Universal mobile width enforcement */
+        @media (max-width: 768px) {
+            * {
+                max-width: 100% !important;
+            }
+
+            html, body, div, section, article, main, header, nav, aside, footer {
+                width: 100% !important;
+                max-width: 100% !important;
+            }
         }
 
         body {
@@ -37,12 +49,21 @@
             flex-direction: column;
         }
 
-        /* Mobile-first: full width on small screens */
+        /* Mobile-first: FORCE full width on small screens */
         @media (max-width: 768px) {
+            html, body {
+                width: 100% !important;
+                max-width: 100% !important;
+                margin: 0 !important;
+                padding: 0 !important;
+                overflow-x: hidden !important;
+            }
+
             .book-reader {
-                max-width: 100%;
-                margin: 0;
-                padding: 0;
+                width: 100% !important;
+                max-width: 100% !important;
+                margin: 0 !important;
+                padding: 0 !important;
             }
         }
 
@@ -282,19 +303,22 @@
             margin-bottom: 2rem;
         }
 
-        /* Mobile reader adjustments */
+        /* Mobile reader adjustments - FORCE full width */
         @media (max-width: 768px) {
             .reader-main {
-                padding: 0;
-                margin: 0;
+                width: 100% !important;
+                max-width: 100% !important;
+                padding: 0 !important;
+                margin: 0 !important;
             }
 
             .book-container {
-                border-radius: 0;
-                margin: 0;
-                box-shadow: none;
-                width: 100%;
-                max-width: 100%;
+                width: 100% !important;
+                max-width: 100% !important;
+                border-radius: 0 !important;
+                margin: 0 !important;
+                padding: 0 !important;
+                box-shadow: none !important;
             }
         }
 
@@ -310,48 +334,72 @@
             z-index: 1;
         }
 
-        /* Mobile chapter page - full width usage */
+        /* Mobile chapter page - FORCE full width usage */
         @media (max-width: 768px) {
             .chapter-page {
-                padding: 1rem;
-                margin: 0;
-                width: 100%;
-                max-width: 100%;
-                box-sizing: border-box;
-                min-height: auto;
+                width: 100% !important;
+                max-width: 100% !important;
+                padding: 1rem !important;
+                margin: 0 !important;
+                box-sizing: border-box !important;
+                min-height: auto !important;
+            }
+
+            .chapter-content {
+                width: 100% !important;
+                max-width: 100% !important;
+                padding: 0.5rem !important;
+                margin: 0 !important;
+                box-sizing: border-box !important;
             }
         }
 
         @media (max-width: 480px) {
-            .chapter-page {
-                padding: 0.75rem;
-            }
-
-            /* Ensure full width usage on very small screens */
-            body {
-                margin: 0;
-                padding: 0;
-                width: 100%;
-                overflow-x: hidden;
+            /* FORCE full width on very small screens */
+            html, body {
+                width: 100% !important;
+                max-width: 100% !important;
+                margin: 0 !important;
+                padding: 0 !important;
+                overflow-x: hidden !important;
             }
 
             .book-reader {
-                width: 100%;
-                max-width: 100%;
-                margin: 0;
-                padding: 0;
+                width: 100% !important;
+                max-width: 100% !important;
+                margin: 0 !important;
+                padding: 0 !important;
             }
 
             .reader-main {
-                width: 100%;
-                padding: 0;
+                width: 100% !important;
+                max-width: 100% !important;
+                padding: 0 !important;
+                margin: 0 !important;
             }
 
             .book-container {
-                width: 100%;
-                max-width: 100%;
-                margin: 0;
-                border-radius: 0;
+                width: 100% !important;
+                max-width: 100% !important;
+                margin: 0 !important;
+                padding: 0 !important;
+                border-radius: 0 !important;
+            }
+
+            .chapter-page {
+                width: 100% !important;
+                max-width: 100% !important;
+                padding: 0.75rem !important;
+                margin: 0 !important;
+            }
+
+            .chapter-content {
+                width: 100% !important;
+                max-width: 100% !important;
+                padding: 0.25rem !important;
+                margin: 0 !important;
+                font-size: 1.1rem !important;
+                line-height: 1.7 !important;
             }
         }
 
@@ -490,25 +538,31 @@
             transition: width 0.3s ease;
         }
 
-        /* Mobile Responsive */
+        /* Mobile Responsive - FORCE full width */
         @media (max-width: 768px) {
             .reader-container {
-                padding: 0;
-                margin: 0;
-                width: 100%;
-                box-sizing: border-box;
+                width: 100% !important;
+                max-width: 100% !important;
+                padding: 0 !important;
+                margin: 0 !important;
+                box-sizing: border-box !important;
             }
 
             .reader-header {
-                padding: 0.75rem 1rem;
+                width: 100% !important;
+                max-width: 100% !important;
+                padding: 0.75rem 1rem !important;
+                margin: 0 !important;
                 flex-wrap: wrap;
                 gap: 0.5rem;
+                box-sizing: border-box !important;
             }
 
             .reader-header h1 {
                 font-size: 1.5rem;
                 margin-bottom: 0.5rem;
-                width: 100%;
+                width: 100% !important;
+                max-width: 100% !important;
                 word-wrap: break-word;
                 overflow-wrap: break-word;
             }
@@ -605,23 +659,36 @@
             }
         }
 
-        /* Very small screens */
+        /* Very small screens - MAXIMUM width enforcement */
         @media (max-width: 480px) {
             .reader-container {
-                padding: 0;
+                width: 100% !important;
+                max-width: 100% !important;
+                padding: 0 !important;
+                margin: 0 !important;
             }
 
             .reader-header {
-                padding: 0.5rem 0.75rem;
+                width: 100% !important;
+                max-width: 100% !important;
+                padding: 0.5rem 0.75rem !important;
+                margin: 0 !important;
+                box-sizing: border-box !important;
             }
 
             .reader-header .book-selector {
-                width: 100%;
+                width: 100% !important;
+                max-width: 100% !important;
                 margin-top: 0.5rem;
+                box-sizing: border-box !important;
             }
 
             .chapter-page {
-                padding: 0.75rem 0.5rem;
+                width: 100% !important;
+                max-width: 100% !important;
+                padding: 0.75rem 0.5rem !important;
+                margin: 0 !important;
+                box-sizing: border-box !important;
             }
 
             .chapter-title {
