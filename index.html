@@ -30,41 +30,78 @@
             font-size: 1.1rem;
             margin-bottom: 2rem;
         }
-        .book-card {
+        .section {
+            margin: 3rem 0;
+        }
+        .section-title {
+            color: #ecf0f1;
+            font-size: 2rem;
+            margin-bottom: 1.5rem;
+            text-align: center;
+            font-weight: 600;
+        }
+        .cards-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+            margin: 2rem 0;
+        }
+        .content-card {
             background: rgba(44, 62, 80, 0.9);
             padding: 2rem;
-            margin: 1.5rem 0;
             border-radius: 12px;
             box-shadow: 0 8px 32px rgba(0,0,0,0.3);
             border: 1px solid rgba(255,255,255,0.1);
             backdrop-filter: blur(10px);
             transition: transform 0.3s ease, box-shadow 0.3s ease;
+            text-align: center;
         }
-        .book-card:hover {
+        .content-card:hover {
             transform: translateY(-5px);
             box-shadow: 0 12px 40px rgba(0,0,0,0.4);
         }
-        .book-title {
+        .card-icon {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+        }
+        .card-title {
             color: #ecf0f1;
             font-size: 1.5rem;
             margin-bottom: 1rem;
             font-weight: 600;
         }
-        .read-btn {
+        .card-description {
+            color: #bdc3c7;
+            margin-bottom: 1.5rem;
+            font-size: 0.95rem;
+        }
+        .action-btn {
             display: inline-block;
             padding: 0.75rem 1.5rem;
-            background: linear-gradient(45deg, #3498db, #2ecc71);
             color: white;
             text-decoration: none;
             border-radius: 8px;
             font-weight: 500;
             transition: all 0.3s ease;
+            min-width: 140px;
+        }
+        .book-btn {
+            background: linear-gradient(45deg, #3498db, #2ecc71);
             box-shadow: 0 4px 15px rgba(52, 152, 219, 0.3);
         }
-        .read-btn:hover {
+        .book-btn:hover {
             background: linear-gradient(45deg, #2980b9, #27ae60);
             transform: translateY(-2px);
             box-shadow: 0 6px 20px rgba(52, 152, 219, 0.4);
+        }
+        .game-btn {
+            background: linear-gradient(45deg, #e74c3c, #f39c12);
+            box-shadow: 0 4px 15px rgba(231, 76, 60, 0.3);
+        }
+        .game-btn:hover {
+            background: linear-gradient(45deg, #c0392b, #e67e22);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(231, 76, 60, 0.4);
         }
         .footer {
             text-align: center;
@@ -95,29 +132,54 @@
 </head>
 <body>
     <div class="container">
-        <h1>📚 ClaudeEVO Books</h1>
-        <p class="subtitle">Welcome to my book collection! Click any book below to start reading.</p>
+        <h1>🎯 Garward's Digital Hub</h1>
+        <p class="subtitle">Welcome to my collection of books and games! Everything is mobile-optimized and ready to enjoy.</p>
 
         <div class="features">
-            <h3>📱 Mobile-Optimized Reading</h3>
+            <h3>✨ Features</h3>
             <ul>
-                <li>🔄 Swipe left/right to navigate chapters</li>
+                <li>📱 Mobile-optimized for all devices</li>
                 <li>🏠 Add to your phone's home screen</li>
-                <li>🌙 Dark mode for comfortable reading</li>
-                <li>📱 Works like a native app</li>
-                <li>🔌 Offline reading once loaded</li>
+                <li>🌙 Dark mode for comfortable viewing</li>
+                <li>🔌 Works offline once loaded</li>
+                <li>🚀 No downloads or installations required</li>
             </ul>
         </div>
 
         
-        <div class="book-card">
-            <h3 class="book-title">📚 Roranns Rage</h3>
-            <a href="roranns_rage_reader.html" class="read-btn">📖 Read Online</a>
+        <div class="section">
+            <h2 class="section-title">📚 Books</h2>
+            <div class="cards-container">
+        
+            <div class="content-card book-card">
+                <div class="card-icon">📖</div>
+                <h3 class="card-title">Roranns Rage</h3>
+                <p class="card-description">Mobile-optimized reading with swipe navigation</p>
+                <a href="books/roranns_rage_reader.html" class="action-btn book-btn">📖 Read Online</a>
+            </div>
+            
+            <div class="content-card book-card">
+                <div class="card-icon">📖</div>
+                <h3 class="card-title">My Fantasy Novel</h3>
+                <p class="card-description">Mobile-optimized reading with swipe navigation</p>
+                <a href="books/my_fantasy_novel_reader.html" class="action-btn book-btn">📖 Read Online</a>
+            </div>
+            
+            </div>
         </div>
         
-        <div class="book-card">
-            <h3 class="book-title">📚 My Fantasy Novel</h3>
-            <a href="my_fantasy_novel_reader.html" class="read-btn">📖 Read Online</a>
+        <div class="section">
+            <h2 class="section-title">🎮 Games</h2>
+            <div class="cards-container">
+        
+            <div class="content-card game-card">
+                <div class="card-icon">🎮</div>
+                <h3 class="card-title">Index</h3>
+                <p class="card-description">Interactive browser game - no download required</p>
+                <a href="games/index.html" class="action-btn game-btn">🎮 Play Now</a>
+            </div>
+            
+            </div>
         </div>
         
 
