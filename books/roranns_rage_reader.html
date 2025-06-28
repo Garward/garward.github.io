@@ -423,7 +423,10 @@
         /* Mobile Responsive */
         @media (max-width: 768px) {
             .reader-container {
-                padding: 0.5rem;
+                padding: 0;
+                margin: 0;
+                width: 100%;
+                box-sizing: border-box;
             }
 
             .reader-header {
@@ -436,6 +439,8 @@
                 font-size: 1.5rem;
                 margin-bottom: 0.5rem;
                 width: 100%;
+                word-wrap: break-word;
+                overflow-wrap: break-word;
             }
 
             .reader-controls {
@@ -451,18 +456,40 @@
             }
 
             .chapter-page {
-                padding: 1rem;
-                margin: 0.5rem 0;
+                padding: 1rem 0.75rem;
+                margin: 0;
+                width: 100%;
+                box-sizing: border-box;
+                overflow-x: hidden;
             }
 
             .chapter-title {
                 font-size: 1.8rem;
                 margin-bottom: 1rem;
+                padding: 0 0.25rem;
+                word-wrap: break-word;
+                overflow-wrap: break-word;
+                hyphens: auto;
             }
 
             .chapter-content {
                 font-size: 1rem;
                 line-height: 1.6;
+                padding: 0 0.25rem;
+                margin: 0;
+                width: 100%;
+                box-sizing: border-box;
+                word-wrap: break-word;
+                overflow-wrap: break-word;
+                hyphens: auto;
+                overflow-x: hidden;
+            }
+
+            .chapter-content p {
+                margin-bottom: 1.5rem;
+                word-wrap: break-word;
+                overflow-wrap: break-word;
+                hyphens: auto;
             }
 
             .table-of-contents {
@@ -513,9 +540,32 @@
 
         /* Very small screens */
         @media (max-width: 480px) {
+            .reader-container {
+                padding: 0;
+            }
+
+            .reader-header {
+                padding: 0.5rem 0.75rem;
+            }
+
             .reader-header .book-selector {
                 width: 100%;
                 margin-top: 0.5rem;
+            }
+
+            .chapter-page {
+                padding: 0.75rem 0.5rem;
+            }
+
+            .chapter-title {
+                font-size: 1.5rem;
+                padding: 0 0.25rem;
+            }
+
+            .chapter-content {
+                font-size: 0.95rem;
+                line-height: 1.7;
+                padding: 0 0.25rem;
             }
 
             .chapter-meta {

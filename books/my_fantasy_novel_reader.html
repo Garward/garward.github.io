@@ -2,7 +2,11 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="theme-color" content="#2c3e50">
     <title>My Fantasy Novel - ClaudeEVO Reader</title>
     <style>
         
@@ -164,23 +168,29 @@
         }
 
         .chapter-item {
-            padding: 0.5rem 0.75rem;
-            border-radius: 4px;
+            padding: 0.75rem 1rem;
+            border-radius: 8px;
             cursor: pointer;
             transition: all 0.2s ease;
             display: flex;
             align-items: center;
             gap: 0.75rem;
-            margin-bottom: 0.25rem;
-            font-size: 0.9rem;
-            line-height: 1.3;
-            border-left: 3px solid transparent;
+            margin-bottom: 0.5rem;
+            font-size: 0.95rem;
+            line-height: 1.4;
+            border: 1px solid transparent;
+            background: rgba(255, 255, 255, 0.5);
         }
 
         .chapter-item:hover {
             background: rgba(52, 152, 219, 0.1);
-            border-left-color: #3498db;
-            transform: translateX(2px);
+            border-color: #3498db;
+            transform: translateY(-1px);
+            box-shadow: 0 2px 8px rgba(52, 152, 219, 0.2);
+        }
+
+        .dark-theme .chapter-item {
+            background: rgba(255, 255, 255, 0.05);
         }
 
         .dark-theme .chapter-item:hover {
@@ -190,8 +200,9 @@
         .chapter-item.active {
             background: #3498db;
             color: white;
-            border-left-color: #2980b9;
+            border-color: #2980b9;
             font-weight: 500;
+            box-shadow: 0 4px 12px rgba(52, 152, 219, 0.3);
         }
 
         .chapter-status {
@@ -199,16 +210,50 @@
             flex-shrink: 0;
         }
 
+        .chapter-number {
+            font-weight: 700;
+            font-size: 1.1rem;
+            color: #3498db;
+            flex-shrink: 0;
+            min-width: 2.5rem;
+            text-align: center;
+            background: rgba(52, 152, 219, 0.1);
+            border-radius: 50%;
+            width: 2.5rem;
+            height: 2.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 2px solid #3498db;
+        }
+
+        .chapter-item.active .chapter-number {
+            color: white;
+            background: rgba(255, 255, 255, 0.2);
+            border-color: white;
+        }
+
+        .dark-theme .chapter-number {
+            color: #5dade2;
+            border-color: #5dade2;
+            background: rgba(93, 173, 226, 0.1);
+        }
+
         .chapter-title {
             flex: 1;
-            font-weight: 400;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            white-space: nowrap;
+            font-weight: 500;
+            font-size: 0.95rem;
+            line-height: 1.3;
+            color: #2c3e50;
         }
 
         .chapter-item.active .chapter-title {
-            font-weight: 500;
+            font-weight: 600;
+            color: white;
+        }
+
+        .dark-theme .chapter-title {
+            color: #ecf0f1;
         }
 
         /* Main Reader */
@@ -375,29 +420,189 @@
             transition: width 0.3s ease;
         }
 
-        /* Responsive */
+        /* Mobile Responsive */
         @media (max-width: 768px) {
-            .reader-header {
-                flex-direction: column;
-                gap: 1rem;
-                text-align: center;
+            .reader-container {
+                padding: 0;
+                margin: 0;
+                width: 100%;
+                box-sizing: border-box;
             }
 
-            .reader-main {
-                padding: 1rem;
+            .reader-header {
+                padding: 0.75rem 1rem;
+                flex-wrap: wrap;
+                gap: 0.5rem;
+            }
+
+            .reader-header h1 {
+                font-size: 1.5rem;
+                margin-bottom: 0.5rem;
+                width: 100%;
+                word-wrap: break-word;
+                overflow-wrap: break-word;
+            }
+
+            .reader-controls {
+                flex-wrap: wrap;
+                gap: 0.5rem;
+            }
+
+            .control-btn {
+                padding: 0.5rem 0.75rem;
+                font-size: 0.85rem;
+                min-height: 44px;
+                min-width: 44px;
             }
 
             .chapter-page {
-                padding: 1.5rem;
+                padding: 1rem 0.75rem;
+                margin: 0;
+                width: 100%;
+                box-sizing: border-box;
+                overflow-x: hidden;
             }
 
             .chapter-title {
-                font-size: 2rem;
+                font-size: 1.8rem;
+                margin-bottom: 1rem;
+                padding: 0 0.25rem;
+                word-wrap: break-word;
+                overflow-wrap: break-word;
+                hyphens: auto;
+            }
+
+            .chapter-content {
+                font-size: 1rem;
+                line-height: 1.6;
+                padding: 0 0.25rem;
+                margin: 0;
+                width: 100%;
+                box-sizing: border-box;
+                word-wrap: break-word;
+                overflow-wrap: break-word;
+                hyphens: auto;
+                overflow-x: hidden;
+            }
+
+            .chapter-content p {
+                margin-bottom: 1.5rem;
+                word-wrap: break-word;
+                overflow-wrap: break-word;
+                hyphens: auto;
             }
 
             .table-of-contents {
-                width: 280px;
-                left: -280px;
+                width: 100%;
+                left: -100%;
+                z-index: 2000;
+            }
+
+            .table-of-contents.open {
+                left: 0;
+            }
+
+            .chapter-item {
+                padding: 1rem;
+                margin-bottom: 0.5rem;
+                border-radius: 12px;
+                min-height: 60px;
+            }
+
+            .chapter-number {
+                width: 3rem;
+                height: 3rem;
+                font-size: 1.2rem;
+                min-width: 3rem;
+            }
+
+            .chapter-title {
+                font-size: 1rem;
+                line-height: 1.4;
+            }
+
+            .navigation {
+                padding: 1rem;
+                gap: 1rem;
+            }
+
+            .nav-btn {
+                padding: 0.75rem 1.5rem;
+                font-size: 1rem;
+                min-width: 120px;
+                min-height: 44px;
+            }
+
+            .page-info {
+                font-size: 0.9rem;
+            }
+        }
+
+        /* Very small screens */
+        @media (max-width: 480px) {
+            .reader-container {
+                padding: 0;
+            }
+
+            .reader-header {
+                padding: 0.5rem 0.75rem;
+            }
+
+            .reader-header .book-selector {
+                width: 100%;
+                margin-top: 0.5rem;
+            }
+
+            .chapter-page {
+                padding: 0.75rem 0.5rem;
+            }
+
+            .chapter-title {
+                font-size: 1.5rem;
+                padding: 0 0.25rem;
+            }
+
+            .chapter-content {
+                font-size: 0.95rem;
+                line-height: 1.7;
+                padding: 0 0.25rem;
+            }
+
+            .chapter-meta {
+                flex-direction: column;
+                gap: 0.25rem;
+                align-items: flex-start;
+            }
+
+            .chapter-meta span {
+                font-size: 0.8rem;
+            }
+
+            .chapter-number {
+                width: 2.5rem;
+                height: 2.5rem;
+                font-size: 1rem;
+            }
+        }
+
+        /* Touch device improvements */
+        @media (hover: none) and (pointer: coarse) {
+            .chapter-item:hover {
+                transform: none;
+                box-shadow: none;
+            }
+
+            .chapter-item:active {
+                transform: scale(0.98);
+                background: rgba(52, 152, 219, 0.2);
+            }
+
+            .control-btn:hover, .nav-btn:hover {
+                transform: none;
+            }
+
+            .control-btn:active, .nav-btn:active {
+                transform: scale(0.95);
             }
         }
         
@@ -435,6 +640,7 @@
                 
                 <li class="chapter-item" data-chapter="0">
                     <span class="chapter-status">📋</span>
+                    <span class="chapter-number">1</span>
                     <span class="chapter-title">The Beginning</span>
                 </li>
             
@@ -513,6 +719,13 @@
                 this.isDarkTheme = true;  // Default to dark mode
                 this.isTocOpen = false;
                 this.isFullscreen = false;
+
+                // Mobile touch handling
+                this.touchStartX = 0;
+                this.touchStartY = 0;
+                this.touchEndX = 0;
+                this.touchEndY = 0;
+                this.minSwipeDistance = 50;
 
                 // Wait for DOM to be fully loaded
                 if (document.readyState === 'loading') {
@@ -627,13 +840,44 @@
                 document.addEventListener('click', (e) => {
                     const toc = document.getElementById('tocPanel');
                     const toggleBtn = document.getElementById('toggleToc');
-                    
+
                     if (this.isTocOpen && !toc.contains(e.target) && !toggleBtn.contains(e.target)) {
                         this.toggleTableOfContents();
                     }
                 });
+
+                // Touch events for mobile swipe navigation
+                document.addEventListener('touchstart', (e) => {
+                    this.touchStartX = e.changedTouches[0].screenX;
+                    this.touchStartY = e.changedTouches[0].screenY;
+                }, { passive: true });
+
+                document.addEventListener('touchend', (e) => {
+                    this.touchEndX = e.changedTouches[0].screenX;
+                    this.touchEndY = e.changedTouches[0].screenY;
+                    this.handleSwipe();
+                }, { passive: true });
             }
-            
+
+            handleSwipe() {
+                const deltaX = this.touchEndX - this.touchStartX;
+                const deltaY = this.touchEndY - this.touchStartY;
+
+                // Check if it's a horizontal swipe (more horizontal than vertical)
+                if (Math.abs(deltaX) > Math.abs(deltaY)) {
+                    // Check if swipe distance is sufficient
+                    if (Math.abs(deltaX) > this.minSwipeDistance) {
+                        if (deltaX > 0) {
+                            // Swipe right - previous page
+                            this.previousPage();
+                        } else {
+                            // Swipe left - next page
+                            this.nextPage();
+                        }
+                    }
+                }
+            }
+
             nextPage() {
                 if (this.currentPage < this.totalPages - 1) {
                     this.goToPage(this.currentPage + 1);
@@ -771,38 +1015,63 @@
                     refreshBtn.textContent = '🔄';
                     refreshBtn.disabled = true;
 
-                    // Simulate API call delay
+                    // Simulate checking for new books
                     setTimeout(() => {
                         refreshBtn.textContent = originalText;
                         refreshBtn.disabled = false;
 
-                        // Show instructions for adding books
-                        this.showBookManagementHelp();
+                        // Show current status and management help
+                        this.showBookStatus();
                     }, 1000);
 
                 } catch (error) {
                     console.error('Error refreshing book list:', error);
+                    const refreshBtn = document.getElementById('refreshBooks');
+                    refreshBtn.textContent = '🔄 Refresh';
+                    refreshBtn.disabled = false;
+                }
+            }
+
+            showBookStatus() {
+                const currentBooks = document.querySelectorAll('#bookSelector option').length;
+                const currentBook = document.querySelector('#bookSelector option:checked').textContent;
+
+                const statusMessage = `📊 CURRENT BOOK STATUS
+
+📚 Available Books: ${currentBooks}
+📖 Current Book: ${currentBook}
+🔄 Last Refreshed: ${new Date().toLocaleTimeString()}
+
+${currentBooks < 2 ? '💡 Add more books to enable switching between projects!' : '✅ Multiple books available - use dropdown to switch!'}
+
+Would you like to see the full book management guide?`;
+
+                if (confirm(statusMessage)) {
+                    this.showBookManagementHelp();
                 }
             }
 
             showBookManagementHelp() {
-                const helpMessage = `📚 Book Management Help
+                const helpMessage = `📚 ClaudeEVO Book Management
 
-To add more books to the reader:
+🔧 ADDING NEW BOOKS:
+1. Create project: /book-new <project_id>
+2. Add chapters: /book-write-next <project_id>
+3. Generate reader: /book-read <project_id>
 
-1. Create a new book project:
-   /book-new <project_id>
+📖 MANAGING EXISTING BOOKS:
+• List all books: /book-list
+• Continue writing: /book-continue <project_id>
+• Expand chapters: /book-expand <project_id> <chapter_num>
+• Quality check: /book-consistency-check <project_id>
 
-2. Add chapters:
-   /book-write-next <project_id>
+🔄 READER FEATURES:
+• Switch books using the dropdown selector
+• Click "🔄 Refresh" to update the book list
+• Use "📚 Contents" for chapter navigation
+• Toggle "🌙 Theme" for dark/light mode
 
-3. Generate reader:
-   /book-read <project_id>
-
-Available books will appear in the dropdown selector.
-
-Current available books can be listed with:
-   /book-list`;
+💡 TIP: Generate readers for all your books to enable seamless switching between projects!`;
 
                 alert(helpMessage);
             }
