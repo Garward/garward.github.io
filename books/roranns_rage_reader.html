@@ -36,9 +36,72 @@
             transition: all 0.3s ease;
         }
 
+        /* Theme Variations */
         body.dark-theme {
             background: #1a1a1a;
             color: #e0e0e0;
+        }
+
+        body.light-theme {
+            background: #ffffff;
+            color: #333333;
+        }
+
+        body.sepia-theme {
+            background: #f4f1e8;
+            color: #5c4b37;
+        }
+
+        body.blue-theme {
+            background: #0f1419;
+            color: #c9d1d9;
+        }
+
+        body.green-theme {
+            background: #0d1117;
+            color: #c9d1d9;
+        }
+
+        body.purple-theme {
+            background: #1a0d1a;
+            color: #e6d7ff;
+        }
+
+        /* Theme-specific header styles */
+        .sepia-theme .reader-header {
+            background: #f0ead6;
+            border-bottom-color: #d4c5a9;
+        }
+
+        .sepia-theme .book-title {
+            color: #5c4b37;
+        }
+
+        .blue-theme .reader-header {
+            background: #1c2128;
+            border-bottom-color: #30363d;
+        }
+
+        .blue-theme .book-title {
+            color: #58a6ff;
+        }
+
+        .green-theme .reader-header {
+            background: #161b22;
+            border-bottom-color: #21262d;
+        }
+
+        .green-theme .book-title {
+            color: #7ee787;
+        }
+
+        .purple-theme .reader-header {
+            background: #2d1b2d;
+            border-bottom-color: #4a2d4a;
+        }
+
+        .purple-theme .book-title {
+            color: #d8b4fe;
         }
 
         .book-reader {
@@ -127,6 +190,28 @@
             background: #2980b9;
         }
 
+        .theme-selector, .filter-select {
+            padding: 0.5rem 1rem;
+            border: 1px solid #34495e;
+            background: #2c3e50;
+            color: white;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.3s ease;
+            min-width: 120px;
+        }
+
+        .theme-selector:focus, .filter-select:focus {
+            outline: none;
+            border-color: #3498db;
+            box-shadow: 0 0 0 2px rgba(52, 152, 219, 0.2);
+        }
+
+        .theme-selector:hover, .filter-select:hover {
+            background: #34495e;
+        }
+
         .book-selector {
             padding: 0.5rem 1rem;
             border: 1px solid #bdc3c7;
@@ -175,6 +260,103 @@
         .dark-theme .table-of-contents {
             background: #2d2d2d;
             border-right-color: #404040;
+        }
+
+        .dark-theme .toc-header {
+            border-bottom-color: #404040;
+        }
+
+        .dark-theme .toc-header h3 {
+            color: #ecf0f1;
+        }
+
+        .dark-theme .toc-filters {
+            background: #1a1a1a;
+            border-color: #404040;
+        }
+
+        .dark-theme .filter-group label {
+            color: #ecf0f1;
+        }
+
+        .dark-theme .filter-stats {
+            color: #95a5a6;
+            background: #404040;
+        }
+
+        .dark-theme .theme-selector, .dark-theme .filter-select {
+            background: #1a1a1a;
+            border-color: #404040;
+            color: #ecf0f1;
+        }
+
+        .dark-theme .theme-selector:hover, .dark-theme .filter-select:hover {
+            background: #2d2d2d;
+        }
+
+        .toc-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+            padding-bottom: 1rem;
+            border-bottom: 2px solid #ecf0f1;
+        }
+
+        .toc-header h3 {
+            margin: 0;
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: #2c3e50;
+        }
+
+        .close-toc {
+            background: #e74c3c;
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            cursor: pointer;
+            font-size: 1rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background 0.3s ease;
+        }
+
+        .close-toc:hover {
+            background: #c0392b;
+        }
+
+        .toc-filters {
+            margin-bottom: 1.5rem;
+            padding: 1rem;
+            background: #f8f9fa;
+            border-radius: 8px;
+            border: 1px solid #e9ecef;
+        }
+
+        .filter-group {
+            margin-bottom: 1rem;
+        }
+
+        .filter-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 600;
+            color: #2c3e50;
+            font-size: 0.9rem;
+        }
+
+        .filter-stats {
+            font-size: 0.85rem;
+            color: #7f8c8d;
+            font-style: italic;
+            text-align: center;
+            padding: 0.5rem;
+            background: #ecf0f1;
+            border-radius: 4px;
         }
 
         .table-of-contents h3 {
@@ -751,8 +933,9 @@
                 <p class="book-author">by Anonymous</p>
                 <div class="book-meta">
                     <span class="genre">Fantasy</span>
-                    <span class="word-count">48,815 words</span>
+                    <span class="word-count">54,071 words</span>
                     <span class="chapter-count">12 chapters</span>
+                    <span class="save-indicator" id="saveIndicator">💾 Auto-save enabled</span>
                 </div>
             </div>
             <div class="reader-controls">
@@ -762,15 +945,40 @@
                 </select>
                 <button id="refreshBooks" class="control-btn">🔄 Refresh</button>
                 <button id="toggleToc" class="control-btn">📚 Contents</button>
-                <button id="toggleTheme" class="control-btn">🌙 Theme</button>
+                <select id="themeSelector" class="theme-selector">
+                    <option value="dark">🌙 Dark</option>
+                    <option value="light">☀️ Light</option>
+                    <option value="sepia">📜 Sepia</option>
+                    <option value="blue">🌊 Blue</option>
+                    <option value="green">🌿 Green</option>
+                    <option value="purple">🔮 Purple</option>
+                </select>
                 <button id="toggleFullscreen" class="control-btn">⛶ Fullscreen</button>
             </div>
         </header>
 
         <!-- Table of Contents -->
         <nav class="table-of-contents" id="tocPanel">
-            <h3>Table of Contents</h3>
-            <ul class="chapter-list">
+            <div class="toc-header">
+                <h3>📚 Table of Contents</h3>
+                <button class="close-toc" onclick="bookReader.toggleTableOfContents()">✕</button>
+            </div>
+            <div class="toc-filters">
+                <div class="filter-group">
+                    <label for="statusFilter">Filter by Status:</label>
+                    <select id="statusFilter" class="filter-select">
+                        <option value="all">All Chapters</option>
+                        <option value="completed">✅ Completed</option>
+                        <option value="draft">📝 Draft</option>
+                        <option value="planned">📋 Planned</option>
+                        <option value="in_progress">🔄 In Progress</option>
+                    </select>
+                </div>
+                <div class="filter-stats">
+                    <span id="filterStats">Showing 12 of 12 chapters</span>
+                </div>
+            </div>
+            <ul class="chapter-list" id="chapterList">
                 
                 <li class="chapter-item" data-chapter="0">
                     <span class="chapter-status">📝</span>
@@ -839,17 +1047,17 @@
                 </li>
             
                 <li class="chapter-item" data-chapter="11">
-                    <span class="chapter-status">✏️</span>
+                    <span class="chapter-status">📝</span>
                     <span class="chapter-number">12</span>
-                    <span class="chapter-title">[TITLE FROM CLAUDE]</span>
+                    <span class="chapter-title">Alliance Consolidation</span>
                 </li>
             
             </ul>
             <div class="progress-info">
                 <div class="progress-bar">
-                    <div class="progress-fill" style="width: 7.748412698412698%"></div>
+                    <div class="progress-fill" style="width: 8.582698412698413%"></div>
                 </div>
-                <p class="progress-text">7.7% Complete</p>
+                <p class="progress-text">8.6% Complete</p>
             </div>
         </nav>
 
@@ -3372,59 +3580,218 @@
 <p>Partnership recognition confirmed coordinated enhancement represented optimal tactical methodology for addressing threats requiring international cooperation transcending individual kingdom defensive capabilities through systematic coordination addressing enhancement threats implementing strategic assault designed to challenge alliance defensive infrastructure through organized pressure operations targeting cooperative dependencies proven ineffective against partnership protocols.</p>
 <br>
 <p>---</p>
-<br>
-<p>*End of Chapter Eleven*</p>
-<br>
-<p>**Word Count**: 3,847  </p>
-<p>**Next Chapter Setup**: Alliance consolidation and permanent integration; investigation into remaining enhancement threats; deeper partnership development as alliance expands operations  </p>
-<p>**Character Development**: Partnership coordination proven effective under extended alliance operations; unconscious protective behaviors continuing to develop; alliance integration serving strategic defensive purposes  </p>
-<p>**Plot Advancement**: Enhanced creature production facilities eliminated across four kingdoms; alliance military integration established permanently; Dr. Mordain's research program destroyed  </p>
-<p>**World Integration**: International military cooperation through religious unity, Crown Council strategic authorization, House diplomatic networks, inter-faith blessing protocols</p>
                     </div>
                 </div>
             
                 <div class="page chapter-page" data-chapter="11" style="display: none">
                     <div class="chapter-content">
-                        <h1>Chapter 12: [TITLE FROM CLAUDE]</h1>
+                        <h1>Chapter Twelve: Alliance Consolidation</h1>
 <br>
-<p>*Generated: 2025-06-28 08:12:32*</p>
-<p>*Status: PLACEHOLDER - Replace with Claude content*</p>
-<p>*Target: 3,500+ words*</p>
+<h2>Scene One: Permanent Integration</h2>
+<br>
+<p>The morning sun cast golden light through reinforced windows as the alliance strategic command center at Thornwood Military Outpost hummed with the controlled energy of permanent institutional change. What had begun as emergency crisis response had evolved into the foundation of international cooperation that would reshape military doctrine across four kingdoms. Crystalline communication networks provided real-time coordination with allied command structures while tactical displays showed the scope of integration that exceeded anything attempted in recorded history.</p>
+<br>
+<p>Rorann stood at the central coordination platform, blessed sword secured with mechanical precision while reviewing comprehensive analysis of alliance effectiveness data. The weapon had become increasingly integrated into his tactical methodology—not through spiritual connection, but through systematic adaptation to enhanced responsiveness that provided measurable advantages during coordinated operations. Three weeks of intensive alliance integration had culminated in operational protocols that preserved individual combat effectiveness while addressing sustainability limitations through partnership enhancement proven superior to individual optimization approaches.</p>
+<br>
+<p>Dr. Cross approached with wrapped provisions and medical evaluation equipment, her maternal instincts increasingly evident despite clinical professionalism. "Both subjects require systematic nutritional support during extended alliance integration," she announced, pressing packages into their hands with protective efficiency that spoke to caring for family members rather than patients. "Enhanced metabolism combined with strategic planning demands systematic fuel intake. I won't have my people compromising their health through poor eating habits during critical consolidation phases."</p>
+<br>
+<p>Her professional satisfaction carried subtle warmth as she observed both young people who had become like adopted children through months of evaluation and protection. "Partnership effectiveness maintaining optimal parameters across all alliance territories," she continued, consulting medical readings that demonstrated continued psychological stability. "Alliance personnel show sustained 200-300% tactical improvement through coordination protocols. Medical authorization confirmed for permanent partnership integration serving strategic defensive requirements."</p>
+<br>
+<p>Lyra moved through lightning channeling exercises while simultaneously organizing tactical documentation with characteristic enthusiasm, electricity dancing around her blessed focus crystal in geometric patterns that demonstrated enhanced capacity through systematic cooperation. Her B-rank affinity responded to partnership protocols with controlled energy discharges that showed improved precision and sustained power output beyond anything her Royal Academy training had prepared her for. As she finished the sequence, she unconsciously arranged their shared equipment with obvious affection, weapons and supplies positioned in patterns that enhanced operational efficiency while her fingers lingered on his sword hilt with care extending beyond tactical necessity.</p>
+<br>
+<p>"Alliance integration confirmed through House diplomatic networks," she announced cheerfully, applying academy-trained analytical precision to international cooperation frameworks. "Eastern Kingdom House Ravencrest reports partnership protocols achieving 250% effectiveness improvement across spell blade companies. Northern Territory House Ironforge documents similar enhancement multipliers with sustained psychological stability. Southern City-States House Goldwave confirms tactical advancement exceeding individual optimization by 300% while maintaining operational sustainability. Uncle Marcus says this represents the most successful military cooperation initiative in our family's trade history—like separate lightning strikes joining to form storms that reshape the very sky."</p>
+<br>
+<p>Private Tommy Chen approached with consolidated alliance reports, his scout-lightning affinity crackling with controlled excitement as he documented coordination patterns in detailed sketches that demonstrated analytical sophistication far beyond his original military training. His artistic evolution from heroic battle scenes to precise strategic diagrams reflected accelerated education through exposure to Crown-level operations, though his enthusiasm for the legendary figures he served remained evident in every interaction.</p>
+<br>
+<p>"Sir, ma'am," Tommy addressed them with military precision that reflected remarkable personal development while his eyes still held obvious admiration, "alliance operational data indicates this represents the most significant transformation in international military doctrine since the Ravencrest Wars! Four hundred and thirty-seven spell blade personnel implementing partnership protocols across allied territories with zero operational failures reported!" He consulted his latest coordination diagrams with barely contained excitement. "Mathematical analysis suggests partnership enhancement could establish permanent alliance frameworks capable of addressing threats exceeding individual kingdom defensive capabilities! You've created tactical doctrine that could protect civilization itself through systematic defensive coordination!"</p>
+<br>
+<p>Agent Cross entered with diplomatic communications bearing international alliance authorization that transcended traditional sovereignty limitations through religious unity enabling strategic cooperation. His neutral expression carried professional satisfaction as he consulted strategic assessment data confirming unprecedented tactical success across multiple kingdom territories simultaneously.</p>
+<br>
+<p>"Crown Council and allied leadership confirmation received," he announced, consulting classified authorization that exceeded normal diplomatic cooperation through shared theological opposition to systematic enhancement programs. "Partnership-based tactical enhancement approved for permanent alliance military integration. Strategic cooperation protocols established for ongoing international coordination addressing threats requiring unified response transcending individual kingdom capabilities."</p>
+<br>
+<p>Captain Thorne entered with Father Benedict Cross, the military chaplain carrying ceremonial equipment for conducting permanent alliance blessing protocols that would establish religious foundation for strategic cooperation. The silver lightning bolt symbol of the Order of Unified Essence caught the facility's illumination as he prepared theological frameworks supporting international military integration through inter-faith unity.</p>
+<br>
+<p>"Alliance consolidation blessing ceremony prepared," Thorne commanded, applying warrior-fire authority to diplomatic coordination requiring religious validation for permanent strategic alliance formation. "Lightning guide our unified preparations, steel strengthen our permanent bonds, may the Eternal Forge unite our blades in service to civilization's protection through coordinated enhancement serving divine principles rather than individual advancement threatening operational sustainability."</p>
+<br>
+<p>Father Benedict raised his ceremonial staff bearing unified religious symbols representing unprecedented theological cooperation between traditionally competing faith traditions. "Inter-faith blessing prepared for permanent alliance integration," he announced, consulting religious protocols developed through cooperation transcending traditional boundaries. "The Order of Unified Essence, Ancestral Paths tradition, Circle of Balance, and Illuminated Truth provide unified spiritual authority for strategic cooperation serving protective purposes through partnership enhancement rather than systematic individual destruction threatening divine gift principles."</p>
+<br>
+<p>The blessing ceremony incorporated specific elements from each tradition: Order lightning-flame blessing for unity through divine essence, Ancestral Paths bloodline validation ceremony honoring cooperative strength preserving family honor, Circle of Balance natural harmony blessing maintaining equilibrium through alliance coordination, and Illuminated Truth knowledge consecration optimizing divine understanding through systematic cooperation rather than isolated research threatening ethical boundaries.</p>
+<br>
+<p>"Partnership coordination blessed through divine authority serves fundamental protective purposes," Father Benedict announced, conducting rituals providing spiritual framework for strategic cooperation. "Alliance integration serves divine gift principles through willing partnership protecting sacred abilities against systematic corruption while maintaining individual effectiveness through coordinated enhancement addressing operational sustainability limitations."</p>
+<br>
+<p>Rorann found himself studying alliance integration data with analytical precision while applying systematic assessment to operational parameters that had evolved from individual statistical advancement toward strategic defensive requirements serving protective purposes through coordinated enhancement rather than isolated optimization approaches threatening psychological stability. His kill count of 17,445 now represented baseline capability for operations serving alliance objectives through partnership coordination proven effective against enhancement threats implementing systematic assault designed to challenge civilization.</p>
+<br>
+<p>"Alliance assessment: permanent integration authorized," he stated, applying analytical frameworks to strategic cooperation serving protective purposes through partnership enhancement addressing sustainability limitations while maintaining tactical effectiveness through coordinated operations rather than individual advancement threatening operational capability through psychological vulnerability.</p>
+<br>
+<p>"Partnership protocols approved for permanent alliance strategic integration," Lyra agreed, her academy training recognizing implications extending beyond immediate tactical applications into diplomatic evolution serving protective purposes through enhanced international cooperation transcending traditional limitations. "Lightning coordination demonstrates sustained effectiveness serving alliance objectives while addressing individual enhancement limitations through systematic cooperation rather than isolated advancement."</p>
+<br>
+<p>As the blessing ceremony concluded with unprecedented inter-faith unity providing spiritual authority for strategic alliance formation, Rorann contemplated operational evolution that preserved essential tactical functionality while serving objectives extending beyond individual advancement toward alliance defensive requirements protecting civilization through enhanced cooperation rather than isolated approaches insufficient for addressing coordinated threats exceeding individual kingdom capabilities.</p>
+<br>
+<p>The systematic approach to threat elimination could continue serving protective purposes while evolving to meet strategic requirements through partnership enhancement that addressed operational limitations while maintaining mission focus on protection rather than individual achievement threatening sustainability through psychological costs exceeding acceptable parameters for sustained effectiveness.</p>
+<br>
+<h2>Scene Two: Remaining Threat Assessment</h2>
+<br>
+<p>The alliance intelligence center operated with precision that exceeded anything previously possible through international cooperation, crystalline networks providing real-time assessment of enhancement activities across all affected territories while encrypted communication channels coordinated information sharing that transcended traditional diplomatic limitations. Agent Cross stood before comprehensive tactical displays showing the scope of intelligence analysis that had emerged following successful elimination of seventeen enhanced creature production facilities.</p>
+<br>
+<p>Commander Ravencrest's image appeared through secure alliance communication networks from Royal Command headquarters, her intelligence background evident in the systematic presentation of strategic assessment data requiring careful analysis to understand implications for continued alliance operations. "Enhanced creature production capabilities eliminated across documented facilities," she announced, consulting classified intelligence that bore international cooperation markings. "However, surveillance networks indicate secondary enhancement activities continuing at undocumented locations utilizing different operational approaches."</p>
+<br>
+<p>The implications were strategically significant in ways that extended beyond simple facility elimination into areas suggesting Dr. Elena Mordain's research program had achieved broader distribution than intelligence assessment had initially calculated. Enhanced creature armies might have been prevented from completion, but systematic enhancement techniques appeared to have achieved wider implementation through alternative channels requiring continued alliance coordination for effective detection and elimination.</p>
+<br>
+<p>Major Viktor Kozlov activated additional displays showing intelligence analysis from Eastern Kingdom networks that provided supplementary assessment of continuing enhancement activities through trade monitoring and diplomatic observation capabilities. "Eastern Kingdom intelligence confirms enhancement specialist disappearances continuing beyond documented recruitment patterns," he reported, consulting tactical assessment that indicated systematic personnel acquisition for programs operating outside documented facilities. "Trade network analysis suggests material acquisitions for enhancement research continuing through alternative supply channels utilizing different procurement methodologies."</p>
+<br>
+<p>Lyra studied bioelectrical analysis data from House Ashwood international networks while maintaining lightning detection patterns that provided strategic intelligence about enhancement activities through family trade connections across affected territories. Her academy training in electromagnetic theory complemented diplomatic intelligence gathering through commercial relationships that exceeded official governmental information channels.</p>
+<br>
+<p>"House intelligence confirms systematic material acquisition patterns continuing across allied territories," she reported, applying analytical precision to strategic assessment while unconsciously organizing documentation in patterns that enhanced Rorann's systematic processing efficiency. "Eastern Kingdom sources document equipment purchases for enhancement research utilizing alternative procurement networks. Northern Territory mining operations report unusual material requisitions suggesting continued modification research through undetected facilities. Southern City-States record personnel disappearances exceeding normal recruitment levels indicating systematic acquisition for enhancement programs operating beyond documented installations."</p>
+<br>
+<p>Her electrical patterns shifted to controlled analysis as implications crystallized, geometric formations following mathematical principles that demonstrated partnership coordination benefits extending into intelligence assessment capabilities. "Like lightning seeking new paths when familiar routes are blocked—enhancement research adapting to utilize alternative channels for continued development despite facility elimination success."</p>
+<br>
+<p>Tommy Chen coordinated intelligence assessment from alliance monitoring networks while documenting threat analysis in tactical diagrams that demonstrated analytical sophistication accelerated through exposure to strategic operations exceeding normal military education parameters. His scout-lightning affinity provided detection capabilities that complemented traditional intelligence gathering through magical sensitivity to coordination patterns indicating systematic organization.</p>
+<br>
+<p>"Sir, ma'am," Tommy addressed alliance leadership with confidence reflecting continued tactical development while maintaining obvious admiration for strategic complexity he was witnessing, "intelligence coordination across alliance networks suggests enhancement research program achieved distribution exceeding documented facility capabilities! Mathematical analysis indicates Dr. Mordain's research program established alternative operational infrastructure before primary facility elimination!"</p>
+<br>
+<p>He consulted detailed coordination diagrams with analytical precision that demonstrated remarkable intellectual development. "Alliance intelligence assessment suggests enhancement techniques may have achieved implementation through institutional infiltration of legitimate research programs rather than isolated facility development! This could indicate threat scope exceeding initial evaluation parameters requiring expanded alliance investigation capabilities!"</p>
+<br>
+<p>Agent Cross reviewed classified intelligence bearing Crown authorization and international cooperation markings while consulting strategic assessment data that revealed uncomfortable implications about the scope of enhancement research distribution across affected territories. "Intelligence analysis confirms enhancement research program achieved broader implementation than facility elimination addressed," he announced with characteristic neutrality masking professional concern about strategic implications.</p>
+<br>
+<p>"Institutional infiltration assessment indicates enhancement techniques may have achieved integration within legitimate magical research programs across multiple kingdoms through systematic recruitment of enhancement specialists operating within established academic and governmental institutions," he continued, consulting additional classified assessment. "This suggests threat scope exceeding facility-based production requiring alliance investigation capabilities addressing systematic infiltration rather than isolated enhancement operations."</p>
+<br>
+<p>Dr. Cross approached with medical analysis equipment while reviewing enhancement research data that provided troubling assessment of systematic modification techniques achieving distribution through alternative channels requiring careful medical evaluation to understand implications for alliance defensive capabilities. Her protective instincts toward the young people who had become like adopted children were evident as she considered threats that could affect their safety despite successful partnership protocol implementation.</p>
+<br>
+<p>"Medical analysis of captured enhancement research materials indicates systematic modification techniques achieving sophistication exceeding documented parameters," she announced, consulting comprehensive evaluation that revealed uncomfortable truths about enhancement research capabilities. "Enhancement methodology appears to have achieved theoretical advancement enabling applications beyond creature modification into areas affecting human enhancement through technological augmentation rather than biological adaptation."</p>
+<br>
+<p>Her clinical precision carried maternal concern as implications became clear. "If enhancement research achieved institutional infiltration enabling human modification through technological means rather than creature enhancement, alliance personnel could face recruitment attempts utilizing improved psychological manipulation techniques specifically designed to exploit partnership dependencies through systematic pressure on individual coordination elements."</p>
+<br>
+<p>Father Benedict Cross entered with religious intelligence from inter-faith networks monitoring theological responses to continuing enhancement activities across alliance territories. The unprecedented cooperation between traditionally competing religious traditions provided information channels that exceeded governmental intelligence capabilities through spiritual authority transcending normal diplomatic limitations.</p>
+<br>
+<p>"Religious networks confirm continuing enhancement activities utilizing theological corruption approaches," he announced, consulting assessment that revealed disturbing implications about enhancement research evolution beyond creature modification into areas threatening fundamental spiritual principles. "Enhancement research appears to have developed techniques for corrupting divine gifts through systematic spiritual manipulation rather than technological augmentation, suggesting research program achieved understanding of magical affinity principles enabling direct interference with sacred connections between divine essence and individual consciousness."</p>
+<br>
+<p>The theological implications were strategically concerning in ways that threatened fundamental assumptions about magical affinity protection through religious blessing protocols. If enhancement research had achieved understanding of divine gift corruption through spiritual manipulation, alliance blessing protocols might prove insufficient for protecting personnel against recruitment attempts utilizing enhanced psychological pressure techniques.</p>
+<br>
+<p>Rorann applied systematic analysis to threat assessment data while calculating implications for alliance defensive capabilities addressing enhanced recruitment techniques that exceeded previous evaluation parameters. The strategic situation had evolved from facility elimination success toward investigation requirements addressing institutional infiltration utilizing enhancement research distribution beyond documented operational centers.</p>
+<br>
+<p>"Threat assessment: enhancement research achieved distribution exceeding facility elimination parameters," he observed, applying analytical precision to strategic intelligence requiring coordinated alliance investigation capabilities. "Institutional infiltration suggests systematic approach requiring alliance coordination for effective detection and elimination of alternative enhancement operations."</p>
+<br>
+<p>"Partnership protocols provide psychological protection against enhanced recruitment techniques," Lyra agreed, her academy training recognizing strategic implications while electrical patterns demonstrated enhanced coordination maintaining optimal effectiveness despite threat escalation. "Alliance investigation capabilities exceed individual kingdom resources for addressing institutional infiltration requiring international cooperation through partnership enhancement addressing enhanced threats."</p>
+<br>
+<p>As intelligence assessment continued revealing the scope of enhancement research distribution beyond documented facilities, alliance leadership recognized that successful facility elimination represented initial phase of strategic response requiring expanded investigation capabilities addressing systematic infiltration of legitimate research institutions through enhancement specialist recruitment utilizing alternative operational approaches requiring continued alliance coordination for effective elimination.</p>
+<br>
+<p>The threat had evolved from creature enhancement armies toward institutional infiltration utilizing human enhancement techniques that could affect alliance personnel through improved recruitment approaches specifically designed to exploit partnership coordination through systematic pressure on individual elements requiring enhanced alliance investigation capabilities addressing expanded threat scope.</p>
+<br>
+<h2>Scene Three: Enhanced Partnership Operations</h2>
+<br>
+<p>The alliance training facility had been modified to address enhanced threat assessment requiring partnership coordination under conditions simulating institutional infiltration scenarios that exceeded previous evaluation parameters. Crystalline displays showed simulated enhancement research environments while monitoring equipment tracked partnership effectiveness during tactical operations designed to test coordination against enhanced psychological pressure techniques.</p>
+<br>
+<p>Rorann stood at the central platform with blessed sword providing enhanced responsiveness through systematic adaptation to partnership coordination while tactical feedback systems monitored combat effectiveness during scenarios simulating institutional infiltration requiring investigation capabilities exceeding individual operational approaches. The weapon carried spiritual enhancement that provided measurable advantages during coordinated engagement while offering protection against systematic enhancement corruption through religious authority reinforcing partnership bonds.</p>
+<br>
+<p>Dr. Cross observed partnership coordination through comprehensive medical monitoring that tracked psychological indicators during enhanced pressure simulation designed to evaluate coordination effectiveness against improved recruitment techniques. Her maternal instincts were evident as she monitored both young people who had become like adopted children while ensuring their safety during tactical assessment exceeding normal evaluation parameters.</p>
+<br>
+<p>"Partnership coordination maintaining optimal effectiveness during enhanced pressure simulation," she announced, consulting medical readings that confirmed psychological stability despite systematic pressure designed to exploit coordination dependencies through advanced manipulation techniques. "Stress indicators remain within acceptable parameters while tactical effectiveness exceeds individual optimization by 250% during scenarios simulating institutional infiltration requiring investigation capabilities."</p>
+<br>
+<p>Her protective concern was evident as she produced additional provisions with maternal efficiency. "Both subjects require systematic nutritional support during enhanced training operations. Complex scenario evaluation demands optimal physical and psychological condition supporting sustained tactical effectiveness during extended investigation requirements."</p>
+<br>
+<p>Lyra moved through advanced lightning coordination exercises while simultaneously maintaining bioelectrical surveillance patterns that provided detection capabilities for institutional infiltration scenarios requiring partnership investigation approaches. Her blessed focus crystal created electrical formations demonstrating enhanced capacity through systematic cooperation while providing protection against systematic enhancement corruption through spiritual authority reinforcing divine gift principles.</p>
+<br>
+<p>"Lightning coordination adapting to enhanced threat simulation maintaining optimal effectiveness," she reported, applying academy training to tactical applications exceeding theoretical classroom instruction while unconsciously positioning to enhance partnership coordination effectiveness. "Electrical pattern synchronization achieving +5 effectiveness bonus with corruption resistance through religious framework providing spiritual protection against systematic enhancement manipulation techniques attempting to exploit partnership dependencies."</p>
+<br>
+<p>Her characteristic enthusiasm remained evident despite tactical complexity as she organized shared equipment with obvious care that spoke to partnership bonds extending beyond tactical necessity. "Like lightning learning to strike through storms designed to disrupt natural electrical flow—partnership coordination adapts to maintain effectiveness despite enhanced psychological pressure techniques attempting systematic manipulation through institutional infiltration approaches."</p>
+<br>
+<p>Tommy coordinated simulation parameters from monitoring stations while documenting partnership effectiveness under enhanced pressure conditions through detailed tactical analysis that demonstrated analytical sophistication accelerated through exposure to strategic operations. His scout-lightning affinity provided detection capabilities that complemented tactical assessment through magical sensitivity to coordination patterns indicating enhanced manipulation attempts.</p>
+<br>
+<p>"Sir, ma'am," Tommy addressed them with confidence reflecting continued tactical development while maintaining obvious admiration for partnership coordination effectiveness under enhanced pressure, "simulation data indicates partnership protocols provide superior psychological protection against enhanced recruitment techniques designed specifically to exploit coordination dependencies! Mathematical analysis suggests partnership enhancement represents optimal defensive methodology for addressing institutional infiltration requiring investigation capabilities!"</p>
+<br>
+<p>He consulted detailed diagrams with analytical precision that demonstrated remarkable intellectual growth. "Partnership coordination maintains 250-300% tactical effectiveness while providing psychological stability exceeding individual optimization approaches by 400% during scenarios simulating enhanced recruitment pressure specifically designed to challenge coordination through systematic manipulation targeting individual partnership elements!"</p>
+<br>
+<p>Agent Cross observed simulation results while coordinating intelligence assessment with alliance networks monitoring partnership effectiveness across international training operations implementing identical evaluation protocols. His neutral expression carried professional satisfaction as partnership coordination demonstrated superior capabilities addressing enhanced threats requiring investigation approaches exceeding individual operational parameters.</p>
+<br>
+<p>"Alliance assessment confirms partnership coordination provides optimal capabilities for addressing institutional infiltration requiring investigation operations," he announced, consulting strategic evaluation confirming partnership effectiveness across alliance territories implementing enhanced training protocols. "Partnership enhancement demonstrates superior psychological protection against enhanced recruitment techniques while maintaining tactical effectiveness exceeding individual approaches by 200-400% during complex scenario evaluation."</p>
+<br>
+<p>Captain Thorne entered with updated protocols bearing Crown authorization for enhanced partnership operations addressing institutional infiltration investigation requirements. His warrior-fire authority was evident in strategic planning that recognized partnership coordination as essential capability for addressing threats exceeding individual kingdom investigation resources.</p>
+<br>
+<p>"Enhanced partnership operations authorized for institutional infiltration investigation," Thorne commanded, applying military authority to strategic coordination requiring partnership capabilities addressing enhanced threats. "Lightning guide our investigation preparations, steel strengthen our partnership bonds, may the Eternal Forge unite our blades in service to alliance objectives requiring coordinated investigation approaches transcending individual operational limitations."</p>
+<br>
+<p>Father Benedict approached with enhanced blessing protocols specifically designed to strengthen partnership coordination against systematic enhancement corruption through institutional infiltration utilizing improved psychological manipulation techniques. The silver lightning bolt symbol caught facility illumination as he prepared religious enhancement addressing advanced threats requiring spiritual protection exceeding standard blessing capabilities.</p>
+<br>
+<p>"Enhanced partnership blessing prepared for investigation operations addressing institutional infiltration," he announced, consulting theological protocols developed through inter-faith cooperation addressing advanced threats requiring enhanced spiritual protection. "Religious authority provides enhanced spiritual framework strengthening partnership coordination against systematic enhancement corruption through institutional infiltration utilizing improved manipulation techniques specifically designed to exploit coordination dependencies."</p>
+<br>
+<p>The enhanced blessing ceremony incorporated advanced elements from each tradition: Order lightning-flame unity blessing providing enhanced spiritual protection through divine essence reinforcement, Ancestral Paths bloodline validation ceremony providing enhanced honor protection through cooperative strength validation, Circle of Balance natural harmony blessing providing enhanced equilibrium protection through alliance coordination reinforcement, and Illuminated Truth knowledge consecration providing enhanced wisdom protection through systematic understanding advancement.</p>
+<br>
+<p>"Enhanced partnership coordination blessed through divine authority provides superior protection against systematic enhancement corruption through institutional infiltration," Father Benedict announced, conducting rituals providing enhanced spiritual framework for investigation operations requiring partnership coordination exceeding standard operational parameters.</p>
+<br>
+<p>Rorann found himself analyzing enhanced partnership effectiveness through systematic assessment while applying analytical precision to tactical capabilities addressing institutional infiltration investigation requirements exceeding individual operational approaches. The partnership coordination had demonstrated superior effectiveness during enhanced pressure simulation while providing psychological protection against systematic manipulation techniques designed specifically to exploit coordination dependencies.</p>
+<br>
+<p>"Enhanced partnership assessment: optimal effectiveness confirmed for investigation operations addressing institutional infiltration," he stated, applying systematic analysis to tactical coordination serving alliance objectives through enhanced capabilities addressing advanced threats requiring partnership cooperation. "Partnership coordination provides superior tactical effectiveness while maintaining psychological protection against enhanced recruitment techniques."</p>
+<br>
+<p>"Enhanced lightning coordination maintaining optimal effectiveness through spiritual protection and partnership enhancement," Lyra agreed, her academy training recognizing strategic implications while electrical patterns demonstrated enhanced coordination providing improved capabilities addressing institutional infiltration investigation requirements. "Partnership protocols provide enhanced tactical effectiveness while addressing psychological vulnerability through systematic cooperation rather than individual advancement threatening operational sustainability."</p>
+<br>
+<p>As enhanced partnership operations prepared for deployment addressing institutional infiltration investigation requirements, Rorann contemplated tactical evolution that preserved essential functionality while providing enhanced capabilities serving alliance objectives through coordinated operations addressing threats exceeding individual kingdom investigation resources through systematic cooperation rather than isolated approaches insufficient for addressing enhanced recruitment techniques utilizing institutional infiltration for continued enhancement research distribution.</p>
+<br>
+<p>The systematic approach to threat elimination could continue serving protective purposes while evolving to address enhanced threats requiring investigation capabilities through partnership coordination providing optimal effectiveness while maintaining psychological protection against systematic manipulation techniques specifically designed to challenge alliance investigation operations through exploitation of coordination dependencies proven ineffective against enhanced partnership protocols.</p>
+<br>
+<h2>Scene Four: Future Strategic Planning</h2>
+<br>
+<p>The evening air carried the weight of strategic planning as alliance leadership gathered in the expanded command facility to address long-term implications of enhanced partnership operations and institutional infiltration investigation requirements. Crystalline communication networks provided encrypted coordination with allied command structures while tactical displays showed comprehensive analysis of threat assessment requiring systematic alliance response transcending traditional operational parameters.</p>
+<br>
+<p>Rorann stood at the strategic coordination platform reviewing intelligence analysis while applying systematic assessment to operational requirements that had evolved from facility elimination success toward investigation capabilities addressing institutional infiltration threatening alliance security through enhanced recruitment techniques. His blessed sword carried enhanced responsiveness through partnership coordination while providing spiritual protection against systematic enhancement corruption through religious authority reinforcing divine gift principles.</p>
+<br>
+<p>Dr. Cross approached with comprehensive medical evaluation data documenting partnership effectiveness throughout alliance operations while maintaining protective oversight of both young people who had become like adopted children through months of strategic coordination and tactical assessment. Her maternal instincts were increasingly evident as she considered long-term implications of enhanced operations requiring sustained partnership coordination under conditions exceeding normal military service parameters.</p>
+<br>
+<p>"Partnership coordination demonstrates sustained effectiveness throughout alliance integration and enhanced threat assessment," she announced, consulting medical analysis that confirmed psychological stability and tactical effectiveness during extended operations. "Alliance personnel show maintained 200-300% tactical improvement through coordination protocols with psychological stability exceeding individual optimization approaches by 400% during complex operational requirements addressing institutional infiltration investigation necessities."</p>
+<br>
+<p>She produced provisions calculated for sustained strategic planning operations with maternal efficiency that spoke to family concern rather than professional duty. "Both subjects require systematic nutritional support during extended strategic planning phases. Enhanced operational requirements combined with investigation responsibilities demand optimal physical and psychological condition supporting sustained tactical effectiveness during alliance expansion addressing advanced threats requiring international coordination."</p>
+<br>
+<p>Her protective satisfaction was evident as she observed successful adaptation to enhanced partnership operations while maintaining concern about increased operational complexity affecting their welfare. "Medical authorization confirmed for enhanced partnership integration serving alliance strategic objectives requiring investigation capabilities addressing institutional infiltration threatening civilization through systematic enhancement research distribution utilizing alternative operational approaches."</p>
+<br>
+<p>Lyra approached with documentation wrapped in alliance diplomatic colors while maintaining electrical patterns that demonstrated enhanced coordination capabilities through partnership enhancement serving strategic objectives. Her characteristic enthusiasm remained evident despite operational complexity as she applied academy training to intelligence assessment exceeding theoretical classroom instruction while unconsciously organizing shared materials with obvious affection enhancing operational efficiency.</p>
+<br>
+<p>"Alliance strategic planning confirmed through House diplomatic networks providing comprehensive intelligence assessment," she announced cheerfully, applying analytical precision to international cooperation frameworks addressing enhanced threats. "Eastern Kingdom House Ravencrest confirms investigation capabilities requiring partnership coordination for addressing institutional infiltration. Northern Territory House Ironforge documents similar requirements utilizing alliance coordination for systematic threat assessment. Southern City-States House Goldwave reports enhanced threat scope requiring alliance investigation capabilities transcending individual kingdom operational parameters."</p>
+<br>
+<p>She unconsciously adjusted his equipment positioning during strategic planning with care extending beyond tactical necessity while her fingers lingered on blessed steel with affection suggesting partnership bonds deepening through shared operational experience. "Uncle Marcus says alliance strategic planning represents evolution in international cooperation requiring partnership coordination for addressing threats exceeding traditional diplomatic solutions—like lightning storms that reshape the entire sky through coordinated electrical harmony rather than isolated strikes."</p>
+<br>
+<p>Tommy Chen approached with consolidated strategic planning documentation while maintaining scout-lightning patterns that demonstrated analytical sophistication accelerated through exposure to alliance operations. His artistic evolution continued reflecting tactical development as detailed diagrams documented strategic implications with precision exceeding normal military education while enthusiasm for legendary figures remained evident in every interaction.</p>
+<br>
+<p>"Sir, ma'am," Tommy addressed alliance leadership with confidence reflecting remarkable personal development while eyes still held obvious admiration for strategic complexity, "alliance strategic planning data indicates partnership enhancement could establish permanent international cooperation frameworks capable of addressing threats requiring investigation capabilities transcending individual kingdom operational parameters! Mathematical analysis suggests alliance formation through partnership coordination represents systematic evolution in defensive capability protecting civilization itself!"</p>
+<br>
+<p>He consulted strategic planning diagrams with analytical precision demonstrating intellectual advancement. "Alliance assessment indicates partnership protocols provide optimal foundation for addressing institutional infiltration requiring investigation operations while maintaining tactical effectiveness exceeding individual approaches by 200-400% through systematic cooperation rather than isolated advancement threatening operational sustainability through psychological vulnerability!"</p>
+<br>
+<p>Agent Cross approached with diplomatic communications bearing alliance strategic authorization exceeding traditional sovereignty limitations through religious unity enabling international coordination addressing enhanced threats requiring investigation capabilities. His neutral expression carried professional satisfaction as alliance formation demonstrated unprecedented success through partnership enhancement enabling strategic cooperation transcending normal diplomatic frameworks.</p>
+<br>
+<p>"Alliance strategic planning authorization confirmed through Crown Council and allied leadership coordination," he announced, consulting classified strategic assessment bearing international cooperation markings that exceeded traditional diplomatic authority. "Partnership-based tactical enhancement approved for permanent alliance strategic integration addressing institutional infiltration investigation requirements. Enhanced coordination protocols established for ongoing international cooperation addressing threats requiring unified response transcending individual kingdom capabilities."</p>
+<br>
+<p>Captain Thorne entered with Father Benedict Cross carrying ceremonial equipment for conducting strategic planning blessing protocols that would establish religious foundation for enhanced alliance operations addressing institutional infiltration investigation requirements. The silver lightning bolt symbol of unified religious authority caught facility illumination as theological frameworks supporting international cooperation prepared for strategic enhancement.</p>
+<br>
+<p>"Alliance strategic planning blessing ceremony prepared," Thorne commanded, applying warrior-fire authority to diplomatic coordination requiring religious validation for enhanced strategic cooperation addressing institutional infiltration threats. "Lightning guide our enhanced preparations, steel strengthen our strategic bonds, may the Eternal Forge unite our blades in service to civilization's protection through alliance coordination addressing threats requiring investigation capabilities transcending traditional operational parameters."</p>
+<br>
+<p>Father Benedict raised ceremonial staff bearing unified religious symbols representing unprecedented theological cooperation addressing enhanced threats requiring spiritual protection exceeding standard blessing capabilities. "Inter-faith blessing prepared for enhanced alliance strategic planning addressing institutional infiltration investigation requirements," he announced, consulting religious protocols developed through cooperation transcending traditional boundaries.</p>
+<br>
+<p>"The Order of Unified Essence, Ancestral Paths tradition, Circle of Balance, and Illuminated Truth provide unified spiritual authority for enhanced strategic cooperation serving protective purposes through partnership coordination addressing institutional infiltration threatening divine gift principles through systematic enhancement research distribution utilizing alternative operational approaches requiring alliance investigation capabilities," Father Benedict continued, preparing enhanced blessing protocols addressing advanced threats.</p>
+<br>
+<p>The strategic planning blessing ceremony incorporated enhanced elements from each tradition providing spiritual framework for investigation operations: Order lightning-flame blessing for enhanced unity through divine essence reinforcement addressing spiritual threats, Ancestral Paths bloodline validation ceremony honoring enhanced cooperative strength protecting family honor against institutional corruption, Circle of Balance natural harmony blessing maintaining enhanced equilibrium through alliance coordination addressing systematic threats, and Illuminated Truth knowledge consecration optimizing enhanced divine understanding through strategic cooperation addressing institutional infiltration requiring investigation capabilities.</p>
+<br>
+<p>Commander Ravencrest's image appeared through alliance communication networks from Royal Command headquarters providing strategic assessment for enhanced alliance operations addressing institutional infiltration investigation requirements. "Alliance strategic assessment confirms partnership enhancement provides optimal foundation for addressing institutional infiltration requiring investigation capabilities exceeding individual kingdom operational parameters," she announced, consulting comprehensive analysis bearing international cooperation authority.</p>
+<br>
+<p>"Enhanced alliance strategic planning approved for addressing institutional infiltration investigation requirements through partnership coordination providing tactical effectiveness exceeding individual approaches while maintaining psychological protection against systematic enhancement corruption through improved manipulation techniques specifically designed to exploit coordination dependencies," she continued, authorizing enhanced alliance operations addressing advanced threats requiring international coordination.</p>
+<br>
+<p>Rorann applied systematic analysis to strategic planning data while calculating implications for alliance operations addressing institutional infiltration investigation requirements exceeding individual kingdom capabilities through partnership coordination providing optimal effectiveness addressing enhanced threats. His kill count of 17,445 now represented baseline capability for enhanced alliance operations serving strategic objectives through partnership coordination proven effective against systematic enhancement threats attempting exploitation of coordination dependencies.</p>
+<br>
+<p>"Alliance strategic planning assessment: enhanced partnership coordination provides optimal effectiveness for addressing institutional infiltration investigation requirements," he stated, applying analytical precision to strategic cooperation serving protective purposes through coordinated enhancement addressing advanced threats requiring alliance investigation capabilities transcending individual operational approaches insufficient for addressing systematic enhancement research distribution utilizing institutional infiltration.</p>
+<br>
+<p>"Enhanced lightning coordination demonstrates sustained effectiveness serving alliance strategic objectives while addressing institutional infiltration investigation requirements through partnership enhancement providing optimal tactical capabilities," Lyra agreed, her academy training recognizing strategic implications extending beyond immediate tactical applications into diplomatic evolution serving protective purposes through enhanced international cooperation addressing advanced threats requiring systematic alliance coordination.</p>
+<br>
+<p>Lyra offered chocolate wrapped in alliance strategic planning colors calculated for sustained operations with characteristic cheerfulness while ensuring optimal resource distribution during extended planning phases. "Strategic planning requires proper celebration," she announced with enthusiasm while unconscious contact during transfer fell within acceptable partnership parameters while providing measurable psychological stability. "House tradition holds that successful alliance strategic planning deserves acknowledgment—may the storm's wisdom guide our enhanced preparations."</p>
+<br>
+<p>As strategic planning blessing concluded with unprecedented inter-faith unity providing spiritual authority for enhanced alliance operations, Rorann contemplated operational evolution preserving essential tactical functionality while providing enhanced capabilities serving alliance objectives through partnership coordination addressing institutional infiltration investigation requirements protecting civilization through enhanced cooperation rather than isolated approaches insufficient for addressing systematic enhancement threats utilizing alternative operational approaches requiring alliance investigation capabilities.</p>
+<br>
+<p>The systematic approach to threat elimination could continue serving protective purposes while evolving to address enhanced strategic requirements through partnership coordination providing optimal effectiveness addressing institutional infiltration investigation while maintaining mission focus on protection rather than individual advancement threatening operational sustainability through psychological costs exceeding acceptable parameters for sustained tactical effectiveness serving alliance objectives protecting civilization through enhanced international cooperation.</p>
 <br>
 <p>---</p>
 <br>
-<h2>📝 INSTRUCTIONS FOR CLAUDE CONTENT</h2>
+<p>*End of Chapter Twelve*</p>
 <br>
-<p>1. **Replace this entire file** with Claude's chapter response</p>
-<p>2. **Keep the chapter title** in the format: `# Chapter 12: [Actual Title]`</p>
-<p>3. **Ensure word count** meets 3,000-4,000 word target</p>
-<p>4. **Run refresh command** after importing: `/book-refresh roranns_rage`</p>
-<br>
-<p>---</p>
-<br>
-<h2>🔄 PLACEHOLDER CONTENT</h2>
-<br>
-<p>**This is a placeholder file for Chapter 12.**</p>
-<br>
-<p>**TO IMPORT CLAUDE CONTENT:**</p>
-<p>- Copy Claude's full chapter response</p>
-<p>- Replace this entire file content</p>
-<p>- Save the file</p>
-<p>- Run: `/book-refresh roranns_rage`</p>
-<br>
-<p>**EXPECTED FORMAT:**</p>
-<p>```</p>
-<h1>Chapter 12: [Chapter Title]</h1>
-<br>
-<p>[Chapter content from Claude...]</p>
-<p>```</p>
-<br>
-<p>**WORD COUNT TARGET:** 3,000-4,000 words minimum</p>
-<br>
-<p>---</p>
-<br>
-<p>*This placeholder will be automatically replaced when you import the chapter content from Claude.*</p>
-<br>
+<p>**Word Count**: 4,247  </p>
+<p>**Next Chapter Setup**: Alliance investigation operations begin; institutional infiltration uncovered; deeper partnership development under investigation stress; expanded alliance coordination addressing enhanced threats  </p>
+<p>**Character Development**: Partnership coordination proven effective for enhanced strategic operations; unconscious protective behaviors and growing emotional connections continuing development; alliance integration serving strategic defensive purposes addressing advanced threats  </p>
+<p>**Plot Advancement**: Alliance strategic planning complete; enhanced threat assessment identifying institutional infiltration requiring investigation; partnership protocols providing optimal capabilities for addressing systematic enhancement research distribution through alternative approaches  </p>
+<p>**World Integration**: International strategic cooperation through religious unity, alliance investigation capabilities, enhanced partnership coordination, institutional infiltration threats requiring systematic alliance response transcending individual kingdom operational parameters</p>
                     </div>
                 </div>
             
@@ -3455,9 +3822,13 @@
             constructor() {
                 this.currentPage = 0;
                 this.totalPages = 0;
-                this.isDarkTheme = true;  // Default to dark mode
+                this.currentTheme = 'dark';  // Default theme
                 this.isTocOpen = false;
                 this.isFullscreen = false;
+                this.allChapters = [];
+                this.filteredChapters = [];
+                this.currentFilter = 'all';
+                this.bookId = this.getBookIdFromUrl();
 
                 // Mobile touch handling
                 this.touchStartX = 0;
@@ -3493,18 +3864,20 @@
 
                 this.initializeEventListeners();
 
-                // Set current page to 0 and ensure it's visible
-                this.currentPage = 0;
+                // Initialize chapters data
+                this.initializeChaptersData();
 
-                // Apply dark theme by default
-                document.body.classList.add('dark-theme');
-                console.log('Dark theme applied by default');
+                // Load saved position
+                this.loadSavedPosition();
 
-                // Update theme button text for dark mode
-                const themeBtn = document.getElementById('toggleTheme');
-                if (themeBtn) {
-                    themeBtn.textContent = '☀️ Light';
-                }
+                // Set current page to saved position or 0
+                this.currentPage = this.getSavedPage();
+
+                // Apply saved theme or default
+                this.loadSavedTheme();
+
+                // Initialize filters
+                this.initializeFilters();
 
                 // Make sure first page is visible (it should already be from HTML)
                 const firstPage = document.querySelector('.chapter-page[data-chapter="0"]');
@@ -3528,10 +3901,13 @@
                 
                 // Control buttons
                 document.getElementById('toggleToc').addEventListener('click', () => this.toggleTableOfContents());
-                document.getElementById('toggleTheme').addEventListener('click', () => this.toggleTheme());
+                document.getElementById('themeSelector').addEventListener('change', (e) => this.changeTheme(e.target.value));
                 document.getElementById('toggleFullscreen').addEventListener('click', () => this.toggleFullscreen());
                 document.getElementById('bookSelector').addEventListener('change', (e) => this.switchBook(e.target.value));
                 document.getElementById('refreshBooks').addEventListener('click', () => this.refreshBookList());
+
+                // Filter controls
+                document.getElementById('statusFilter').addEventListener('change', (e) => this.filterChapters(e.target.value));
                 
                 // Chapter navigation
                 document.querySelectorAll('.chapter-item').forEach((item, index) => {
@@ -3658,6 +4034,9 @@
                         this.updateProgress();
                         this.updateActiveChapter();
 
+                        // Save current position
+                        this.saveCurrentPosition();
+
                         // Scroll to top
                         window.scrollTo({ top: 0, behavior: 'smooth' });
                     } else {
@@ -3699,12 +4078,27 @@
                 toc.classList.toggle('open', this.isTocOpen);
             }
             
-            toggleTheme() {
-                this.isDarkTheme = !this.isDarkTheme;
-                document.body.classList.toggle('dark-theme', this.isDarkTheme);
+            changeTheme(theme) {
+                // Remove all theme classes
+                document.body.classList.remove('dark-theme', 'light-theme', 'sepia-theme', 'blue-theme', 'green-theme', 'purple-theme');
 
-                const btn = document.getElementById('toggleTheme');
-                btn.textContent = this.isDarkTheme ? '☀️ Light' : '🌙 Dark';
+                // Add new theme class
+                document.body.classList.add(theme + '-theme');
+
+                this.currentTheme = theme;
+                this.saveTheme(theme);
+
+                console.log(`Theme changed to: ${theme}`);
+            }
+
+            loadSavedTheme() {
+                const savedTheme = localStorage.getItem(`bookReader_${this.bookId}_theme`) || 'dark';
+                document.getElementById('themeSelector').value = savedTheme;
+                this.changeTheme(savedTheme);
+            }
+
+            saveTheme(theme) {
+                localStorage.setItem(`bookReader_${this.bookId}_theme`, theme);
             }
             
             toggleFullscreen() {
@@ -3813,6 +4207,114 @@ Would you like to see the full book management guide?`;
 💡 TIP: Generate readers for all your books to enable seamless switching between projects!`;
 
                 alert(helpMessage);
+            }
+
+            // Save/Load Position Methods
+            saveCurrentPosition() {
+                const saveData = {
+                    chapter: this.currentPage,
+                    timestamp: new Date().toISOString(),
+                    totalChapters: this.totalPages
+                };
+                localStorage.setItem(`bookReader_${this.bookId}_position`, JSON.stringify(saveData));
+
+                // Update save indicator
+                const indicator = document.getElementById('saveIndicator');
+                if (indicator) {
+                    indicator.textContent = '💾 Saved';
+                    indicator.style.color = '#27ae60';
+                    setTimeout(() => {
+                        indicator.textContent = '💾 Auto-save enabled';
+                        indicator.style.color = '';
+                    }, 2000);
+                }
+            }
+
+            loadSavedPosition() {
+                const saved = localStorage.getItem(`bookReader_${this.bookId}_position`);
+                if (saved) {
+                    try {
+                        const saveData = JSON.parse(saved);
+                        console.log(`Loaded saved position: Chapter ${saveData.chapter + 1}`);
+                        return saveData;
+                    } catch (e) {
+                        console.error('Error loading saved position:', e);
+                    }
+                }
+                return null;
+            }
+
+            getSavedPage() {
+                const saved = this.loadSavedPosition();
+                return saved ? saved.chapter : 0;
+            }
+
+            getBookIdFromUrl() {
+                const url = window.location.href;
+                const match = url.match(/([^/]+)_reader\.html$/);
+                return match ? match[1] : 'unknown';
+            }
+
+            // Chapter Filter Methods
+            initializeChaptersData() {
+                this.allChapters = Array.from(document.querySelectorAll('.chapter-item')).map((item, index) => ({
+                    element: item,
+                    index: index,
+                    title: item.querySelector('.chapter-title')?.textContent || `Chapter ${index + 1}`,
+                    status: this.getChapterStatus(item)
+                }));
+                this.filteredChapters = [...this.allChapters];
+            }
+
+            getChapterStatus(chapterElement) {
+                const statusText = chapterElement.querySelector('.chapter-status')?.textContent || '';
+                if (statusText.includes('completed') || statusText.includes('✅')) return 'completed';
+                if (statusText.includes('draft') || statusText.includes('📝')) return 'draft';
+                if (statusText.includes('planned') || statusText.includes('📋')) return 'planned';
+                if (statusText.includes('progress') || statusText.includes('🔄')) return 'in_progress';
+                return 'completed'; // Default assumption
+            }
+
+            initializeFilters() {
+                this.updateFilterStats();
+            }
+
+            filterChapters(status) {
+                this.currentFilter = status;
+
+                if (status === 'all') {
+                    this.filteredChapters = [...this.allChapters];
+                } else {
+                    this.filteredChapters = this.allChapters.filter(chapter => chapter.status === status);
+                }
+
+                // Update visibility
+                this.allChapters.forEach(chapter => {
+                    const shouldShow = this.filteredChapters.includes(chapter);
+                    chapter.element.style.display = shouldShow ? 'flex' : 'none';
+                });
+
+                this.updateFilterStats();
+            }
+
+            updateFilterStats() {
+                const statsElement = document.getElementById('filterStats');
+                if (statsElement) {
+                    const total = this.allChapters.length;
+                    const filtered = this.filteredChapters.length;
+                    const filterText = this.currentFilter === 'all' ? 'All' : this.getFilterDisplayName(this.currentFilter);
+                    statsElement.textContent = `Showing ${filtered} of ${total} chapters (${filterText})`;
+                }
+            }
+
+            getFilterDisplayName(filter) {
+                const names = {
+                    'completed': 'Completed',
+                    'draft': 'Draft',
+                    'planned': 'Planned',
+                    'in_progress': 'In Progress'
+                };
+                return names[filter] || filter;
             }
         }
         

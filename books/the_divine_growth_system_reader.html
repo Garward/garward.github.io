@@ -1,0 +1,1395 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0, user-scalable=no, shrink-to-fit=no">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="theme-color" content="#2c3e50">
+    <title>The_Divine_Growth_System - ClaudeEVO Reader</title>
+    <style>
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        /* Universal mobile width enforcement */
+        @media (max-width: 768px) {
+            * {
+                max-width: 100% !important;
+            }
+
+            html, body, div, section, article, main, header, nav, aside, footer {
+                width: 100% !important;
+                max-width: 100% !important;
+            }
+        }
+
+        body {
+            font-family: 'Georgia', 'Times New Roman', serif;
+            line-height: 1.6;
+            color: #333;
+            background: #f8f9fa;
+            transition: all 0.3s ease;
+        }
+
+        body.dark-theme {
+            background: #1a1a1a;
+            color: #e0e0e0;
+        }
+
+        .book-reader {
+            max-width: 1200px;
+            margin: 0 auto;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Mobile-first: FORCE full width on small screens */
+        @media (max-width: 768px) {
+            html, body {
+                width: 100% !important;
+                max-width: 100% !important;
+                margin: 0 !important;
+                padding: 0 !important;
+                overflow-x: hidden !important;
+            }
+
+            .book-reader {
+                width: 100% !important;
+                max-width: 100% !important;
+                margin: 0 !important;
+                padding: 0 !important;
+            }
+        }
+
+        /* Header */
+        .reader-header {
+            background: white;
+            padding: 1.5rem 2rem;
+            border-bottom: 1px solid #e0e0e0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        .dark-theme .reader-header {
+            background: #2d2d2d;
+            border-bottom-color: #404040;
+        }
+
+        .book-title {
+            font-size: 2rem;
+            font-weight: bold;
+            margin-bottom: 0.5rem;
+            color: #2c3e50;
+        }
+
+        .dark-theme .book-title {
+            color: #ecf0f1;
+        }
+
+        .book-author {
+            font-size: 1.1rem;
+            color: #7f8c8d;
+            margin-bottom: 0.5rem;
+        }
+
+        .book-meta {
+            display: flex;
+            gap: 1rem;
+            font-size: 0.9rem;
+            color: #95a5a6;
+        }
+
+        .reader-controls {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .control-btn {
+            padding: 0.5rem 1rem;
+            border: none;
+            background: #3498db;
+            color: white;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: background 0.3s ease;
+        }
+
+        .control-btn:hover {
+            background: #2980b9;
+        }
+
+        .book-selector {
+            padding: 0.5rem 1rem;
+            border: 1px solid #bdc3c7;
+            background: white;
+            color: #2c3e50;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            min-width: 200px;
+            max-width: 300px;
+            margin-right: 0.5rem;
+        }
+
+        .dark-theme .book-selector {
+            background: #34495e;
+            color: #ecf0f1;
+            border-color: #7f8c8d;
+        }
+
+        .book-selector:focus {
+            outline: none;
+            border-color: #3498db;
+            box-shadow: 0 0 0 2px rgba(52, 152, 219, 0.2);
+        }
+
+        /* Table of Contents */
+        .table-of-contents {
+            position: fixed;
+            left: -320px;
+            top: 0;
+            width: 320px;
+            height: 100vh;
+            background: white;
+            border-right: 1px solid #e0e0e0;
+            padding: 1.5rem;
+            overflow-y: auto;
+            transition: left 0.3s ease;
+            z-index: 1000;
+            box-shadow: 2px 0 15px rgba(0,0,0,0.1);
+        }
+
+        .table-of-contents.open {
+            left: 0;
+        }
+
+        .dark-theme .table-of-contents {
+            background: #2d2d2d;
+            border-right-color: #404040;
+        }
+
+        .table-of-contents h3 {
+            margin: 0 0 1.5rem 0;
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: #2c3e50;
+            padding-bottom: 0.5rem;
+            border-bottom: 2px solid #ecf0f1;
+        }
+
+        .dark-theme .table-of-contents h3 {
+            color: #ecf0f1;
+            border-bottom-color: #404040;
+        }
+
+        .chapter-list {
+            list-style: none;
+            margin-bottom: 2rem;
+            padding: 0;
+        }
+
+        .chapter-item {
+            padding: 0.75rem 1rem;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            margin-bottom: 0.5rem;
+            font-size: 0.95rem;
+            line-height: 1.4;
+            border: 1px solid transparent;
+            background: rgba(255, 255, 255, 0.5);
+        }
+
+        .chapter-item:hover {
+            background: rgba(52, 152, 219, 0.1);
+            border-color: #3498db;
+            transform: translateY(-1px);
+            box-shadow: 0 2px 8px rgba(52, 152, 219, 0.2);
+        }
+
+        .dark-theme .chapter-item {
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        .dark-theme .chapter-item:hover {
+            background: rgba(52, 152, 219, 0.15);
+        }
+
+        .chapter-item.active {
+            background: #3498db;
+            color: white;
+            border-color: #2980b9;
+            font-weight: 500;
+            box-shadow: 0 4px 12px rgba(52, 152, 219, 0.3);
+        }
+
+        .chapter-status {
+            font-size: 0.8rem;
+            flex-shrink: 0;
+        }
+
+        .chapter-number {
+            font-weight: 700;
+            font-size: 1.1rem;
+            color: #3498db;
+            flex-shrink: 0;
+            min-width: 2.5rem;
+            text-align: center;
+            background: rgba(52, 152, 219, 0.1);
+            border-radius: 50%;
+            width: 2.5rem;
+            height: 2.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 2px solid #3498db;
+        }
+
+        .chapter-item.active .chapter-number {
+            color: white;
+            background: rgba(255, 255, 255, 0.2);
+            border-color: white;
+        }
+
+        .dark-theme .chapter-number {
+            color: #5dade2;
+            border-color: #5dade2;
+            background: rgba(93, 173, 226, 0.1);
+        }
+
+        .chapter-title {
+            flex: 1;
+            font-weight: 500;
+            font-size: 0.95rem;
+            line-height: 1.3;
+            color: #2c3e50;
+        }
+
+        .chapter-item.active .chapter-title {
+            font-weight: 600;
+            color: white;
+        }
+
+        .dark-theme .chapter-title {
+            color: #ecf0f1;
+        }
+
+        /* Main Reader */
+        .reader-main {
+            flex: 1;
+            padding: 2rem;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .book-container {
+            flex: 1;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+            overflow: hidden;
+            margin-bottom: 2rem;
+        }
+
+        /* Mobile reader adjustments - FORCE full width */
+        @media (max-width: 768px) {
+            .reader-main {
+                width: 100% !important;
+                max-width: 100% !important;
+                padding: 0 !important;
+                margin: 0 !important;
+            }
+
+            .book-container {
+                width: 100% !important;
+                max-width: 100% !important;
+                border-radius: 0 !important;
+                margin: 0 !important;
+                padding: 0 !important;
+                box-shadow: none !important;
+            }
+        }
+
+        .dark-theme .book-container {
+            background: #2d2d2d;
+        }
+
+        .chapter-page {
+            padding: 3rem;
+            min-height: 600px;
+            animation: fadeIn 0.3s ease;
+            position: relative;
+            z-index: 1;
+        }
+
+        /* Mobile chapter page - FORCE full width usage */
+        @media (max-width: 768px) {
+            .chapter-page {
+                width: 100% !important;
+                max-width: 100% !important;
+                padding: 1rem !important;
+                margin: 0 !important;
+                box-sizing: border-box !important;
+                min-height: auto !important;
+            }
+
+            .chapter-content {
+                width: 100% !important;
+                max-width: 100% !important;
+                padding: 0.5rem !important;
+                margin: 0 !important;
+                box-sizing: border-box !important;
+            }
+        }
+
+        @media (max-width: 480px) {
+            /* FORCE full width on very small screens */
+            html, body {
+                width: 100% !important;
+                max-width: 100% !important;
+                margin: 0 !important;
+                padding: 0 !important;
+                overflow-x: hidden !important;
+            }
+
+            .book-reader {
+                width: 100% !important;
+                max-width: 100% !important;
+                margin: 0 !important;
+                padding: 0 !important;
+            }
+
+            .reader-main {
+                width: 100% !important;
+                max-width: 100% !important;
+                padding: 0 !important;
+                margin: 0 !important;
+            }
+
+            .book-container {
+                width: 100% !important;
+                max-width: 100% !important;
+                margin: 0 !important;
+                padding: 0 !important;
+                border-radius: 0 !important;
+            }
+
+            .chapter-page {
+                width: 100% !important;
+                max-width: 100% !important;
+                padding: 0.75rem !important;
+                margin: 0 !important;
+            }
+
+            .chapter-content {
+                width: 100% !important;
+                max-width: 100% !important;
+                padding: 0.25rem !important;
+                margin: 0 !important;
+                font-size: 1.1rem !important;
+                line-height: 1.7 !important;
+            }
+        }
+
+        .chapter-page[style*="block"] {
+            display: block !important;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateX(20px); }
+            to { opacity: 1; transform: translateX(0); }
+        }
+
+        .chapter-header {
+            border-bottom: 2px solid #ecf0f1;
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .dark-theme .chapter-header {
+            border-bottom-color: #404040;
+        }
+
+        .chapter-title {
+            font-size: 2.5rem;
+            color: #2c3e50;
+            margin-bottom: 1rem;
+        }
+
+        .dark-theme .chapter-title {
+            color: #ecf0f1;
+        }
+
+        .chapter-content {
+            font-size: 1.1rem;
+            line-height: 1.8;
+            text-align: justify;
+            min-height: 200px;
+            background: rgba(0,0,0,0.02);
+            padding: 1rem;
+            border-radius: 4px;
+        }
+
+        .chapter-content h1, .chapter-content h2, .chapter-content h3 {
+            margin: 2rem 0 1rem 0;
+            color: #2c3e50;
+        }
+
+        .dark-theme .chapter-content h1,
+        .dark-theme .chapter-content h2,
+        .dark-theme .chapter-content h3 {
+            color: #ecf0f1;
+        }
+
+        .chapter-content p {
+            margin-bottom: 1.5rem;
+        }
+
+        /* Navigation */
+        .page-navigation {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1rem 2rem;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        .dark-theme .page-navigation {
+            background: #2d2d2d;
+        }
+
+        .nav-btn {
+            padding: 0.75rem 1.5rem;
+            border: none;
+            background: #3498db;
+            color: white;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+        }
+
+        .nav-btn:hover {
+            background: #2980b9;
+            transform: translateY(-2px);
+        }
+
+        .nav-btn:disabled {
+            background: #bdc3c7;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .page-indicator {
+            font-size: 1.1rem;
+            font-weight: bold;
+            color: #7f8c8d;
+        }
+
+        /* Progress Bar */
+        .reading-progress {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 4px;
+            background: rgba(0,0,0,0.1);
+            z-index: 1001;
+        }
+
+        .progress-bar-thin {
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.1);
+        }
+
+        .progress-fill-thin {
+            height: 100%;
+            background: linear-gradient(90deg, #3498db, #2ecc71);
+            transition: width 0.3s ease;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 8px;
+            background: rgba(0,0,0,0.1);
+            border-radius: 4px;
+            overflow: hidden;
+            margin-bottom: 0.5rem;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #3498db, #2ecc71);
+            transition: width 0.3s ease;
+        }
+
+        /* Mobile Responsive - FORCE full width */
+        @media (max-width: 768px) {
+            .reader-container {
+                width: 100% !important;
+                max-width: 100% !important;
+                padding: 0 !important;
+                margin: 0 !important;
+                box-sizing: border-box !important;
+            }
+
+            .reader-header {
+                width: 100% !important;
+                max-width: 100% !important;
+                padding: 0.75rem 1rem !important;
+                margin: 0 !important;
+                flex-wrap: wrap;
+                gap: 0.5rem;
+                box-sizing: border-box !important;
+            }
+
+            .reader-header h1 {
+                font-size: 1.5rem;
+                margin-bottom: 0.5rem;
+                width: 100% !important;
+                max-width: 100% !important;
+                word-wrap: break-word;
+                overflow-wrap: break-word;
+            }
+
+            .reader-controls {
+                flex-wrap: wrap;
+                gap: 0.5rem;
+            }
+
+            .control-btn {
+                padding: 0.5rem 0.75rem;
+                font-size: 0.85rem;
+                min-height: 44px;
+                min-width: 44px;
+            }
+
+            /* Chapter page styling moved to earlier section for better organization */
+
+            .chapter-title {
+                font-size: 1.8rem;
+                margin-bottom: 1rem;
+                padding: 0 0.25rem;
+                word-wrap: break-word;
+                overflow-wrap: break-word;
+                hyphens: auto;
+            }
+
+            .chapter-content {
+                font-size: 1.1rem;
+                line-height: 1.7;
+                padding: 0.5rem;
+                margin: 0;
+                width: 100%;
+                max-width: 100%;
+                box-sizing: border-box;
+                word-wrap: break-word;
+                overflow-wrap: break-word;
+                hyphens: auto;
+                overflow-x: hidden;
+                background: transparent;
+                text-align: left;
+            }
+
+            .chapter-content p {
+                margin-bottom: 1.5rem;
+                word-wrap: break-word;
+                overflow-wrap: break-word;
+                hyphens: auto;
+            }
+
+            .table-of-contents {
+                width: 100%;
+                left: -100%;
+                z-index: 2000;
+            }
+
+            .table-of-contents.open {
+                left: 0;
+            }
+
+            .chapter-item {
+                padding: 1rem;
+                margin-bottom: 0.5rem;
+                border-radius: 12px;
+                min-height: 60px;
+            }
+
+            .chapter-number {
+                width: 3rem;
+                height: 3rem;
+                font-size: 1.2rem;
+                min-width: 3rem;
+            }
+
+            .chapter-title {
+                font-size: 1rem;
+                line-height: 1.4;
+            }
+
+            .navigation {
+                padding: 1rem;
+                gap: 1rem;
+            }
+
+            .nav-btn {
+                padding: 0.75rem 1.5rem;
+                font-size: 1rem;
+                min-width: 120px;
+                min-height: 44px;
+            }
+
+            .page-info {
+                font-size: 0.9rem;
+            }
+        }
+
+        /* Very small screens - MAXIMUM width enforcement */
+        @media (max-width: 480px) {
+            .reader-container {
+                width: 100% !important;
+                max-width: 100% !important;
+                padding: 0 !important;
+                margin: 0 !important;
+            }
+
+            .reader-header {
+                width: 100% !important;
+                max-width: 100% !important;
+                padding: 0.5rem 0.75rem !important;
+                margin: 0 !important;
+                box-sizing: border-box !important;
+            }
+
+            .reader-header .book-selector {
+                width: 100% !important;
+                max-width: 100% !important;
+                margin-top: 0.5rem;
+                box-sizing: border-box !important;
+            }
+
+            .chapter-page {
+                width: 100% !important;
+                max-width: 100% !important;
+                padding: 0.75rem 0.5rem !important;
+                margin: 0 !important;
+                box-sizing: border-box !important;
+            }
+
+            .chapter-title {
+                font-size: 1.5rem;
+                padding: 0 0.25rem;
+            }
+
+            .chapter-content {
+                font-size: 0.95rem;
+                line-height: 1.7;
+                padding: 0 0.25rem;
+            }
+
+            .chapter-meta {
+                flex-direction: column;
+                gap: 0.25rem;
+                align-items: flex-start;
+            }
+
+            .chapter-meta span {
+                font-size: 0.8rem;
+            }
+
+            .chapter-number {
+                width: 2.5rem;
+                height: 2.5rem;
+                font-size: 1rem;
+            }
+        }
+
+        /* Touch device improvements */
+        @media (hover: none) and (pointer: coarse) {
+            .chapter-item:hover {
+                transform: none;
+                box-shadow: none;
+            }
+
+            .chapter-item:active {
+                transform: scale(0.98);
+                background: rgba(52, 152, 219, 0.2);
+            }
+
+            .control-btn:hover, .nav-btn:hover {
+                transform: none;
+            }
+
+            .control-btn:active, .nav-btn:active {
+                transform: scale(0.95);
+            }
+        }
+        
+    </style>
+</head>
+<body>
+    <div class="book-reader">
+        <!-- Header -->
+        <header class="reader-header">
+            <div class="book-info">
+                <h1 class="book-title">The_Divine_Growth_System</h1>
+                <p class="book-author">by GracerGamer</p>
+                <div class="book-meta">
+                    <span class="genre">Fantasy</span>
+                    <span class="word-count">3,418 words</span>
+                    <span class="chapter-count">1 chapters</span>
+                </div>
+            </div>
+            <div class="reader-controls">
+                <select id="bookSelector" class="book-selector">
+                    <option value="my_fantasy_novel" >My Fantasy Novel</option>
+                    <option value="roranns_rage" >Rorann's Rage</option>
+                    <option value="the_divine_growth_system" selected>The_Divine_Growth_System</option>
+                </select>
+                <button id="refreshBooks" class="control-btn">🔄 Refresh</button>
+                <button id="toggleToc" class="control-btn">📚 Contents</button>
+                <button id="toggleTheme" class="control-btn">🌙 Theme</button>
+                <button id="toggleFullscreen" class="control-btn">⛶ Fullscreen</button>
+            </div>
+        </header>
+
+        <!-- Table of Contents -->
+        <nav class="table-of-contents" id="tocPanel">
+            <h3>Table of Contents</h3>
+            <ul class="chapter-list">
+                
+                <li class="chapter-item" data-chapter="0">
+                    <span class="chapter-status">📝</span>
+                    <span class="chapter-number">1</span>
+                    <span class="chapter-title">The Defective Son</span>
+                </li>
+            
+            </ul>
+            <div class="progress-info">
+                <div class="progress-bar">
+                    <div class="progress-fill" style="width: 0.5258461538461539%"></div>
+                </div>
+                <p class="progress-text">0.5% Complete</p>
+            </div>
+        </nav>
+
+        <!-- Main Reader -->
+        <main class="reader-main">
+            <div class="book-container">
+                <div class="book-pages" id="bookPages">
+                    
+                <div class="page chapter-page" data-chapter="0" style="display: block">
+                    <div class="chapter-content">
+                        <h1>Chapter 1: The Defective Son</h1>
+<br>
+<p>The morning sun cast long shadows across the Thornwick family farm as Kael struggled with the simple task of hauling water from the well. His scrawny arms trembled under the weight of the half-filled bucket, and sweat beaded on his forehead despite the cool autumn air of late Harvest month. At sixteen, he should have been able to carry twice this amount without strain, but the family curse that ran through his bloodline had other plans.</p>
+<br>
+<p>"Mana Deficiency Syndrome," the village healer had called it years ago, though Kael suspected that was just a polite way of saying "magically defective." The condition affected less than one percent of the population, causing magical energy to flow poorly through their bodies and leaving them physically weaker than they should be. For a farming family that relied on basic earth magic to maintain their crops and strengthen their tools, having a son who could barely lift a full water bucket was more than just disappointing—it was a genuine hardship that threatened their very survival.</p>
+<br>
+<p>Kael's father, Marcus Thornwick, emerged from the vegetable garden where he'd been using his modest earth magic to encourage the late-season harvest. At Level 3, Marcus possessed just enough magical ability to coax better yields from their soil and reinforce their farming tools, but even his limited powers seemed godlike compared to Kael's complete inability to channel mana.</p>
+<br>
+<p>"Struggling again?" Marcus asked, his tone carrying the weight of countless similar conversations. There was no cruelty in his voice, but the disappointment was harder to bear than outright anger would have been.</p>
+<br>
+<p>"The bucket's heavier today," Kael replied, though they both knew it wasn't true. Every bucket felt impossibly heavy to someone whose strength barely registered above a child's level despite his age.</p>
+<br>
+<p>Marcus sighed and took the bucket without comment, carrying it easily to the irrigation channels that fed their crops. His earth magic allowed him to distribute the water evenly across their fields with minimal effort, a task that would have taken Kael hours of manual labor to accomplish poorly.</p>
+<br>
+<p>"Your mother's expecting you to help with the mana leak in the storage cellar," Marcus said as he returned. "She thinks your... condition... might actually make you safer around unstable magical fields."</p>
+<br>
+<p>Kael nodded, understanding the implication. Normal people could be injured by exposure to raw, uncontrolled mana. Someone like him, who could barely sense magical energy at all, might be able to work around the problem without being affected by it. It wasn't exactly a compliment, but it was useful in its own way.</p>
+<br>
+<p>The storage cellar beneath their modest farmhouse was where they kept preserved foods, seed stocks, and the few magical implements the family could afford. Recently, one of their mana storage crystals had developed a crack, causing magical energy to leak slowly into the surrounding area. For Marcus or Elena, Kael's mother, extended exposure to the leaked mana could cause headaches, nausea, or even temporary magical disruption. For Kael, it was just another reminder of how different he was.</p>
+<br>
+<p>Elena Thornwick was kneeling beside the damaged crystal when Kael descended into the cellar, her hands glowing with the soft golden light of healing magic as she tried to assess the extent of the damage. At Level 2, her magical abilities were limited but precise, focused primarily on minor healing and household applications. She looked up as Kael approached, her expression mixing concern with the kind of gentle encouragement she'd perfected over years of dealing with his limitations.</p>
+<br>
+<p>"There you are, dear," she said, her voice warm despite the frustration of their situation. "I need you to hold this stabilizing rod while I try to seal the crack. Your father and I both get dizzy after a few minutes near the leak, but you should be fine."</p>
+<br>
+<p>Kael took the rod she offered—a simple metal implement designed to channel and focus magical energy—and positioned it as she directed. He could feel nothing from the device itself, no tingle of power or sense of connection that others described when handling magical tools. The leaked mana that made his parents uncomfortable was equally imperceptible to him, like trying to sense a color that didn't exist.</p>
+<br>
+<p>"Hold it steady," Elena murmured as she began her repair work. Golden light flowed from her hands into the cracked crystal, slowly fusing the damaged sections back together. It was delicate work that required concentration and precise control, both of which could be disrupted by the chaotic energy radiating from the leak.</p>
+<br>
+<p>As his mother worked, Kael found his mind wandering to the conversation he'd overheard the night before. Thomas Blackwater, his closest friend in the village, had received acceptance to the International Academy for Adventurer Excellence—the most prestigious educational institution in the known world. Founded just five years ago in response to the growing Abyssal Crisis, the academy accepted only the most promising students from all three kingdoms: Valeria, the Beastland Federation, and the Ironhold Dominion. Acceptance virtually guaranteed a successful career as an elite adventurer, political leader, or magical researcher.</p>
+<br>
+<p>Thomas was Level 6 at sixteen, with solid earth and fire magic abilities that would serve him well in academy training alongside the best students from across the civilized world. His family had been celebrating for days, hosting visitors who wanted to congratulate them on their son's achievement. The Blackwater family had even commissioned a feast with imported spices from the Ironhold markets—an expense that cost more than the Thornwick family typically spent on food in an entire Gold month. Meanwhile, the Thornwick family struggled with a cracked mana crystal that any competent magical craftsman could have repaired for a handful of silver coins.</p>
+<br>
+<p>"There," Elena said with satisfaction as the last traces of the crack disappeared from the crystal's surface. She whispered a brief prayer of gratitude to the elemental spirits, a habit that reminded Kael how even the smallest magical tasks carried spiritual significance in their world. "That should hold for another few years, assuming we don't overload it again."</p>
+<br>
+<p>Kael set down the stabilizing rod and helped his mother gather her tools. "Mother," he said carefully, "what do you think will happen to me?"</p>
+<br>
+<p>Elena paused in her packing, understanding immediately what he meant. In a world where magical ability determined social status, career prospects, and even marriage potential, someone with Mana Deficiency Syndrome faced a severely limited future. The best he could hope for was to take over the family farm and continue the cycle of barely scraping by that had defined the Thornwick bloodline for generations.</p>
+<br>
+<p>"You're a good boy, Kael," she said finally. "Hardworking, honest, and kind. Those qualities matter more than magical power in the long run."</p>
+<br>
+<p>It was the same reassurance she'd been giving him for years, and they both knew it wasn't really true. Kindness didn't harvest crops efficiently. Honesty didn't strengthen tools or heal injuries. Hard work meant little when your physical capabilities were severely limited by a genetic curse.</p>
+<br>
+<p>"Thomas got into the Academy," Kael said quietly.</p>
+<br>
+<p>"I heard. That's wonderful for him and his family."</p>
+<br>
+<p>"Do you think... if I weren't cursed... do you think I could have made it too?"</p>
+<br>
+<p>Elena's expression softened with the kind of pain that only a parent watching their child suffer could understand. "Oh, sweetheart. Your curse doesn't define your worth or your potential. It just means your path will be different from Thomas's."</p>
+<br>
+<p>Different. That was the word everyone used when they wanted to be polite about his limitations. Not worse, not hopeless, just different. But Kael had lived with "different" for sixteen years, and he was beginning to understand that different often meant irrelevant.</p>
+<br>
+<p>They emerged from the cellar to find Marcus waiting with news that managed to be both routine and devastating in its implications. "The Miller family sent word," he said, holding a small scroll marked with their family seal. "They need help with their harvest, and they're offering three silver coins per day for strong backs and working hands—more than we typically see in a week."</p>
+<br>
+<p>The amount was indeed generous by village standards. Most seasonal work paid copper coins, with silver reserved for skilled crafts or dangerous tasks. Three silver per day suggested the Millers were desperate for workers, which meant the work would be particularly demanding. For most sixteen-year-olds, it would be an opportunity to earn money and gain experience. For Kael, it was a reminder that he wasn't strong enough to be useful even for basic manual labor.</p>
+<br>
+<p>"I could try," Kael offered, though all three of them knew how that would go.</p>
+<br>
+<p>"Son," Marcus said gently, "they need people who can work a full day without collapsing. Maybe in a few years, when you've had more time to develop..."</p>
+<br>
+<p>But they all knew he wasn't going to develop. The family curse wasn't something you grew out of or overcame through training. If anything, the gap between Kael and his peers would only widen as they continued advancing in level and ability while he remained stuck at the bottom.</p>
+<br>
+<p>After lunch—a simple meal of bread, cheese, and preserved vegetables that Elena had enhanced with basic nutrition magic to stretch their limited resources—Kael retreated to his favorite spot on the small hill behind their house. As the autumn wind carried the scent of burning leaves from the village's preparation for the upcoming Fade month celebrations, he contemplated his future from the vantage point where he could see most of their property and the road that led to the village. It was where he went when he needed to think, which had been happening more frequently as his sixteenth birthday approached and the reality of his limited future became impossible to ignore.</p>
+<br>
+<p>He was contemplating the unfairness of being born into a world where magical ability determined everything when he noticed something unusual in the freshly plowed field below. A section of earth near the eastern property line seemed to be reflecting sunlight differently than the surrounding soil, as if something metallic was buried just beneath the surface.</p>
+<br>
+<p>Curiosity overcoming his usual caution, Kael made his way down the hill and across the field to investigate. The reflective spot was about the size of his palm, visible only because the afternoon sun was hitting it at just the right angle. He knelt and began carefully digging with his hands, unsure what he might find.</p>
+<br>
+<p>The object revealed itself slowly: a crystalline artifact unlike anything he'd ever seen. It was roughly spherical, about the size of a chicken egg, with a surface that seemed to shift between transparent and opaque depending on the viewing angle. Internal structures that might have been circuits or magical formations pulsed with a soft, rhythmic light that reminded him somehow of a heartbeat. The artifact radiated an otherworldly presence that made the air around it feel charged with potential energy.</p>
+<br>
+<p>The moment his fingers made contact with the crystal's surface, the world exploded into sensation.</p>
+<br>
+<p>Visions flooded his mind—images of cosmic forces beyond human comprehension, of realities layered upon realities, of a vast system designed to nurture growth and potential in ways that conventional magic never could. He saw glimpses of possible futures: himself standing among legendary heroes, wielding power that made conventional magic seem quaint, protecting not just his family or village but entire dimensions from threats that existed beyond normal understanding. The visions carried the sharp, metallic scent of disrupted reality and the taste of infinite possibility on his tongue.</p>
+<br>
+<p>And then, as suddenly as it had begun, the overwhelming flood of information stopped. The crystal in his hands had dissolved, its substance somehow merging with his body in a way that felt both foreign and completely natural. Knowledge settled into his mind—not the chaotic rush of the initial contact, but organized information that he could access and understand. He could feel the artifact's essence integrating with his very being, rewriting fundamental aspects of his existence at a level deeper than magic or physics.</p>
+<br>
+<p>A translucent interface materialized in his vision, visible only to him:</p>
+<br>
+<p>```</p>
+<p>═══════════════════════════════════════</p>
+<p>    DIVINE GROWTH SYSTEM ACTIVATED</p>
+<p>═══════════════════════════════════════</p>
+<p>Welcome, Kael Thornwick</p>
+<p>System Integration: 100% Complete</p>
+<p>Current Status: INITIALIZATION</p>
+<br>
+<p>WARNING: This system exists outside normal </p>
+<p>magical law. Revealing its existence to others </p>
+<p>may result in catastrophic consequences for </p>
+<p>both user and revealed parties.</p>
+<br>
+<p>Do you accept the responsibilities and </p>
+<p>risks of system partnership? Y/N</p>
+<p>═══════════════════════════════════════</p>
+<p>```</p>
+<br>
+<p>Kael stared at the interface, his mind struggling to process what was happening. The family curse that had limited him his entire life suddenly seemed insignificant compared to this impossible development. Here was power beyond anything he'd dreamed of, offering itself to someone the world had written off as defective.</p>
+<br>
+<p>But the warning gave him pause. Catastrophic consequences. He thought of his parents, of Thomas and the other village children, of everyone whose lives could be affected by his choice. Did he have the right to accept something this potentially dangerous?</p>
+<br>
+<p>Then he thought of the visions he'd seen—the threats that existed beyond normal understanding, the futures where his acceptance of this power meant the difference between salvation and destruction for countless innocent people. Perhaps the question wasn't whether he had the right to accept the system, but whether he had the right to refuse it.</p>
+<br>
+<p>Taking a deep breath, Kael focused on the "Y" option and felt something fundamental shift in his perception of reality.</p>
+<br>
+<p>```</p>
+<p>═══════════════════════════════════════</p>
+<p>    DIVINE GROWTH SYSTEM v∞.1</p>
+<p>═══════════════════════════════════════</p>
+<p>Name: Kael Thornwick          Level: 1</p>
+<p>Class: Unawakened            XP: 0/100</p>
+<p>Title: Cursed Bloodline</p>
+<br>
+<p>ATTRIBUTES:</p>
+<p>STR: 3     AGI: 4     VIT: 5</p>
+<p>INT: 7     WIS: 6     LUK: 12</p>
+<br>
+<p>DERIVED STATS:</p>
+<p>HP: 55/55     MP: 68/68     SP: 40/40</p>
+<p>Physical Def: 3    Magical Def: 6</p>
+<br>
+<p>ACTIVE QUESTS: 1/3</p>
+<p>SYSTEM POINTS: 0</p>
+<p>SKILLS: None</p>
+<br>
+<p>[NEW QUEST AVAILABLE]</p>
+<p>"First Steps": Begin your journey by </p>
+<p>improving your basic capabilities.</p>
+<p>- Complete 50 push-ups [0/50]</p>
+<p>- Run 1 kilometer without stopping [0/1]</p>
+<p>- Study basic magical theory for 2 hours [0/2]</p>
+<p>Reward: 75 XP, +1 to STR/AGI/INT</p>
+<p>Failure: -50% XP gain for 48 hours</p>
+<p>═══════════════════════════════════════</p>
+<p>```</p>
+<br>
+<p>The numbers were depressing but not surprising. His attributes were far below what a normal sixteen-year-old should possess, reflecting the limitations imposed by his curse. But the system was offering him a path forward—a way to grow beyond those limitations through effort and achievement.</p>
+<br>
+<p>More importantly, his Luck stat was significantly higher than his other attributes. Twelve was actually above average for most adults, which might explain how he'd managed to find this artifact when anyone else would have walked past the buried crystal without noticing it.</p>
+<br>
+<p>The quest requirements looked challenging but achievable. Fifty push-ups would be difficult given his current strength, but not impossible if he paced himself. Running a kilometer might leave him exhausted, but it was within the realm of possibility. And studying magical theory was something he could do regardless of his ability to actually use magic.</p>
+<br>
+<p>A new sensation drew his attention—something that felt like intuitive knowledge being gently inserted into his consciousness, accompanied by what could only be described as the voice of the universe itself speaking directly to his soul. The system was providing him with basic operational information, including several critical warnings that resonated with the weight of absolute truth:</p>
+<br>
+<p>*The Divine Growth System operated outside the normal laws of magic and reality. It was not magic in any conventional sense, but something far more fundamental—a tool of creation itself, capable of granting power that surpassed any limitation imposed by natural law. However, it demanded effort, courage, and moral character in return. Attempts to exploit or abuse the system would result in its withdrawal, possibly permanently.*</p>
+<br>
+<p>*System abilities and interface were imperceptible to others unless specifically revealed by the user. Even the most advanced magical detection methods would not identify the system's presence or effects. To outside observation, any improvements would appear to be the result of natural talent finally manifesting or exceptional training.*</p>
+<br>
+<p>*The system's true nature and origin were matters of cosmic significance that touched upon the fundamental structure of reality itself. Premature revelation could endanger not just the user, but the stability of existence across multiple dimensions. The knowledge it contained was not merely powerful—it was potentially reality-altering in ways that mortal minds could barely comprehend.*</p>
+<br>
+<p>*Most importantly, the system had not chosen him randomly. His extraordinarily high Luck stat, caused by the same genetic quirk that limited his other abilities, had made him uniquely capable of finding and bonding with this particular artifact. What others saw as a curse had actually been preparing him for a destiny that transcended normal understanding.*</p>
+<br>
+<p>As the implications settled into his mind, Kael realized that his life had just changed in ways he couldn't fully comprehend. The weak, cursed farm boy who'd struggled to carry a water bucket that morning was now connected to a force that could potentially reshape his destiny and the fate of everyone around him.</p>
+<br>
+<p>But first, he had to complete fifty push-ups.</p>
+<br>
+<p>Standing in the field where his old life had ended and his new one begun, Kael looked back toward the farmhouse where his parents continued their daily struggle against poverty and limitation. They had no idea that their "defective" son had just gained access to power beyond their wildest imagination. For now, that secret would have to remain his burden to bear.</p>
+<br>
+<p>He began walking home, already planning how to complete his first quest without raising suspicion. The push-ups and running could be explained as an attempt to build strength for farm work—perhaps inspired by his disappointment at being unable to help with the Miller harvest. The magical theory study would be trickier, but he could claim academic curiosity about why his condition prevented him from using magic, or suggest he was trying to understand the theoretical basis for magical phenomena even if he couldn't participate in them practically.</p>
+<br>
+<p>As he approached their modest farmhouse, with its weathered stone walls and roof tiles that his father had reinforced with earth magic, Kael caught his reflection in the window. The late afternoon sun of Harvest month cast everything in golden light, and for a moment he could almost imagine he looked different—stronger, more confident, touched by destiny. But outwardly, he remained the same scrawny, weak, unremarkable boy who'd struggled with a water bucket that morning.</p>
+<br>
+<p>However, behind his hazel eyes, something new gleamed with golden possibility that matched the seasonal light. Where once there had been only resignation and quiet despair, now there burned the ember of hope that could kindle into something magnificent. The cursed bloodline that had defined him for sixteen years was about to become merely the prologue to a much larger story—one that might span not just his lifetime, but the entire future of multiple realities.</p>
+<br>
+<p>The Divine Growth System pulsed gently in his consciousness, patient but expectant. His first quest awaited completion, and beyond that lay challenges and opportunities he couldn't yet imagine. For the first time in his life, Kael Thornwick faced a future filled with genuine possibility rather than resigned limitation.</p>
+<br>
+<p>The defective son was about to discover that sometimes the greatest power comes to those the world considers least worthy of it.</p>
+<br>
+<p>---</p>
+<br>
+<h2>Chapter 1 Summary</h2>
+<br>
+<p>**Key Events:**</p>
+<p>- Kael struggles with daily farm tasks due to Mana Deficiency Syndrome family curse</p>
+<p>- His friend Thomas gets accepted to the prestigious International Academy, highlighting Kael's limitations</p>
+<p>- While helping repair a mana crystal leak, Kael contemplates his bleak future prospects</p>
+<p>- Discovering a mysterious crystalline artifact in their field, Kael experiences cosmic visions</p>
+<p>- The artifact dissolves into his body, activating the Divine Growth System</p>
+<p>- System presents interface showing his low stats but high Luck attribute</p>
+<p>- First quest assigned: physical training and magical theory study</p>
+<p>- Kael accepts the system partnership and begins planning to complete initial challenges</p>
+<br>
+<p>**Character Development:**</p>
+<p>- Establishes Kael's desperate situation and feelings of inadequacy</p>
+<p>- Shows his relationship with caring but disappointed parents</p>
+<p>- Demonstrates his moral character through consideration of consequences</p>
+<p>- Sets up transformation from weakest to potentially strongest</p>
+<br>
+<p>**World Building:**</p>
+<p>- Introduces Mana Deficiency Syndrome and its social implications</p>
+<p>- Establishes level-based society where magical ability determines status</p>
+<p>- Shows rural farming life dependent on basic magic</p>
+<p>- Introduces the International Academy as prestigious institution</p>
+<p>- Sets up the Divine Growth System as unique, cosmic-level power</p>
+<br>
+<p>**Progression Setup:**</p>
+<p>- Level 1 with extremely low stats except Luck (12)</p>
+<p>- First quest provides path to improvement</p>
+<p>- System warnings establish stakes and secrecy requirements</p>
+<p>- Foundation laid for dramatic character transformation</p>
+                    </div>
+                </div>
+            
+                </div>
+            </div>
+            
+            <!-- Navigation -->
+            <div class="page-navigation">
+                <button id="prevPage" class="nav-btn nav-prev">‹ Previous</button>
+                <div class="page-indicator">
+                    <span id="currentPage">1</span> / <span id="totalPages">1</span>
+                </div>
+                <button id="nextPage" class="nav-btn nav-next">Next ›</button>
+            </div>
+        </main>
+
+        <!-- Reading Progress -->
+        <div class="reading-progress">
+            <div class="progress-bar-thin">
+                <div class="progress-fill-thin" id="readingProgress"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        
+        class BookReader {
+            constructor() {
+                this.currentPage = 0;
+                this.totalPages = 0;
+                this.isDarkTheme = true;  // Default to dark mode
+                this.isTocOpen = false;
+                this.isFullscreen = false;
+
+                // Mobile touch handling
+                this.touchStartX = 0;
+                this.touchStartY = 0;
+                this.touchEndX = 0;
+                this.touchEndY = 0;
+                this.minSwipeDistance = 50;
+
+                // Wait for DOM to be fully loaded
+                if (document.readyState === 'loading') {
+                    document.addEventListener('DOMContentLoaded', () => this.initialize());
+                } else {
+                    this.initialize();
+                }
+            }
+
+            initialize() {
+                // Count pages after DOM is ready
+                this.totalPages = document.querySelectorAll('.chapter-page').length;
+                console.log(`BookReader initialized: ${this.totalPages} pages found`);
+
+                if (this.totalPages === 0) {
+                    console.error('No chapter pages found! Check HTML structure.');
+                    return;
+                }
+
+                // Debug: Check if pages have content
+                document.querySelectorAll('.chapter-page').forEach((page, index) => {
+                    const content = page.querySelector('.chapter-content');
+                    const contentLength = content ? content.textContent.length : 0;
+                    console.log(`Page ${index}: ${contentLength} characters of content`);
+                });
+
+                this.initializeEventListeners();
+
+                // Set current page to 0 and ensure it's visible
+                this.currentPage = 0;
+
+                // Apply dark theme by default
+                document.body.classList.add('dark-theme');
+                console.log('Dark theme applied by default');
+
+                // Update theme button text for dark mode
+                const themeBtn = document.getElementById('toggleTheme');
+                if (themeBtn) {
+                    themeBtn.textContent = '☀️ Light';
+                }
+
+                // Make sure first page is visible (it should already be from HTML)
+                const firstPage = document.querySelector('.chapter-page[data-chapter="0"]');
+                if (firstPage) {
+                    firstPage.style.display = 'block';
+                    console.log('First page confirmed visible');
+                } else {
+                    console.error('First page not found during initialization!');
+                }
+
+                this.updateNavigation();
+                this.updateProgress();
+                this.updateActiveChapter();
+            }
+
+            
+            initializeEventListeners() {
+                // Navigation buttons
+                document.getElementById('prevPage').addEventListener('click', () => this.previousPage());
+                document.getElementById('nextPage').addEventListener('click', () => this.nextPage());
+                
+                // Control buttons
+                document.getElementById('toggleToc').addEventListener('click', () => this.toggleTableOfContents());
+                document.getElementById('toggleTheme').addEventListener('click', () => this.toggleTheme());
+                document.getElementById('toggleFullscreen').addEventListener('click', () => this.toggleFullscreen());
+                document.getElementById('bookSelector').addEventListener('change', (e) => this.switchBook(e.target.value));
+                document.getElementById('refreshBooks').addEventListener('click', () => this.refreshBookList());
+                
+                // Chapter navigation
+                document.querySelectorAll('.chapter-item').forEach((item, index) => {
+                    item.addEventListener('click', () => {
+                        console.log(`Chapter item ${index} clicked`);
+                        this.goToPage(index);
+                        // Close TOC after navigation
+                        if (this.isTocOpen) {
+                            this.toggleTableOfContents();
+                        }
+                    });
+                });
+                
+                // Keyboard navigation
+                document.addEventListener('keydown', (e) => {
+                    switch(e.key) {
+                        case 'ArrowLeft':
+                        case 'ArrowUp':
+                            e.preventDefault();
+                            this.previousPage();
+                            break;
+                        case 'ArrowRight':
+                        case 'ArrowDown':
+                        case ' ':
+                            e.preventDefault();
+                            this.nextPage();
+                            break;
+                        case 'Home':
+                            e.preventDefault();
+                            this.goToPage(0);
+                            break;
+                        case 'End':
+                            e.preventDefault();
+                            this.goToPage(this.totalPages - 1);
+                            break;
+                        case 'Escape':
+                            if (this.isTocOpen) {
+                                this.toggleTableOfContents();
+                            }
+                            break;
+                    }
+                });
+                
+                // Close TOC when clicking outside
+                document.addEventListener('click', (e) => {
+                    const toc = document.getElementById('tocPanel');
+                    const toggleBtn = document.getElementById('toggleToc');
+
+                    if (this.isTocOpen && !toc.contains(e.target) && !toggleBtn.contains(e.target)) {
+                        this.toggleTableOfContents();
+                    }
+                });
+
+                // Touch events for mobile swipe navigation
+                document.addEventListener('touchstart', (e) => {
+                    this.touchStartX = e.changedTouches[0].screenX;
+                    this.touchStartY = e.changedTouches[0].screenY;
+                }, { passive: true });
+
+                document.addEventListener('touchend', (e) => {
+                    this.touchEndX = e.changedTouches[0].screenX;
+                    this.touchEndY = e.changedTouches[0].screenY;
+                    this.handleSwipe();
+                }, { passive: true });
+            }
+
+            handleSwipe() {
+                const deltaX = this.touchEndX - this.touchStartX;
+                const deltaY = this.touchEndY - this.touchStartY;
+
+                // Check if it's a horizontal swipe (more horizontal than vertical)
+                if (Math.abs(deltaX) > Math.abs(deltaY)) {
+                    // Check if swipe distance is sufficient
+                    if (Math.abs(deltaX) > this.minSwipeDistance) {
+                        if (deltaX > 0) {
+                            // Swipe right - previous page
+                            this.previousPage();
+                        } else {
+                            // Swipe left - next page
+                            this.nextPage();
+                        }
+                    }
+                }
+            }
+
+            nextPage() {
+                if (this.currentPage < this.totalPages - 1) {
+                    this.goToPage(this.currentPage + 1);
+                }
+            }
+            
+            previousPage() {
+                if (this.currentPage > 0) {
+                    this.goToPage(this.currentPage - 1);
+                }
+            }
+            
+            goToPage(pageIndex) {
+                console.log(`goToPage called: pageIndex=${pageIndex}, totalPages=${this.totalPages}`);
+
+                if (pageIndex >= 0 && pageIndex < this.totalPages) {
+                    // Hide all pages
+                    const allPages = document.querySelectorAll('.chapter-page');
+                    console.log(`Found ${allPages.length} chapter pages for hiding`);
+
+                    allPages.forEach((page, index) => {
+                        page.style.display = 'none';
+                    });
+
+                    // Show new page using more specific selector
+                    const newPage = document.querySelector(`.chapter-page[data-chapter="${pageIndex}"]`);
+                    console.log(`Looking for page with data-chapter="${pageIndex}":`, newPage);
+
+                    if (newPage) {
+                        newPage.style.display = 'block';
+                        this.currentPage = pageIndex;
+                        console.log(`Successfully showing page ${pageIndex}`);
+
+                        // Verify the page is actually visible
+                        const computedStyle = window.getComputedStyle(newPage);
+                        console.log(`Page ${pageIndex} display style: ${computedStyle.display}`);
+
+                        this.updateNavigation();
+                        this.updateProgress();
+                        this.updateActiveChapter();
+
+                        // Scroll to top
+                        window.scrollTo({ top: 0, behavior: 'smooth' });
+                    } else {
+                        console.error(`Page with data-chapter="${pageIndex}" not found!`);
+                        // Debug: List all available pages
+                        const availablePages = document.querySelectorAll('.chapter-page');
+                        console.log('Available pages:');
+                        availablePages.forEach((page, index) => {
+                            console.log(`  Page ${index}: data-chapter="${page.getAttribute('data-chapter')}"`);
+                        });
+                    }
+                } else {
+                    console.error(`Invalid page index: ${pageIndex} (total: ${this.totalPages})`);
+                }
+            }
+            
+            updateNavigation() {
+                document.getElementById('currentPage').textContent = this.currentPage + 1;
+                document.getElementById('totalPages').textContent = this.totalPages;
+                
+                document.getElementById('prevPage').disabled = this.currentPage === 0;
+                document.getElementById('nextPage').disabled = this.currentPage === this.totalPages - 1;
+            }
+            
+            updateProgress() {
+                const progress = ((this.currentPage + 1) / this.totalPages) * 100;
+                document.getElementById('readingProgress').style.width = progress + '%';
+            }
+            
+            updateActiveChapter() {
+                document.querySelectorAll('.chapter-item').forEach((item, index) => {
+                    item.classList.toggle('active', index === this.currentPage);
+                });
+            }
+            
+            toggleTableOfContents() {
+                const toc = document.getElementById('tocPanel');
+                this.isTocOpen = !this.isTocOpen;
+                toc.classList.toggle('open', this.isTocOpen);
+            }
+            
+            toggleTheme() {
+                this.isDarkTheme = !this.isDarkTheme;
+                document.body.classList.toggle('dark-theme', this.isDarkTheme);
+
+                const btn = document.getElementById('toggleTheme');
+                btn.textContent = this.isDarkTheme ? '☀️ Light' : '🌙 Dark';
+            }
+            
+            toggleFullscreen() {
+                if (!this.isFullscreen) {
+                    if (document.documentElement.requestFullscreen) {
+                        document.documentElement.requestFullscreen();
+                    }
+                } else {
+                    if (document.exitFullscreen) {
+                        document.exitFullscreen();
+                    }
+                }
+                this.isFullscreen = !this.isFullscreen;
+
+                const btn = document.getElementById('toggleFullscreen');
+                btn.textContent = this.isFullscreen ? '⛶ Exit' : '⛶ Fullscreen';
+            }
+
+            async switchBook(projectId) {
+                if (!projectId || projectId === this.currentBookId) return;
+
+                console.log(`Switching to book: ${projectId}`);
+
+                // Show loading indicator
+                const bookTitle = document.querySelector('.book-title');
+                const originalTitle = bookTitle.textContent;
+                bookTitle.textContent = '🔄 Loading...';
+
+                try {
+                    // Redirect to new book reader
+                    const newUrl = window.location.href.replace(/[^/]+_reader\.html$/, `${projectId}_reader.html`);
+                    window.location.href = newUrl;
+                } catch (error) {
+                    console.error('Error switching book:', error);
+                    bookTitle.textContent = originalTitle;
+                    alert('Failed to switch book. Please try again.');
+                }
+            }
+
+            async refreshBookList() {
+                console.log('Refreshing book list...');
+
+                try {
+                    // Show loading state
+                    const refreshBtn = document.getElementById('refreshBooks');
+                    const originalText = refreshBtn.textContent;
+                    refreshBtn.textContent = '🔄';
+                    refreshBtn.disabled = true;
+
+                    // Simulate checking for new books
+                    setTimeout(() => {
+                        refreshBtn.textContent = originalText;
+                        refreshBtn.disabled = false;
+
+                        // Show current status and management help
+                        this.showBookStatus();
+                    }, 1000);
+
+                } catch (error) {
+                    console.error('Error refreshing book list:', error);
+                    const refreshBtn = document.getElementById('refreshBooks');
+                    refreshBtn.textContent = '🔄 Refresh';
+                    refreshBtn.disabled = false;
+                }
+            }
+
+            showBookStatus() {
+                const currentBooks = document.querySelectorAll('#bookSelector option').length;
+                const currentBook = document.querySelector('#bookSelector option:checked').textContent;
+
+                const statusMessage = `📊 CURRENT BOOK STATUS
+
+📚 Available Books: ${currentBooks}
+📖 Current Book: ${currentBook}
+🔄 Last Refreshed: ${new Date().toLocaleTimeString()}
+
+${currentBooks < 2 ? '💡 Add more books to enable switching between projects!' : '✅ Multiple books available - use dropdown to switch!'}
+
+Would you like to see the full book management guide?`;
+
+                if (confirm(statusMessage)) {
+                    this.showBookManagementHelp();
+                }
+            }
+
+            showBookManagementHelp() {
+                const helpMessage = `📚 ClaudeEVO Book Management
+
+🔧 ADDING NEW BOOKS:
+1. Create project: /book-new <project_id>
+2. Add chapters: /book-write-next <project_id>
+3. Generate reader: /book-read <project_id>
+
+📖 MANAGING EXISTING BOOKS:
+• List all books: /book-list
+• Continue writing: /book-continue <project_id>
+• Expand chapters: /book-expand <project_id> <chapter_num>
+• Quality check: /book-consistency-check <project_id>
+
+🔄 READER FEATURES:
+• Switch books using the dropdown selector
+• Click "🔄 Refresh" to update the book list
+• Use "📚 Contents" for chapter navigation
+• Toggle "🌙 Theme" for dark/light mode
+
+💡 TIP: Generate readers for all your books to enable seamless switching between projects!`;
+
+                alert(helpMessage);
+            }
+        }
+        
+        // Initialize reader when page loads
+        document.addEventListener('DOMContentLoaded', () => {
+            new BookReader();
+        });
+        
+    </script>
+</body>
+</html>
