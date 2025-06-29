@@ -36,9 +36,72 @@
             transition: all 0.3s ease;
         }
 
+        /* Theme Variations */
         body.dark-theme {
             background: #1a1a1a;
             color: #e0e0e0;
+        }
+
+        body.light-theme {
+            background: #ffffff;
+            color: #333333;
+        }
+
+        body.sepia-theme {
+            background: #f4f1e8;
+            color: #5c4b37;
+        }
+
+        body.blue-theme {
+            background: #0f1419;
+            color: #c9d1d9;
+        }
+
+        body.green-theme {
+            background: #0d1117;
+            color: #c9d1d9;
+        }
+
+        body.purple-theme {
+            background: #1a0d1a;
+            color: #e6d7ff;
+        }
+
+        /* Theme-specific header styles */
+        .sepia-theme .reader-header {
+            background: #f0ead6;
+            border-bottom-color: #d4c5a9;
+        }
+
+        .sepia-theme .book-title {
+            color: #5c4b37;
+        }
+
+        .blue-theme .reader-header {
+            background: #1c2128;
+            border-bottom-color: #30363d;
+        }
+
+        .blue-theme .book-title {
+            color: #58a6ff;
+        }
+
+        .green-theme .reader-header {
+            background: #161b22;
+            border-bottom-color: #21262d;
+        }
+
+        .green-theme .book-title {
+            color: #7ee787;
+        }
+
+        .purple-theme .reader-header {
+            background: #2d1b2d;
+            border-bottom-color: #4a2d4a;
+        }
+
+        .purple-theme .book-title {
+            color: #d8b4fe;
         }
 
         .book-reader {
@@ -127,6 +190,28 @@
             background: #2980b9;
         }
 
+        .theme-selector, .filter-select {
+            padding: 0.5rem 1rem;
+            border: 1px solid #34495e;
+            background: #2c3e50;
+            color: white;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.3s ease;
+            min-width: 120px;
+        }
+
+        .theme-selector:focus, .filter-select:focus {
+            outline: none;
+            border-color: #3498db;
+            box-shadow: 0 0 0 2px rgba(52, 152, 219, 0.2);
+        }
+
+        .theme-selector:hover, .filter-select:hover {
+            background: #34495e;
+        }
+
         .book-selector {
             padding: 0.5rem 1rem;
             border: 1px solid #bdc3c7;
@@ -175,6 +260,103 @@
         .dark-theme .table-of-contents {
             background: #2d2d2d;
             border-right-color: #404040;
+        }
+
+        .dark-theme .toc-header {
+            border-bottom-color: #404040;
+        }
+
+        .dark-theme .toc-header h3 {
+            color: #ecf0f1;
+        }
+
+        .dark-theme .toc-filters {
+            background: #1a1a1a;
+            border-color: #404040;
+        }
+
+        .dark-theme .filter-group label {
+            color: #ecf0f1;
+        }
+
+        .dark-theme .filter-stats {
+            color: #95a5a6;
+            background: #404040;
+        }
+
+        .dark-theme .theme-selector, .dark-theme .filter-select {
+            background: #1a1a1a;
+            border-color: #404040;
+            color: #ecf0f1;
+        }
+
+        .dark-theme .theme-selector:hover, .dark-theme .filter-select:hover {
+            background: #2d2d2d;
+        }
+
+        .toc-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+            padding-bottom: 1rem;
+            border-bottom: 2px solid #ecf0f1;
+        }
+
+        .toc-header h3 {
+            margin: 0;
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: #2c3e50;
+        }
+
+        .close-toc {
+            background: #e74c3c;
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            cursor: pointer;
+            font-size: 1rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background 0.3s ease;
+        }
+
+        .close-toc:hover {
+            background: #c0392b;
+        }
+
+        .toc-filters {
+            margin-bottom: 1.5rem;
+            padding: 1rem;
+            background: #f8f9fa;
+            border-radius: 8px;
+            border: 1px solid #e9ecef;
+        }
+
+        .filter-group {
+            margin-bottom: 1rem;
+        }
+
+        .filter-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 600;
+            color: #2c3e50;
+            font-size: 0.9rem;
+        }
+
+        .filter-stats {
+            font-size: 0.85rem;
+            color: #7f8c8d;
+            font-style: italic;
+            text-align: center;
+            padding: 0.5rem;
+            background: #ecf0f1;
+            border-radius: 4px;
         }
 
         .table-of-contents h3 {
@@ -753,6 +935,7 @@
                     <span class="genre">Fantasy</span>
                     <span class="word-count">3,418 words</span>
                     <span class="chapter-count">1 chapters</span>
+                    <span class="save-indicator" id="saveIndicator">💾 Auto-save enabled</span>
                 </div>
             </div>
             <div class="reader-controls">
@@ -763,15 +946,40 @@
                 </select>
                 <button id="refreshBooks" class="control-btn">🔄 Refresh</button>
                 <button id="toggleToc" class="control-btn">📚 Contents</button>
-                <button id="toggleTheme" class="control-btn">🌙 Theme</button>
+                <select id="themeSelector" class="theme-selector">
+                    <option value="dark">🌙 Dark</option>
+                    <option value="light">☀️ Light</option>
+                    <option value="sepia">📜 Sepia</option>
+                    <option value="blue">🌊 Blue</option>
+                    <option value="green">🌿 Green</option>
+                    <option value="purple">🔮 Purple</option>
+                </select>
                 <button id="toggleFullscreen" class="control-btn">⛶ Fullscreen</button>
             </div>
         </header>
 
         <!-- Table of Contents -->
         <nav class="table-of-contents" id="tocPanel">
-            <h3>Table of Contents</h3>
-            <ul class="chapter-list">
+            <div class="toc-header">
+                <h3>📚 Table of Contents</h3>
+                <button class="close-toc" onclick="bookReader.toggleTableOfContents()">✕</button>
+            </div>
+            <div class="toc-filters">
+                <div class="filter-group">
+                    <label for="statusFilter">Filter by Status:</label>
+                    <select id="statusFilter" class="filter-select">
+                        <option value="all">All Chapters</option>
+                        <option value="completed">✅ Completed</option>
+                        <option value="draft">📝 Draft</option>
+                        <option value="planned">📋 Planned</option>
+                        <option value="in_progress">🔄 In Progress</option>
+                    </select>
+                </div>
+                <div class="filter-stats">
+                    <span id="filterStats">Showing 1 of 1 chapters</span>
+                </div>
+            </div>
+            <ul class="chapter-list" id="chapterList">
                 
                 <li class="chapter-item" data-chapter="0">
                     <span class="chapter-status">📝</span>
@@ -1024,9 +1232,13 @@
             constructor() {
                 this.currentPage = 0;
                 this.totalPages = 0;
-                this.isDarkTheme = true;  // Default to dark mode
+                this.currentTheme = 'dark';  // Default theme
                 this.isTocOpen = false;
                 this.isFullscreen = false;
+                this.allChapters = [];
+                this.filteredChapters = [];
+                this.currentFilter = 'all';
+                this.bookId = this.getBookIdFromUrl();
 
                 // Mobile touch handling
                 this.touchStartX = 0;
@@ -1062,18 +1274,20 @@
 
                 this.initializeEventListeners();
 
-                // Set current page to 0 and ensure it's visible
-                this.currentPage = 0;
+                // Initialize chapters data
+                this.initializeChaptersData();
 
-                // Apply dark theme by default
-                document.body.classList.add('dark-theme');
-                console.log('Dark theme applied by default');
+                // Load saved position
+                this.loadSavedPosition();
 
-                // Update theme button text for dark mode
-                const themeBtn = document.getElementById('toggleTheme');
-                if (themeBtn) {
-                    themeBtn.textContent = '☀️ Light';
-                }
+                // Set current page to saved position or 0
+                this.currentPage = this.getSavedPage();
+
+                // Apply saved theme or default
+                this.loadSavedTheme();
+
+                // Initialize filters
+                this.initializeFilters();
 
                 // Make sure first page is visible (it should already be from HTML)
                 const firstPage = document.querySelector('.chapter-page[data-chapter="0"]');
@@ -1097,10 +1311,13 @@
                 
                 // Control buttons
                 document.getElementById('toggleToc').addEventListener('click', () => this.toggleTableOfContents());
-                document.getElementById('toggleTheme').addEventListener('click', () => this.toggleTheme());
+                document.getElementById('themeSelector').addEventListener('change', (e) => this.changeTheme(e.target.value));
                 document.getElementById('toggleFullscreen').addEventListener('click', () => this.toggleFullscreen());
                 document.getElementById('bookSelector').addEventListener('change', (e) => this.switchBook(e.target.value));
                 document.getElementById('refreshBooks').addEventListener('click', () => this.refreshBookList());
+
+                // Filter controls
+                document.getElementById('statusFilter').addEventListener('change', (e) => this.filterChapters(e.target.value));
                 
                 // Chapter navigation
                 document.querySelectorAll('.chapter-item').forEach((item, index) => {
@@ -1227,6 +1444,9 @@
                         this.updateProgress();
                         this.updateActiveChapter();
 
+                        // Save current position
+                        this.saveCurrentPosition();
+
                         // Scroll to top
                         window.scrollTo({ top: 0, behavior: 'smooth' });
                     } else {
@@ -1268,12 +1488,27 @@
                 toc.classList.toggle('open', this.isTocOpen);
             }
             
-            toggleTheme() {
-                this.isDarkTheme = !this.isDarkTheme;
-                document.body.classList.toggle('dark-theme', this.isDarkTheme);
+            changeTheme(theme) {
+                // Remove all theme classes
+                document.body.classList.remove('dark-theme', 'light-theme', 'sepia-theme', 'blue-theme', 'green-theme', 'purple-theme');
 
-                const btn = document.getElementById('toggleTheme');
-                btn.textContent = this.isDarkTheme ? '☀️ Light' : '🌙 Dark';
+                // Add new theme class
+                document.body.classList.add(theme + '-theme');
+
+                this.currentTheme = theme;
+                this.saveTheme(theme);
+
+                console.log(`Theme changed to: ${theme}`);
+            }
+
+            loadSavedTheme() {
+                const savedTheme = localStorage.getItem(`bookReader_${this.bookId}_theme`) || 'dark';
+                document.getElementById('themeSelector').value = savedTheme;
+                this.changeTheme(savedTheme);
+            }
+
+            saveTheme(theme) {
+                localStorage.setItem(`bookReader_${this.bookId}_theme`, theme);
             }
             
             toggleFullscreen() {
@@ -1382,6 +1617,114 @@ Would you like to see the full book management guide?`;
 💡 TIP: Generate readers for all your books to enable seamless switching between projects!`;
 
                 alert(helpMessage);
+            }
+
+            // Save/Load Position Methods
+            saveCurrentPosition() {
+                const saveData = {
+                    chapter: this.currentPage,
+                    timestamp: new Date().toISOString(),
+                    totalChapters: this.totalPages
+                };
+                localStorage.setItem(`bookReader_${this.bookId}_position`, JSON.stringify(saveData));
+
+                // Update save indicator
+                const indicator = document.getElementById('saveIndicator');
+                if (indicator) {
+                    indicator.textContent = '💾 Saved';
+                    indicator.style.color = '#27ae60';
+                    setTimeout(() => {
+                        indicator.textContent = '💾 Auto-save enabled';
+                        indicator.style.color = '';
+                    }, 2000);
+                }
+            }
+
+            loadSavedPosition() {
+                const saved = localStorage.getItem(`bookReader_${this.bookId}_position`);
+                if (saved) {
+                    try {
+                        const saveData = JSON.parse(saved);
+                        console.log(`Loaded saved position: Chapter ${saveData.chapter + 1}`);
+                        return saveData;
+                    } catch (e) {
+                        console.error('Error loading saved position:', e);
+                    }
+                }
+                return null;
+            }
+
+            getSavedPage() {
+                const saved = this.loadSavedPosition();
+                return saved ? saved.chapter : 0;
+            }
+
+            getBookIdFromUrl() {
+                const url = window.location.href;
+                const match = url.match(/([^/]+)_reader\.html$/);
+                return match ? match[1] : 'unknown';
+            }
+
+            // Chapter Filter Methods
+            initializeChaptersData() {
+                this.allChapters = Array.from(document.querySelectorAll('.chapter-item')).map((item, index) => ({
+                    element: item,
+                    index: index,
+                    title: item.querySelector('.chapter-title')?.textContent || `Chapter ${index + 1}`,
+                    status: this.getChapterStatus(item)
+                }));
+                this.filteredChapters = [...this.allChapters];
+            }
+
+            getChapterStatus(chapterElement) {
+                const statusText = chapterElement.querySelector('.chapter-status')?.textContent || '';
+                if (statusText.includes('completed') || statusText.includes('✅')) return 'completed';
+                if (statusText.includes('draft') || statusText.includes('📝')) return 'draft';
+                if (statusText.includes('planned') || statusText.includes('📋')) return 'planned';
+                if (statusText.includes('progress') || statusText.includes('🔄')) return 'in_progress';
+                return 'completed'; // Default assumption
+            }
+
+            initializeFilters() {
+                this.updateFilterStats();
+            }
+
+            filterChapters(status) {
+                this.currentFilter = status;
+
+                if (status === 'all') {
+                    this.filteredChapters = [...this.allChapters];
+                } else {
+                    this.filteredChapters = this.allChapters.filter(chapter => chapter.status === status);
+                }
+
+                // Update visibility
+                this.allChapters.forEach(chapter => {
+                    const shouldShow = this.filteredChapters.includes(chapter);
+                    chapter.element.style.display = shouldShow ? 'flex' : 'none';
+                });
+
+                this.updateFilterStats();
+            }
+
+            updateFilterStats() {
+                const statsElement = document.getElementById('filterStats');
+                if (statsElement) {
+                    const total = this.allChapters.length;
+                    const filtered = this.filteredChapters.length;
+                    const filterText = this.currentFilter === 'all' ? 'All' : this.getFilterDisplayName(this.currentFilter);
+                    statsElement.textContent = `Showing ${filtered} of ${total} chapters (${filterText})`;
+                }
+            }
+
+            getFilterDisplayName(filter) {
+                const names = {
+                    'completed': 'Completed',
+                    'draft': 'Draft',
+                    'planned': 'Planned',
+                    'in_progress': 'In Progress'
+                };
+                return names[filter] || filter;
             }
         }
         
