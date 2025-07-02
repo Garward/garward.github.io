@@ -809,6 +809,12 @@ class RagnarokGame {
                     }
                 }
 
+                // NEW: Check status effect boosts
+                const statusBonuses = this.skills.getActiveStatusEffects();
+                if (statusBonuses.mpRegenBoost) {
+                 baseRegen *= (1 + statusBonuses.mpRegenBoost);
+                }
+
                 const actualRestore = this.player.restoreMp(Math.floor(baseRegen));
                 if (actualRestore > 0) {
                     this.ui.updatePlayerDisplay();

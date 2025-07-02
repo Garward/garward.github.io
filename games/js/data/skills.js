@@ -1,159 +1,194 @@
 // skills.js - Skills data and management system
 const SWORDSMAN_SKILLS = [
     {
-        id: "bash",
-        name: "Bash",
-        maxLevel: 10,
-        currentLevel: 0,
-        description: "Powerful single hit attack",
-        damageMultiplier: 1.3,
-        mpCost: 8,
-        unlockLevel: 1,
-        cooldown: 0,
-        maxCooldown: 2000,
-        hotkey: "1",
-        icon: "⚔️"
-    },
-    {
         id: "magnum_break",
         name: "Magnum Break",
+        description: "Deals fire damage and increases your attack temporarily.",
         maxLevel: 10,
         currentLevel: 0,
-        description: "Fire explosion, +20% damage for 10s",
+        unlockLevel: 1,
         damageMultiplier: 1.5,
+        atkMultiplierPerLevel: 0.05,
+        durationBase: 5000,
+        durationPerLevel: 250,
         mpCost: 15,
-        isFireDamage: true,
-        unlockLevel: 5,
         cooldown: 0,
         maxCooldown: 8000,
-        hotkey: "2",
+        isFireDamage: true,
+        hotkey: "1",
         icon: "🔥"
     },
     {
-        id: "endure",
-        name: "Endure",
+        id: "battle_focus",
+        name: "Battle Focus",
+        description: "Boosts critical chance and critical damage for a short duration.",
         maxLevel: 10,
         currentLevel: 0,
-        description: "Increases defense by 25% + 2% per level",
-        defenseMultiplier: 0.25,
-        mpCost: 12,
-        unlockLevel: 10,
+        unlockLevel: 5,
+        critChancePerLevel: 1,
+        critDamagePerLevel: 0.1,
+        duration: 10000,
+        mpCost: 15,
         cooldown: 0,
         maxCooldown: 12000,
+        hotkey: "2",
+        icon: "🎯"
+    },
+    {
+        id: "fortify",
+        name: "Fortify",
+        description: "Boosts defense and reduces skill damage taken.",
+        maxLevel: 10,
+        currentLevel: 0,
+        unlockLevel: 10,
+        defMultiplierPerLevel: 0.05,
+        skillDamageReductionPerLevel: 0.02,
+        duration: 12000,
+        mpCost: 25,
+        cooldown: 0,
+        maxCooldown: 20000,
         hotkey: "3",
         icon: "🛡️"
     },
     {
-        id: "hp_recovery",
-        name: "HP Recovery",
+        id: "iron_will",
+        name: "Iron Will",
+        description: "Passively increases defense and flat damage reduction.",
         maxLevel: 10,
         currentLevel: 0,
-        description: "Passive HP regeneration",
-        regenAmount: 2,
+        defenseBonus: 2,
+        flatDamageReduction: 1,
         unlockLevel: 3,
         isPassive: true,
-        icon: "❤️"
+        icon: "🪓"
     },
     {
-        id: "sword_mastery",
-        name: "Sword Mastery",
+        id: "heavy_training",
+        name: "Heavy Training",
+        description: "Passively increases max HP and HP regen.",
         maxLevel: 10,
         currentLevel: 0,
-        description: "Increases ATK permanently",
-        atkBonus: 3,
+        hpBonusPerLevel: 25,
+        hpRegenBoostPerLevel: 0.01,
         unlockLevel: 7,
         isPassive: true,
-        icon: "⚔️"
+        icon: "💪"
     }
 ];
 
-// Mage Skills
 const MAGE_SKILLS = [
     {
         id: "fire_bolt",
         name: "Fire Bolt",
         maxLevel: 10,
         currentLevel: 0,
-        description: "Launch a fiery projectile at the enemy",
-        damageMultiplier: 3.6, // Doubled from 1.8
+        description: "Fast fire spell. +3% crit chance per level.",
+        damageMultiplier: 3.6,
         mpCost: 12,
         unlockLevel: 1,
         cooldown: 0,
         maxCooldown: 1500,
         hotkey: "1",
         icon: "🔥",
-        element: "fire",
-        sprite: "fire_bolt.png"
+        element: "fire"
     },
     {
-        id: "ice_bolt",
-        name: "Ice Bolt",
+        id: "lightning_spear",
+        name: "Lightning Spear",
         maxLevel: 10,
         currentLevel: 0,
-        description: "Launch an icy projectile that may slow enemies",
-        damageMultiplier: 3.2, // Doubled from 1.6
-        mpCost: 10,
-        unlockLevel: 3,
+        description: "Ignores 30–60% of enemy DEF. Strong anti-boss spell.",
+        damageMultiplier: 4.0,
+        armorPiercePercent: 30, // can be used in damage calc
+        mpCost: 20,
+        unlockLevel: 4,
         cooldown: 0,
-        maxCooldown: 1500,
+        maxCooldown: 5000,
         hotkey: "2",
-        icon: "❄️",
-        element: "ice",
-        sprite: "ice_bolt.png"
-    },
-    {
-        id: "lightning_bolt",
-        name: "Lightning Bolt",
-        maxLevel: 10,
-        currentLevel: 0,
-        description: "Strike with lightning for high damage",
-        damageMultiplier: 4.0, // Doubled from 2.0
-        mpCost: 15,
-        unlockLevel: 5,
-        cooldown: 0,
-        maxCooldown: 2000,
-        hotkey: "3",
         icon: "⚡",
-        element: "lightning",
-        sprite: "lightning_bolt.png"
+        element: "lightning"
     },
     {
-        id: "increase_mana_recovery",
-        name: "Increase Mana Recovery",
+        id: "ice_spike",
+        name: "Ice Spike",
         maxLevel: 10,
         currentLevel: 0,
-        description: "Increases mana regeneration by 20% per level (base: 2% max MP/sec)",
-        isPassive: true,
+        description: "Chance to freeze enemy for 1.5s.",
+        damageMultiplier: 3.2,
+        freezeChance: 20, // base chance
+        mpCost: 18,
         unlockLevel: 7,
-        icon: "💙",
-        sprite: "mana_recovery.png",
-        effect: {
-            type: "mana_regen_bonus",
-            value: 0.2 // 20% per level
-        }
+        cooldown: 0,
+        maxCooldown: 6000,
+        hotkey: "3",
+        icon: "❄️",
+        element: "ice"
     },
     {
-        id: "energy_coat",
-        name: "Energy Coat",
+        id: "meteor_burst",
+        name: "Meteor Burst",
         maxLevel: 10,
         currentLevel: 0,
-        description: "Creates a magical barrier that reduces damage",
-        mpCost: 30,
-        unlockLevel: 10,
+        description: "Delayed impact. Huge single-hit damage.",
+        damageMultiplier: 6.0,
+        mpCost: 40,
+        unlockLevel: 12,
         cooldown: 0,
-        maxCooldown: 25000, // 25 second cooldown
+        maxCooldown: 12000,
         hotkey: "4",
-        icon: "🛡️",
-        sprite: "energy_coat.png",
-        isBuff: true,
-        buffDuration: 5000, // 5 seconds
-        effect: {
-            type: "damage_reduction",
-            baseValue: 10, // 10% at level 1
-            perLevel: 8    // +8% per level (10% + 9*8% = 82% at level 10, but we'll cap at 90%)
-        }
+        icon: "☄️",
+        element: "fire"
+    },
+    {
+        id: "arcane_shield",
+        name: "Arcane Shield",
+        maxLevel: 10,
+        currentLevel: 0,
+        description: "Converts 30% damage taken to MP loss for 20s.",
+        mpCost: 25,
+        unlockLevel: 6,
+        cooldown: 0,
+        maxCooldown: 20000,
+        hotkey: "5",
+        icon: "🛡️"
+    },
+    {
+        id: "mana_infusion",
+        name: "Mana Infusion",
+        maxLevel: 10,
+        currentLevel: 0,
+        description: "Boost MP regen + reduce costs for 30s.",
+        mpCost: 20,
+        unlockLevel: 9,
+        cooldown: 0,
+        maxCooldown: 25000,
+        hotkey: "6",
+        icon: "🔄"
+    },
+    {
+        id: "glass_soul",
+        name: "Glass Soul",
+        maxLevel: 10,
+        currentLevel: 0,
+        description: "+20–30% damage, +10–15% damage taken. Passive.",
+        isPassive: true,
+        unlockLevel: 5,
+        icon: "🧪"
+    },
+    {
+        id: "elemental_attunement",
+        name: "Elemental Attunement",
+        maxLevel: 10,
+        currentLevel: 0,
+        description: "+10–25% fire, ice, lightning spell damage. Passive.",
+        isPassive: true,
+        unlockLevel: 8,
+        icon: "🌈"
     }
 ];
+
+window.MAGE_SKILLS = MAGE_SKILLS;
+
 
 // Arch Mage Skills
 const ARCH_MAGE_SKILLS = [
@@ -418,7 +453,14 @@ class SkillManager {
         }
 
         // Check MP cost
-        const mpCost = skill.mpCost ? skill.mpCost + (skill.currentLevel - 1) * 2 : 0;
+        let mpCost = skill.mpCost ? skill.mpCost + (skill.currentLevel - 1) * 2 : 0;
+
+        // Apply MP cost reduction from buffs (like Mana Infusion)
+        const costReduction = Game.skills.getActiveStatusEffects().mpCostReduction || 0;
+        if (costReduction > 0) {
+            mpCost = Math.floor(mpCost * (1 - costReduction));
+        }
+
         if (mpCost > 0 && !Game.player.canUseSkill(mpCost)) {
             Game.ui.showMessage("Not enough MP!");
             return false;
@@ -447,22 +489,33 @@ class SkillManager {
         return true;
     }
 
-    applySkillEffect(skill) {
+    applySkillEffect(skill) {     
         switch (skill.id) {
+            // Swordsman Skills
             case "magnum_break":
-                const damageBonus = 0.2 + (skill.currentLevel * 0.05); // Scales with level
-                this.addStatusEffect("magnumBreakBuff", "Fire Weapon", "🔥", 10000, { 
-                    damageBonus: damageBonus 
+                const magAtkBuff = 1 + (skill.currentLevel * skill.atkMultiplierPerLevel);
+                const magDuration = skill.effect?.duration || skill.durationBase + (skill.currentLevel * skill.durationPerLevel);
+                this.addStatusEffect("magnumBreak", "Magnum Break", "🔥", magDuration, {
+                    atkMultiplier: magAtkBuff
                 });
                 break;
-                
-            case "endure":
-                const defenseMultiplier = skill.defenseMultiplier + (skill.currentLevel * 0.02);
-                this.addStatusEffect("endureBuff", "Endure", "🛡️", 15000 + (skill.currentLevel * 2000), { 
-                    defMultiplier: 1 + defenseMultiplier 
+
+            case "battle_focus":
+                this.addStatusEffect("battleFocus", "Battle Focus", "🎯", skill.duration, {
+                    critChanceBonus: skill.currentLevel * skill.critChancePerLevel,
+                    critDamageBonus: skill.currentLevel * skill.critDamagePerLevel
                 });
                 break;
-                
+
+
+            case "fortify":
+                this.addStatusEffect("fortifyBuff", "Fortify", "🛡️", skill.duration, {
+                    defMultiplier: 1 + (skill.currentLevel * skill.defMultiplierPerLevel),
+                    skillDamageReduction: skill.currentLevel * skill.skillDamageReductionPerLevel
+                });
+                break;
+
+            // Dragon Knight Skills
             case "dragonic_aura":
                 const multiplier = 1.5 + (skill.currentLevel * 0.1);
                 this.addStatusEffect("dragonicAura", "Dragonic Aura", "🔴", 20000 + (skill.currentLevel * 3000), { 
@@ -499,6 +552,22 @@ class SkillManager {
                     Game.ui.showLootNotification("🩸 Life force drained!");
                 }
                 break;
+
+            case "arcane_shield":
+                const mpShieldRatio = 0.3 + (skill.currentLevel * 0.02); // scales to ~50%
+                this.addStatusEffect("arcane_shield", "Arcane Shield", "🛡️", 20000, {
+                    mpShieldRatio: mpShieldRatio
+                });
+                break;
+
+            case "mana_infusion":
+                 const regenBoost = 0.5 + (skill.currentLevel * 0.1); // +50% to +140%
+                 const costReduction = 0.2 + (skill.currentLevel * 0.03); // 20–50%
+                 this.addStatusEffect("mana_infusion", "Mana Infusion", "🔄", 30000, {
+                     mpRegenBoost: regenBoost,
+                     mpCostReduction: costReduction
+                 });
+                 break;    
         }
     }
 
@@ -552,21 +621,35 @@ class SkillManager {
     }
 
     getActiveStatusEffects() {
-        const effects = {
+              const effects = {
             damageBonus: 0,
             atkMultiplier: 1,
+            critChanceBonus: 0,
+            critDamageBonus: 0,
             defenseBonus: 0,
             defMultiplier: 1,
-            damageReduction: 0
+            damageReduction: 0,
+            flatDamageReduction: 0,
+            skillDamageReduction: 0,
+            mpShieldRatio: 0,
+            mpRegenBoost: 0,
+            mpCostReduction: 0
         };
 
-        this.statusEffects.forEach(effect => {
-            if (effect.effects.damageBonus) effects.damageBonus += effect.effects.damageBonus;
-            if (effect.effects.atkMultiplier) effects.atkMultiplier *= effect.effects.atkMultiplier;
-            if (effect.effects.defenseBonus) effects.defenseBonus += effect.effects.defenseBonus;
-            if (effect.effects.defMultiplier) effects.defMultiplier *= effect.effects.defMultiplier;
-            if (effect.effects.damageReduction) effects.damageReduction += effect.effects.damageReduction;
-        });
+    this.statusEffects.forEach(effect => {
+        if (typeof effect.effects.damageBonus === "number") effects.damageBonus += effect.effects.damageBonus; // Always as multiplier (e.g., 0.2 for 20%)
+        if (effect.effects.atkMultiplier) effects.atkMultiplier *= effect.effects.atkMultiplier;
+        if (effect.effects.critChanceBonus) effects.critChanceBonus += effect.effects.critChanceBonus;
+        if (effect.effects.critDamageBonus) effects.critDamageBonus += effect.effects.critDamageBonus;
+        if (effect.effects.defenseBonus) effects.defenseBonus += effect.effects.defenseBonus;
+        if (effect.effects.defMultiplier) effects.defMultiplier *= effect.effects.defMultiplier;
+        if (effect.effects.damageReduction) effects.damageReduction += effect.effects.damageReduction;
+        if (effect.effects.skillDamageReduction) effects.skillDamageReduction += effect.effects.skillDamageReduction;
+        if (effect.effects.flatDamageReduction) effects.flatDamageReduction += effect.effects.flatDamageReduction;
+        if (effect.effects.mpShieldRatio) effects.mpShieldRatio += effect.effects.mpShieldRatio;
+        if (effect.effects.mpRegenBoost) effects.mpRegenBoost += effect.effects.mpRegenBoost;
+        if (effect.effects.mpCostReduction) effects.mpCostReduction += effect.effects.mpCostReduction;
+    });
 
         return effects;
     }
@@ -626,7 +709,42 @@ class SkillManager {
         const levelBonus = 1 + ((skill.currentLevel - 1) * 0.15); // 15% damage per level
         return Math.floor(baseDamage * skill.damageMultiplier * levelBonus);
     }
+
 }
+
+if (typeof Game !== "undefined") {
+    Game.status.addMonsterStatus = function (id, name, duration, icon = "❄️") {
+        if (!Game.monsterManager.currentMonster) return;
+        Game.monsterManager.currentMonster.statusEffects = Game.monsterManager.currentMonster.statusEffects || {};
+        Game.monsterManager.currentMonster.statusEffects[id] = {
+            name,
+            icon,
+            expiresAt: Date.now() + duration
+        };
+    };
+
+    Game.skills.formatStatusBonuses = function(effect) {
+        if (typeof effect !== "object" || effect === null || !effect.effects) return "";
+
+        const e = effect.effects;
+        const parts = [];
+
+        if (e.damageBonus) parts.push(`+${Math.round(e.damageBonus * 100)}% skill damage`);
+        if (e.critChanceBonus) parts.push(`+${Math.round(e.critChanceBonus * 100)}% Crit Chance`);
+        if (e.critDamageBonus) parts.push(`+${Math.round(e.critDamageBonus * 100)}% Crit Damage`);
+        if (e.atkMultiplier && e.atkMultiplier !== 1) parts.push(`+${Math.round((e.atkMultiplier - 1) * 100)}% attack`);
+        if (e.defenseBonus) parts.push(`+${e.defenseBonus} DEF`);
+        if (e.defMultiplier && e.defMultiplier !== 1) parts.push(`+${Math.round((e.defMultiplier - 1) * 100)}% defense`);
+        if (e.damageReduction) parts.push(`-${Math.round(e.damageReduction * 100)}% damage taken`);
+        if (e.skillDamageReduction) parts.push(`-${Math.round(e.skillDamageReduction * 100)}% skill damage taken`);
+        if (e.mpShieldRatio) parts.push(`${Math.round(e.mpShieldRatio * 100)}% MP Shield`);
+        if (e.mpRegenBoost) parts.push(`+${Math.round(e.mpRegenBoost * 100)}% MP regen`);
+        if (e.mpCostReduction) parts.push(`-${Math.round(e.mpCostReduction * 100)}% MP cost`);
+
+        return parts.join("<br>");
+    };
+}
+
 
 // Export for global use
 window.MAGE_SKILLS = MAGE_SKILLS;

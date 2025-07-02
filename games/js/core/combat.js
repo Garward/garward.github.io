@@ -186,15 +186,29 @@ class Combat {
         // Apply status damage bonus (like Magnum Break buff)
         damage *= (1 + statusBonuses.damageBonus);
         
-        // Calculate defense reduction
-        const defense = this.currentMonster.def;
-        damage = Math.max(1, damage - defense);
+        // Armor Pierce: reduce enemy DEF by a % if specified
+        let defense = this.currentMonster.def;
+        if (skillUsed && skillUsed.armorPiercePercent) {
+                defense = Math.floor(defense * (1 - skillUsed.armorPiercePercent / 100));
+            }
+            damage = Math.max(1, damage - defense);
         
         // Random variance (±10%)
         damage = Math.floor(damage * (0.9 + Math.random() * 0.2));
         
         // Deal damage to monster
         this.currentMonster.currentHp -= damage;
+
+        // Apply Freeze effect if skill has freezeChance
+        if (skillUsed?.freezeChance) {
+        const roll = Math.random() * 100;
+        if (roll < skillUsed.freezeChance) {
+        const duration = 1500; // 1.5s freeze
+        Game.status.addMonsterStatus("frozen", "❄️ Frozen", duration);
+        Game.ui.showCombatText("❄️ Enemy frozen!", "blue");
+        }
+        }
+
         
         // Show damage number
         this.showDamageNumber(damage, isCrit);
@@ -224,9 +238,19 @@ class Combat {
             return;
         }
         
+        if (!this.currentMonster || this.currentMonster.currentHp <= 0) return;
+        
+        const mStatus = this.currentMonster.statusEffects || {};
+        if (mStatus["frozen"]?.expiresAt > Date.now()) {
+            Game.ui.showCombatText("🧊 Monster is frozen!", "cyan");
+            return;
+        }
+
+        if (Game.player.hp <= 0) return; // Player is already dead
+
         // Use the base attack value set by location difficulty
         let monsterDamage = this.currentMonster.baseAttack || (this.currentMonster.level * 8 + 20); // Increased base damage
-
+        if (monsterDamage < 1) monsterDamage = 1;
         // Boss monsters hit much harder
         if (this.currentMonster.isBoss) {
             monsterDamage *= 2.5; // Increased from 1.5x for more challenge
@@ -235,28 +259,49 @@ class Combat {
         // Get status effect bonuses from skills
         const statusBonuses = Game.skills.getActiveStatusEffects();
 
-        // Apply player defense with status bonuses - defense is more effective now
+        // Total defense including buffs
         const totalDefense = (Game.player.def + statusBonuses.defenseBonus) * statusBonuses.defMultiplier;
 
-        // Improved defense calculation: defense reduces damage by a percentage + flat amount
-        // This prevents easy 1-damage scenarios while making defense meaningful
-        const defenseReduction = Math.min(0.8, totalDefense * 0.02); // Max 80% reduction, 2% per defense point
-        const flatReduction = totalDefense * 0.5; // Flat reduction
+        // Scale defense: diminishing returns based on monster level
+        const defenseScaling = totalDefense / (totalDefense + 100 + this.currentMonster.level * 2);
+        let reducedDamage = monsterDamage * (1 - defenseScaling);
 
-        let reducedDamage = Math.floor(monsterDamage * (1 - defenseReduction)) - flatReduction;
-
-        // Apply skill-based damage reduction (like Energy Coat) - stacks with DEF
-        const skillDamageReduction = this.getSkillDamageReduction();
-        if (skillDamageReduction > 0) {
-            reducedDamage = Math.floor(reducedDamage * (1 - skillDamageReduction));
+        // Apply skill-based % reduction (like Endure)
+        if (statusBonuses.skillDamageReduction > 0) {
+        reducedDamage *= (1 - statusBonuses.skillDamageReduction);
         }
 
-        const actualDamage = Math.max(Math.floor(monsterDamage * 0.1), reducedDamage); // Minimum 10% of original damage
+        // Apply flat damage reduction (capped to 70% of incoming damage)
+        const flatReduction = Math.min(0.5 * totalDefense, monsterDamage * 0.7);
+        reducedDamage -= flatReduction;
+
+        // Clamp *after* flooring for safety
+        reducedDamage = Math.floor(Math.max(0, reducedDamage)); // round and prevent negative
+
+        // Final damage can't be less than 1% of original base
+        const actualDamage = Math.max(Math.floor(monsterDamage * 0.01), reducedDamage);
+        
+
+        // Apply Arcane Shield (MP absorbs portion of incoming damage)
+        const mpShieldRatio = statusBonuses.mpShieldRatio || 0;
+        if (mpShieldRatio > 0 && Game.player.mp > 0) {
+            const absorbed = Math.floor(actualDamage * mpShieldRatio);
+            const mpUsed = Math.min(absorbed, Game.player.mp);
+
+            Game.player.useMp(mpUsed);
+            actualDamage -= mpUsed;
+
+            Game.ui.showCombatText("🔷 Arcane Shield absorbed " + mpUsed + "!", "cyan");
+        }
 
         Game.player.takeDamage(actualDamage);
         
         // Show damage on player
-        this.showPlayerDamage(actualDamage);
+        if (Game.ui.enhancedCombatUI) {
+            Game.ui.enhancedCombatUI.showDamageNumber(actualDamage, false, true);
+        } else {
+            this.showPlayerDamage(actualDamage);
+        }
         
         Game.ui.updatePlayerDisplay();
     }
@@ -691,18 +736,4 @@ class Combat {
         };
     }
 
-    // Get skill-based damage reduction (like Energy Coat)
-    getSkillDamageReduction() {
-        if (!Game.skills || !Game.skills.statusEffects) return 0;
-
-        let totalReduction = 0;
-        Game.skills.statusEffects.forEach(effect => {
-            if (effect.effects.damageReduction) {
-                totalReduction += effect.effects.damageReduction;
-            }
-        });
-
-        // Cap total skill-based damage reduction at 95%
-        return Math.min(0.95, totalReduction);
     }
-}

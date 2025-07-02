@@ -703,6 +703,26 @@ constructor() {
     this.cleanupOldItems();
 }
 
+    calculateSellPrice(item) {
+    let statValue = item.stats.atk || item.stats.def || item.stats.maxHp || item.stats.maxMp ||
+                    item.stats.expGain || item.stats.lootChance || item.stats.atkPercent ||
+                    item.stats.critChance || item.stats.critDamage || item.stats.skillDamage ||
+                    item.stats.heal || item.stats.restore_mp || item.stats.healPercent ||
+                    item.stats.mpRestorePercent || 1;
+
+    let sellPrice = Math.floor(10 * RARITY_MULTIPLIERS[item.rarity] * statValue);
+
+    // Apply upgrade multiplier if any
+    if (item.upgradeLevel && item.upgradeLevel > 0) {
+        const upgradeMultiplier = 1 + (item.upgradeLevel * 0.5);
+        sellPrice = Math.floor(sellPrice * upgradeMultiplier);
+    }
+
+    return sellPrice;
+}
+
+
+
     cleanupOldItems() {
         // Remove items with MDEF stats from inventory and equipped items
         let removedCount = 0;

@@ -628,11 +628,7 @@ trackMonsterEncounter(monster) {
             const progressColor = progressPercent > 30 ? '#4fc3f7' : '#ff6b6b';
             
             // Get effect description
-            let description = '';
-            if (effect.effects.damageBonus) description += `+${Math.round(effect.effects.damageBonus * 100)}% damage `;
-            if (effect.effects.atkMultiplier && effect.effects.atkMultiplier !== 1) description += `+${Math.round((effect.effects.atkMultiplier - 1) * 100)}% ATK `;
-            if (effect.effects.defenseBonus) description += `+${effect.effects.defenseBonus} DEF `;
-            if (effect.effects.defMultiplier && effect.effects.defMultiplier !== 1) description += `+${Math.round((effect.effects.defMultiplier - 1) * 100)}% DEF `;
+            const description = Game.skills.formatStatusBonuses(effect);
             
             effectDiv.innerHTML = `
                 <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 4px;">
@@ -778,9 +774,19 @@ trackMonsterEncounter(monster) {
         this.elements.playerGold.textContent = stats.gold;
         this.elements.playerClass.textContent = stats.class;
         this.elements.playerLevel.textContent = stats.level;
-        this.elements.playerHp.textContent = stats.hp;
-        this.elements.playerAtk.textContent = stats.atk;
-        this.elements.playerDef.textContent = stats.def;
+        // Get bonuses from status effects
+        const bonuses = Game.skills.getActiveStatusEffects();
+
+        // Calculate buffed stats
+        const buffedAtk = Math.floor(Game.player.atk * bonuses.atkMultiplier);
+        const buffedDef = Math.floor((Game.player.def + bonuses.defenseBonus) * bonuses.defMultiplier);
+        const flatReduction = bonuses.flatDamageReduction || 0;
+        const skillReduction = Math.round((bonuses.skillDamageReduction || 0) * 100);
+
+        // Update visible stat elements (ATK and DEF only — omit HP/MP)
+        this.elements.playerAtk.textContent = `${buffedAtk}`;
+        this.elements.playerDef.textContent = `${buffedDef} (${flatReduction} flat, -${skillReduction}% skill)`;
+
 
         // Update shop when gold changes to enable/disable buy buttons
         this.updateShopAvailability();
@@ -798,12 +804,25 @@ trackMonsterEncounter(monster) {
         // Update critical hit stats
         const critChanceEl = document.getElementById('player-crit-chance');
         const critDamageEl = document.getElementById('player-crit-damage');
+
+        if (critChanceEl || critDamageEl) {
+        const baseCritChance = Game.player.critChance;
+        const baseCritDamage = 100 + Game.player.critDamage;
+        const bonusCritChance = (bonuses.critChanceBonus || 0); // already in percent
+        const bonusCritDamage = (bonuses.critDamageBonus || 0) * 100;
+
+        const finalCritChance = baseCritChance + bonusCritChance;
+        const finalCritDamage = baseCritDamage + bonusCritDamage;
+
         if (critChanceEl) {
-            critChanceEl.textContent = `${Game.player.critChance}%`;
+            critChanceEl.innerHTML = `${finalCritChance.toFixed(1)}% <span style="color:gray;">(Base ${baseCritChance}%)</span>`;
         }
         if (critDamageEl) {
-            critDamageEl.textContent = `${100 + Game.player.critDamage}%`;
+            critDamageEl.innerHTML = `${Math.round(finalCritDamage)}% <span style="color:gray;">(Base ${baseCritDamage}%)</span>`;
         }
+        }
+
+
         
         // Update player name
         const playerNameEl = document.getElementById('player-name');
@@ -843,28 +862,7 @@ trackMonsterEncounter(monster) {
         }
         if (playerCurrentMp) playerCurrentMp.textContent = Math.ceil(Game.player.mp);
         if (playerMaxMp) playerMaxMp.textContent = Game.player.maxMp;
-        
-        // Update HP color based on percentage
-        const hpPercent = (Game.player.hp / Game.player.maxHp) * 100;
-        if (hpPercent <= 25) {
-            this.elements.playerHp.style.color = '#ff4444';
-        } else if (hpPercent <= 50) {
-            this.elements.playerHp.style.color = '#ffaa44';
-        } else {
-            this.elements.playerHp.style.color = '#4fc3f7';
-        }
-        
-        // Update MP color based on percentage
-        const mpPercent = (Game.player.mp / Game.player.maxMp) * 100;
-        if (this.elements.playerMp) {
-            if (mpPercent <= 25) {
-                this.elements.playerMp.style.color = '#ff4444';
-            } else if (mpPercent <= 50) {
-                this.elements.playerMp.style.color = '#ffaa44';
-            } else {
-                this.elements.playerMp.style.color = '#1e88e5';
-            }
-        }
+    
         
         // Update Dragon Knight styling if applicable
         if (Game.player.isDragonKnight) {

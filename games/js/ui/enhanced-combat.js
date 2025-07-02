@@ -1192,3 +1192,25 @@ window.toggleStatusPanel = function() {
         }
     }
 };
+
+// === PATCHED: Fix monster UI and autoBattle after spawn/defeat ===
+if (typeof Game !== 'undefined' && Game.combat) {
+    const originalSpawn = Game.combat.spawnMonster;
+    Game.combat.spawnMonster = function (...args) {
+        const result = originalSpawn.apply(this, args);
+        if (Game.ui?.enhancedCombatUI) {
+            Game.ui.enhancedCombatUI.updateMonsterDisplay();
+            Game.ui.enhancedCombatUI.updateBattleButtons?.();
+        }
+        return result;
+    };
+
+    const originalDefeat = Game.combat.defeatMonster;
+    Game.combat.defeatMonster = function (...args) {
+        const result = originalDefeat.apply(this, args);
+        if (Game.ui?.enhancedCombatUI) {
+            Game.ui.enhancedCombatUI.updateBattleButtons?.();
+        }
+        return result;
+    };
+}
