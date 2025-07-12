@@ -1,0 +1,372 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Zachary Chase Arthur - Resume</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Arial', 'Helvetica', sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 8.5in;
+            margin: 0 auto;
+            padding: 0.75in;
+            background: white;
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 2em;
+            padding-bottom: 1em;
+            border-bottom: 2px solid #2c3e50;
+        }
+        
+        .name {
+            font-size: 2.2em;
+            font-weight: bold;
+            color: #2c3e50;
+            margin-bottom: 0.5em;
+        }
+        
+        .contact-info {
+            font-size: 1em;
+            color: #555;
+            line-height: 1.4;
+        }
+        
+        .section {
+            margin-bottom: 2em;
+            page-break-inside: avoid;
+        }
+        
+        .section-title {
+            font-size: 1.2em;
+            font-weight: bold;
+            color: #2c3e50;
+            text-transform: uppercase;
+            margin-bottom: 1em;
+            padding-bottom: 0.3em;
+            border-bottom: 1px solid #ccc;
+        }
+        
+        .summary {
+            font-size: 1em;
+            line-height: 1.7;
+            text-align: justify;
+            color: #444;
+        }
+        
+        .skills-grid {
+            display: block;
+        }
+        
+        .skill-category {
+            margin-bottom: 1em;
+            display: inline-block;
+            width: 48%;
+            vertical-align: top;
+            margin-right: 2%;
+        }
+        
+        .skill-category h4 {
+            font-weight: bold;
+            color: #2c3e50;
+            margin-bottom: 0.5em;
+            font-size: 1em;
+        }
+        
+        .skill-category p {
+            font-size: 0.9em;
+            line-height: 1.5;
+            color: #555;
+        }
+        
+        .education-item, .experience-item {
+            margin-bottom: 1.5em;
+            page-break-inside: avoid;
+        }
+        
+        .job-header, .edu-header {
+            margin-bottom: 0.5em;
+        }
+        
+        .job-title, .degree {
+            font-weight: bold;
+            color: #2c3e50;
+            font-size: 1em;
+            display: inline-block;
+        }
+        
+        .company, .school {
+            font-weight: normal;
+            color: #555;
+            font-size: 1em;
+        }
+        
+        .location {
+            font-style: italic;
+            color: #777;
+            font-size: 0.9em;
+        }
+        
+        .dates {
+            font-weight: bold;
+            color: #777;
+            font-size: 0.9em;
+            float: right;
+        }
+        
+        .job-description {
+            list-style: none;
+            margin-top: 0.5em;
+            clear: both;
+        }
+        
+        .job-description li {
+            margin-bottom: 0.4em;
+            padding-left: 1em;
+            position: relative;
+            font-size: 0.9em;
+            line-height: 1.5;
+        }
+        
+        .job-description li:before {
+            content: "•";
+            position: absolute;
+            left: 0;
+            color: #2c3e50;
+        }
+        
+        .hobbies {
+            margin-top: 0.5em;
+        }
+        
+        .hobby-item {
+            font-size: 0.9em;
+            line-height: 1.5;
+            margin-bottom: 0.3em;
+            padding-left: 1em;
+            position: relative;
+        }
+        
+        .hobby-item:before {
+            content: "•";
+            position: absolute;
+            left: 0;
+            color: #2c3e50;
+        }
+        
+        .reference {
+            font-size: 0.9em;
+            line-height: 1.5;
+        }
+        
+        .reference-name {
+            font-weight: bold;
+            color: #2c3e50;
+        }
+        
+        @media print {
+            body {
+                padding: 0.5in;
+                font-size: 11pt;
+            }
+            
+            .section {
+                margin-bottom: 1.5em;
+            }
+            
+            .skills-grid {
+                display: block;
+            }
+            
+            .skill-category {
+                width: 48%;
+                display: inline-block;
+                vertical-align: top;
+                margin-right: 2%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="name">Zachary Chase Arthur</div>
+        <div class="contact-info">
+            1465 County Rd 18, Southpoint, OH 45680<br>
+            zarthur001@gmail.com • (304) 942-6079
+        </div>
+    </div>
+
+    <div class="section">
+        <div class="section-title">Professional Summary</div>
+        <div class="summary">
+            Dynamic Engineering Design graduate with a strong foundation in problem-solving, computer repair, and 3D printing technologies. Proven quick learner with collaborative teamwork skills and hands-on technical expertise. Eager to leverage customer service experience and innovative abilities in a fast-paced engineering or tech environment to drive efficient solutions and project success.
+        </div>
+    </div>
+
+    <div class="section">
+        <div class="section-title">Key Skills</div>
+        <div class="skills-grid">
+            <div class="skill-category">
+                <h4>Software Proficiency</h4>
+                <p>AutoCAD, Autodesk Inventor, Unity, 3DS MAX, Microsoft Excel, Word, PowerPoint</p>
+            </div>
+            <div class="skill-category">
+                <h4>Technical Expertise</h4>
+                <p>3D Printing (Fusion 360), Computer repair and troubleshooting, Technical machinery operation</p>
+            </div>
+            <div class="skill-category">
+                <h4>Problem-Solving</h4>
+                <p>Methodical approach to identifying issues and implementing efficient, effective resolutions</p>
+            </div>
+            <div class="skill-category">
+                <h4>Communication & Customer Service</h4>
+                <p>Excellent interpersonal skills, adaptable to diverse environments, with a track record of handling high-pressure client interactions professionally</p>
+            </div>
+            <div class="skill-category">
+                <h4>Teamwork & Collaboration</h4>
+                <p>Demonstrated through group projects and extracurricular activities, such as Marching Band at Huntington High School</p>
+            </div>
+            <div class="skill-category">
+                <h4>Additional Strengths</h4>
+                <p>Market analysis and cryptocurrency trading for profitable outcomes; Advanced Google Sheets for creating custom calculators</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="section">
+        <div class="section-title">Education</div>
+        <div class="education-item">
+            <div class="edu-header">
+                <div class="dates">Graduated May 2019</div>
+                <div class="degree">Associate of Applied Science (AAS), Engineering Design Technology</div>
+                <div class="school">Mountwest Community and Technical College</div>
+                <div class="location">Huntington, WV</div>
+            </div>
+            <ul class="job-description">
+                <li>Specialized in 3D printing, AutoCAD, and collaborative design projects</li>
+                <li>Gained practical experience operating technical machinery, including 3D printers, and utilizing Autodesk software suites</li>
+            </ul>
+        </div>
+        <div class="education-item">
+            <div class="edu-header">
+                <div class="dates">Graduated with Honors, June 2016</div>
+                <div class="degree">High School Diploma</div>
+                <div class="school">Huntington High School</div>
+                <div class="location">Huntington, WV</div>
+            </div>
+            <ul class="job-description">
+                <li>Excelled in mathematics, building a strong analytical foundation</li>
+            </ul>
+        </div>
+    </div>
+
+    <div class="section">
+        <div class="section-title">Professional Experience</div>
+        
+        <div class="experience-item">
+            <div class="job-header">
+                <div class="dates">2022 – Present</div>
+                <div class="job-title">Telemarketing Representative</div>
+                <div class="company">Intelogix, Huntington, WV</div>
+            </div>
+            <ul class="job-description">
+                <li>Handled high-volume inbound calls, delivering professional support to distressed clients while maintaining composure and empathy</li>
+                <li>Resolved complex inquiries, managed sensitive information securely, and adapted to flexible scheduling to ensure consistent service excellence</li>
+                <li>Contributed to team efficiency by providing reliable customer resolutions in a fast-paced environment</li>
+            </ul>
+        </div>
+
+        <div class="experience-item">
+            <div class="job-header">
+                <div class="dates">2021 – 2022</div>
+                <div class="job-title">Cryptocurrency Trading & Mining</div>
+                <div class="company">Independent</div>
+            </div>
+            <ul class="job-description">
+                <li>Executed day trades in emerging cryptocurrencies, analyzing market trends to generate profits</li>
+                <li>Managed mining operations, optimizing setups for efficiency and returns</li>
+            </ul>
+        </div>
+
+        <div class="experience-item">
+            <div class="job-header">
+                <div class="dates">2020 – 2022</div>
+                <div class="job-title">Food Service Worker</div>
+                <div class="company">Bateman Hospital, Huntington, WV</div>
+            </div>
+            <ul class="job-description">
+                <li>Prepared ingredients for culinary staff while adhering to strict sanitation protocols to maintain a hygienic environment</li>
+                <li>Cleaned and organized kitchen spaces, ensuring compliance with health standards</li>
+                <li>Delivered meals to patients promptly, enhancing service quality and patient satisfaction</li>
+            </ul>
+        </div>
+
+        <div class="experience-item">
+            <div class="job-header">
+                <div class="dates">2016 – 2018</div>
+                <div class="job-title">Computer Technician</div>
+                <div class="company">Computer Medics, Huntington, WV</div>
+            </div>
+            <ul class="job-description">
+                <li>Diagnosed and repaired hardware/software issues, restoring computers to optimal performance for clients</li>
+                <li>Customized and assembled PCs according to specific client needs, including component sourcing and integration</li>
+                <li>Offered expert technical support, troubleshooting diverse problems to minimize downtime</li>
+            </ul>
+        </div>
+
+        <div class="experience-item">
+            <div class="job-header">
+                <div class="dates">2013 – 2016</div>
+                <div class="job-title">Vending Technician</div>
+                <div class="company">DJ's Vending, Huntington, WV</div>
+            </div>
+            <ul class="job-description">
+                <li>Maintained vending machines by performing routine repairs, restocking inventory, and ensuring operational reliability</li>
+                <li>Managed stock levels for snacks and beverages, optimizing inventory to meet demand and reduce waste</li>
+            </ul>
+        </div>
+
+        <div class="experience-item">
+            <div class="job-header">
+                <div class="dates">2013 – 2016</div>
+                <div class="job-title">Concession Worker</div>
+                <div class="company">Huntington High School Concession Stands, Huntington, WV</div>
+            </div>
+            <ul class="job-description">
+                <li>Served customers during high-attendance events like basketball and football games, processing transactions accurately and efficiently</li>
+                <li>Delivered exceptional customer service while upholding cleanliness and organization standards</li>
+            </ul>
+        </div>
+    </div>
+
+    <div class="section">
+        <div class="section-title">Hobbies & Interests</div>
+        <div class="hobbies">
+            <div class="hobby-item">Rebuilding and repairing computers for personal and custom projects</div>
+            <div class="hobby-item">Writing and editing books, honing creative and detail-oriented skills</div>
+            <div class="hobby-item">Trading cryptocurrencies to stay ahead of market innovations</div>
+            <div class="hobby-item">Programming AI systems to develop complete programs and automated workflows</div>
+            <div class="hobby-item">Utilizing extensive Google Sheets expertise to design versatile calculators for various applications</div>
+        </div>
+    </div>
+
+    <div class="section">
+        <div class="section-title">References</div>
+        <div class="reference">
+            Available upon request.<br><br>
+            <span class="reference-name">Theodore Triplett</span><br>
+            Engineering Professor at MCTC<br>
+            triplettt@mctc.edu
+        </div>
+    </div>
+</body>
+</html>
