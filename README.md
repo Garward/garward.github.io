@@ -7,7 +7,7 @@ Welcome to my collection of books and games! Everything is mobile-optimized and 
 - [Roranns Rage](books/roranns_rage_reader.html)
 - [The Divine Growth System](books/the_divine_growth_system_reader.html)
 - [My Fantasy Novel](books/my_fantasy_novel_reader.html)
-- [Troubles in Elyria](books/Elyria_reader.html)
+- [Troubles in Elyria](books/elyria_reader.html)
 
 
 
