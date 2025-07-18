@@ -161,23 +161,143 @@
             letter-spacing: -0.02em;
         }
 
-        .characters-button {
-            position: absolute;
-            top: 10px;
-            right: 10px;
-            background: linear-gradient(135deg, var(--blue), #29b6f6);
-            color: white;
-            border: none;
-            padding: 8px 12px;
-            border-radius: 8px;
-            cursor: pointer;
-            font-weight: 600;
-            font-size: 0.8rem;
-            transition: all 0.3s ease;
-            box-shadow: 0 4px 15px rgba(79, 195, 247, 0.3);
-            min-height: 44px;
-            min-width: 44px;
-        }
+        .header {
+		text-align: center;
+		margin-bottom: 20px;
+		position: relative;
+		display: flex;
+		align-items: flex-start;
+		justify-content: center;
+			}
+
+		.header-buttons {
+		position: absolute;
+		top: 10px;
+		right: 10px;
+		display: flex;
+		gap: 15px;
+		z-index: 1000;
+		}
+
+		/* Enhanced Header Button Styles */
+		.enhanced-header-btn {
+			position: relative;
+			background: linear-gradient(135deg, var(--glass-bg), rgba(79, 195, 247, 0.2));
+			border: 2px solid var(--border-color);
+			border-radius: 16px;
+			padding: 12px 16px;
+			color: var(--text-primary);
+			font-size: 1.1rem;
+			font-weight: 600;
+			cursor: pointer;
+			transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+			backdrop-filter: blur(15px);
+			box-shadow: 
+				0 4px 15px rgba(0, 0, 0, 0.3),
+				inset 0 1px 0 rgba(255, 255, 255, 0.1);
+			min-width: 50px;
+			min-height: 50px;
+			display: flex;
+			align-items: center;
+			justify-content: center;
+			gap: 8px;
+			text-decoration: none;
+			user-select: none;
+			-webkit-tap-highlight-color: transparent;
+			overflow: hidden;
+		}
+
+		.enhanced-header-btn::before {
+			content: '';
+			position: absolute;
+			top: 0;
+			left: -100%;
+			width: 100%;
+			height: 100%;
+			background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+			transition: left 0.5s ease;
+		}
+
+		.enhanced-header-btn:hover::before {
+			left: 100%;
+		}
+
+		.enhanced-header-btn:hover {
+			transform: translateY(-2px) scale(1.05);
+			border-color: var(--blue);
+			background: linear-gradient(135deg, rgba(79, 195, 247, 0.3), rgba(79, 195, 247, 0.15));
+			box-shadow: 
+				0 8px 25px rgba(79, 195, 247, 0.4),
+				0 0 20px rgba(79, 195, 247, 0.2),
+				inset 0 1px 0 rgba(255, 255, 255, 0.2);
+		}
+
+		.enhanced-header-btn:active {
+			transform: translateY(0) scale(0.98);
+		}
+
+		.enhanced-header-btn .btn-icon {
+			font-size: 1.2rem;
+			filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3));
+		}
+
+		.enhanced-header-btn .btn-text {
+			font-size: 0.9rem;
+			letter-spacing: 0.5px;
+			text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+		}
+
+		.achievements-btn {
+			background: linear-gradient(135deg, rgba(255, 215, 0, 0.2), rgba(255, 215, 0, 0.1));
+			border-color: rgba(255, 215, 0, 0.5);
+		}
+
+		.achievements-btn:hover {
+			background: linear-gradient(135deg, rgba(255, 215, 0, 0.4), rgba(255, 215, 0, 0.2));
+			border-color: var(--gold);
+			box-shadow: 
+				0 8px 25px rgba(255, 215, 0, 0.4),
+				0 0 20px rgba(255, 215, 0, 0.3),
+				inset 0 1px 0 rgba(255, 255, 255, 0.2);
+		}
+
+		.characters-btn {
+			background: linear-gradient(135deg, rgba(156, 39, 176, 0.2), rgba(156, 39, 176, 0.1));
+			border-color: rgba(156, 39, 176, 0.5);
+		}
+
+		.characters-btn:hover {
+			background: linear-gradient(135deg, rgba(156, 39, 176, 0.4), rgba(156, 39, 176, 0.2));
+			border-color: #9c27b0;
+			box-shadow: 
+				0 8px 25px rgba(156, 39, 176, 0.4),
+				0 0 20px rgba(156, 39, 176, 0.3),
+				inset 0 1px 0 rgba(255, 255, 255, 0.2);
+		}
+
+		/* Responsive adjustments */
+		@media (max-width: 768px) {
+			.header-buttons {
+				gap: 10px;
+				top: 5px;
+				right: 5px;
+			}
+			
+			.enhanced-header-btn {
+				padding: 10px 12px;
+				min-width: 45px;
+				min-height: 45px;
+				border-radius: 12px;
+			}
+			
+			.enhanced-header-btn .btn-text {
+				display: none;
+			}
+			
+			.enhanced-header-btn .btn-icon {
+				font-size: 1.1rem;
+			}
+		}
 
         /* === NEW MAIN LAYOUT === */
         .main-layout-new {
@@ -1801,13 +1921,14 @@
         </div>
     </div>
 
-    <div class="game-container">
-        <div class="header">
-            <h1>Ragnarok Online</h1>
-            <div class="subtitle">Enhanced Clicker RPG</div>
-            <button class="characters-button" onclick="Game.characterManager.showCharacterSelector()">👥</button>
-            <button class="achievements-button" onclick="showAchievementsPanel()" style="position: absolute; top: 10px; right: 70px; background: linear-gradient(135deg, var(--gold), #ffed4e); color: #1a1a2e; border: none; padding: 8px 12px; border-radius: 8px; cursor: pointer; font-weight: 600; font-size: 0.8rem; min-height: 44px; min-width: 44px; box-shadow: 0 4px 15px rgba(255, 215, 0, 0.3);">🏆</button>
-        </div>
+		<div class="game-container">
+		<div class="header">
+			<h1>Ragnarok Online</h1>
+			<div class="subtitle">Enhanced Clicker RPG</div>
+			<div class="header-buttons" id="header-buttons">
+				<!-- Enhanced buttons will be created by JavaScript -->
+			</div>
+		</div>
 
         <div class="main-layout-new">
     <!-- LEFT COLUMN: Player Stats (unchanged) -->
@@ -2031,6 +2152,7 @@
     <script src="js/core/equipment.js"></script>
     <script src="js/core/achievements.js"></script>
     <script src="js/ui/display.js"></script>
+    <script src="js/ui/enhanced-buttons.js"></script>
     <script src="js/main.js"></script>
     <script src="js/ui/enhanced-combat.js"></script>
 </body>

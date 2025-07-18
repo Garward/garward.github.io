@@ -68,7 +68,7 @@ const SWORDSMAN_SKILLS = [
         description: "Passively increases max HP and HP regen.",
         maxLevel: 10,
         currentLevel: 0,
-        hpBonusPerLevel: 25,
+        hpBonusPerLevel: 100,
         hpRegenBoostPerLevel: 0.01,
         unlockLevel: 7,
         isPassive: true,
@@ -655,6 +655,8 @@ class SkillManager {
     }
 
     applyPassiveSkillBonuses(player) {
+
+        
         // Apply sword mastery
         const swordMastery = this.activeSkills.find(s => s.id === "sword_mastery");
         if (swordMastery && swordMastery.currentLevel > 0) {
@@ -683,6 +685,21 @@ class SkillManager {
             const atkBonus = Math.floor(player.state.atk * (staffMastery.effect.value / 100) * staffMastery.currentLevel);
             player.state.atk += atkBonus;
         }
+
+        // HP Regen
+        const hpRegenSkill = this.activeSkills.find(s => s.id === "hp_recovery");
+        if (hpRegenSkill?.currentLevel > 0) {
+            player.state.hpRegenPercent = 0.01; // Fixed 1% max HP/sec
+        }
+
+        // Max HP Bonus
+        const hpSkill = this.activeSkills.find(s => s.id === "vitality_training");
+        if (hpSkill && hpSkill.currentLevel > 0) {
+        const bonusPercent = hpSkill.hpBonusPercent * hpSkill.currentLevel;
+        player.state.maxHp *= (1 + bonusPercent / 100);
+        player.state.hp = Math.min(player.state.hp, player.state.maxHp); // Ensure current HP doesn't exceed max
+    
+    }
     }
 
     getSkillByHotkey(key) {

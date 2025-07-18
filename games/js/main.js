@@ -781,17 +781,24 @@ class RagnarokGame {
             }
         }, 100));
 
-        // HP regeneration every 2 seconds (only during active combat)
-        this.gameLoops.push(setInterval(() => {
-            if (this.combat && this.combat.battleActive && this.skills && this.skills.activeSkills) {
-                const hpRecoverySkill = this.skills.activeSkills.find(s => s.id === "hp_recovery");
-                if (hpRecoverySkill && hpRecoverySkill.currentLevel > 0 && this.player.hp < this.player.maxHp && this.player.hp > 0) {
-                    const healing = hpRecoverySkill.regenAmount * hpRecoverySkill.currentLevel;
-                    this.player.heal(healing);
-                    this.ui.updatePlayerDisplay();
-                }
-            }
-        }, 2000));
+        // HP regeneration every 1 seconds (only during active combat)
+            this.gameLoops.push(setInterval(() => {
+            if (
+            this.combat &&
+            this.combat.battleActive &&
+            this.player.hp > 0 &&
+            this.player.hp < this.player.maxHp
+    ) {
+        const regenPercent = this.player.state.hpRegenPercent || 0;
+
+        if (regenPercent > 0) {
+            const healing = Math.floor(this.player.maxHp * regenPercent);
+            this.player.heal(healing);
+            this.ui.updatePlayerDisplay();
+        }
+    }
+        }, 1000));
+
 
         // MP regeneration every 1 second (only during active combat)
         this.gameLoops.push(setInterval(() => {
