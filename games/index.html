@@ -1860,6 +1860,25 @@
         .shop-items:not(.shop-items-bottom) {
             display: none !important;
         }
+
+        body, html {
+        user-select: none;
+        -webkit-user-drag: none;
+          cursor: default;
+          /* ❌ Don't do this unless you're absolutely fullscreen: */
+          /* overflow: hidden; */
+        }
+
+        button, input, textarea {
+        user-select: none;
+        -webkit-user-drag: none;
+        }
+
+        .enhanced-combat-area * {
+           user-select: none;
+          -webkit-user-drag: none;
+          pointer-events: auto;
+        }
     </style>
     <meta name="description" content="Ragnarok Clicker - Interactive browser game">
 </head>
