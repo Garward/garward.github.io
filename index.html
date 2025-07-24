@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Zachary Arthur - Professional Portfolio</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            margin: 0;
+            padding: 2rem;
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            color: #ecf0f1;
+            min-height: 100vh;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        h1 {
+            color: #ecf0f1;
+            text-align: center;
+            font-size: 2.5rem;
+            margin-bottom: 0.5rem;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+        }
+        .subtitle {
+            text-align: center;
+            color: #bdc3c7;
+            font-size: 1.1rem;
+            margin-bottom: 2rem;
+        }
+        .section {
+            margin: 3rem 0;
+        }
+        .section-title {
+            color: #ecf0f1;
+            font-size: 2rem;
+            margin-bottom: 1.5rem;
+            text-align: center;
+            font-weight: 600;
+        }
+        .section-description {
+            text-align: center;
+            color: #bdc3c7;
+            font-size: 1rem;
+            margin-bottom: 2rem;
+            font-style: italic;
+        }
+        .cards-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+            margin: 2rem 0;
+        }
+        .content-card {
+            background: rgba(44, 62, 80, 0.9);
+            padding: 2rem;
+            border-radius: 12px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+            border: 1px solid rgba(255,255,255,0.1);
+            backdrop-filter: blur(10px);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            text-align: center;
+        }
+        .content-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 12px 40px rgba(0,0,0,0.4);
+        }
+        .card-icon {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+        }
+        .card-title {
+            color: #ecf0f1;
+            font-size: 1.5rem;
+            margin-bottom: 1rem;
+            font-weight: 600;
+        }
+        .card-description {
+            color: #bdc3c7;
+            margin-bottom: 1.5rem;
+            font-size: 0.95rem;
+        }
+        .action-btn {
+            display: inline-block;
+            padding: 0.75rem 1.5rem;
+            color: white;
+            text-decoration: none;
+            border-radius: 8px;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            min-width: 140px;
+        }
+        .book-btn {
+            background: linear-gradient(45deg, #3498db, #2ecc71);
+            box-shadow: 0 4px 15px rgba(52, 152, 219, 0.3);
+        }
+        .book-btn:hover {
+            background: linear-gradient(45deg, #2980b9, #27ae60);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(52, 152, 219, 0.4);
+        }
+        .game-btn {
+            background: linear-gradient(45deg, #e74c3c, #f39c12);
+            box-shadow: 0 4px 15px rgba(231, 76, 60, 0.3);
+        }
+        .game-btn:hover {
+            background: linear-gradient(45deg, #c0392b, #e67e22);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(231, 76, 60, 0.4);
+        }
+        .footer {
+            text-align: center;
+            margin-top: 3rem;
+            color: #95a5a6;
+            font-size: 0.9rem;
+        }
+        .features {
+            background: rgba(52, 73, 94, 0.8);
+            padding: 1.5rem;
+            border-radius: 8px;
+            margin: 2rem 0;
+            border-left: 4px solid #3498db;
+        }
+        .features h3 {
+            color: #3498db;
+            margin-top: 0;
+        }
+        .features ul {
+            margin: 0;
+            padding-left: 1.5rem;
+        }
+        .features li {
+            margin: 0.5rem 0;
+            color: #bdc3c7;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎯 Zachary Arthur's Digital Hub</h1>
+        <p class="subtitle">Professional portfolio showcasing optimization projects and AI-assisted development work. Demonstrates cross-domain technical capabilities and iterative improvement methodology.</p>
+
+        <div class="features">
+            <h3>✨ Features</h3>
+            <ul>
+                <li>📱 Mobile-optimized for all devices</li>
+                <li>🏠 Add to your phone's home screen</li>
+                <li>🌙 Dark mode for comfortable viewing</li>
+                <li>🔌 Works offline once loaded</li>
+                <li>🚀 No downloads or installations required</li>
+            </ul>
+        </div>
+
+        <div class="section">
+            <h2 class="section-title">📚 Books</h2>
+            <p class="section-description">AI-assisted content development projects demonstrating workflow optimization and multi-stage process coordination. Built comprehensive publishing pipeline with automated quality control and iterative improvement methodology.</p>
+            <div class="cards-container">
+                <div class="content-card book-card">
+                    <div class="card-icon">📖</div>
+                    <h3 class="card-title">Roranns Rage</h3>
+                    <p class="card-description">Mobile-optimized reading with swipe navigation</p>
+                    <a href="books/roranns_rage_reader.html" class="action-btn book-btn">📖 Read Online</a>
+                </div>
+                
+                <div class="content-card book-card">
+                    <div class="card-icon">📖</div>
+                    <h3 class="card-title">Troubles in Elyria</h3>
+                    <p class="card-description">Mobile-optimized reading with swipe navigation</p>
+                    <a href="books/elyria_reader.html" class="action-btn book-btn">📖 Read Online</a>
+                </div>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2 class="section-title">🎮 Games</h2>
+            <p class="section-description">Interactive applications developed through AI collaboration, demonstrating rapid cross-technology learning and user experience optimization. Showcases ability to build functional solutions in unfamiliar technical domains through methodical problem-solving.</p>
+            <div class="cards-container">
+                <div class="content-card game-card">
+                    <div class="card-icon">🎯</div>
+                    <h3 class="card-title">RPG Clicker</h3>
+                    <p class="card-description">Web-based RPG built through AI-assisted development, demonstrating rapid prototyping and systematic game mechanics implementation</p>
+                    <a href="games/index.html" class="action-btn game-btn">🎮 Play Game</a>
+                </div>
+            </div>
+        </div>
+
+        <div class="footer">
+            <p>Professional Portfolio • Zachary Arthur • 2025</p>
+        </div>
+    </div>
+</body>
+</html>
