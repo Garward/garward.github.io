@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>My Books</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    body { font-family: sans-serif; background: #f7f7f7; padding: 2rem; }
+    h1 { margin-bottom: 1rem; }
+    ul { list-style: none; padding: 0; }
+    li { margin: 0.5rem 0; }
+    a { text-decoration: none; color: #2c3e50; font-size: 1.2rem; }
+    a:hover { text-decoration: underline; }
+  </style>
+</head>
+<body>
+  <h1>📚 My Books</h1>
+  <ul id="book-list"></ul>
+
+  <script>
+    // List your book folders here manually
+    const books = [
+      "realist_hero_volume_1",
+      "black_summoner_vol5",
+      "arifureta_vol1"
+      // add more as you publish them
+    ];
+
+    const list = document.getElementById("book-list");
+    books.forEach(book => {
+      const li = document.createElement("li");
+      const link = document.createElement("a");
+      link.href = `./${book}/`;
+      link.textContent = book.replace(/_/g, " "); // prettier label
+      li.appendChild(link);
+      list.appendChild(li);
+    });
+  </script>
+</body>
+</html>
