@@ -15,26 +15,40 @@
 </head>
 <body>
   <h1>📚 My Books</h1>
-  <ul id="book-list"></ul>
+  <ul id="book-list"><li>Loading...</li></ul>
 
   <script>
-    // List your book folders here manually
-    const books = [
-      "realist_hero_volume_1",
-      "black_summoner_vol5",
-      "arifureta_vol1"
-      // add more as you publish them
-    ];
+    async function loadBooks() {
+      const list = document.getElementById("book-list");
+      list.innerHTML = "";
 
-    const list = document.getElementById("book-list");
-    books.forEach(book => {
-      const li = document.createElement("li");
-      const link = document.createElement("a");
-      link.href = `./${book}/`;
-      link.textContent = book.replace(/_/g, " "); // prettier label
-      li.appendChild(link);
-      list.appendChild(li);
-    });
+      try {
+        // GitHub API endpoint for your repo’s /books/ folder
+        const res = await fetch("https://api.github.com/repos/garward/garward.github.io/contents/books");
+        const data = await res.json();
+
+        // Filter for folders only
+        const folders = data.filter(item => item.type === "dir");
+
+        if (folders.length === 0) {
+          list.innerHTML = "<li>No books found</li>";
+          return;
+        }
+
+        folders.forEach(folder => {
+          const li = document.createElement("li");
+          const a = document.createElement("a");
+          a.href = `./${folder.name}/`;  // link to book folder
+          a.textContent = folder.name.replace(/_/g, " ");
+          li.appendChild(a);
+          list.appendChild(li);
+        });
+      } catch (err) {
+        list.innerHTML = `<li>Error loading books: ${err.message}</li>`;
+      }
+    }
+
+    loadBooks();
   </script>
 </body>
 </html>
