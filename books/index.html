@@ -51,7 +51,7 @@
 
       try {
         // GitHub API endpoint for your repo’s /books/ folder
-        const res = await fetch("https://api.github.com/repos/garward/garward.github.io/contents/books");
+        const res = await fetch("https://api.github.com/repos/garward/garward.github.io/contents/books?ref=main");
         const data = await res.json();
 
         if (!Array.isArray(data)) {
@@ -84,3 +84,4 @@
   </script>
 </body>
 </html>
+
