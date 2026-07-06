@@ -30,12 +30,12 @@ class Player {
             },
             isDragonKnight: false,
             rebirthCount: 0,
-            currentLocation: "prt_fild08",
+            currentLocation: "verdant_meadow",
             isNewPlayer: true,
             currentSlot: 0,
             // Area unlocking system
             areaProgress: {}, // Track monsters defeated per area
-            unlockedAreas: ["prt_fild08"] // Start with first area unlocked
+            unlockedAreas: ["verdant_meadow"] // Start with first area unlocked
         };
     }
 
@@ -426,12 +426,12 @@ class Player {
         this.state.isNewPlayer = false;
         // Keep the old global storage for backwards compatibility of basic player data
         // But inventory/skills are now handled by character manager
-        localStorage.setItem('ragnarok_player', JSON.stringify(this.state));
+        localStorage.setItem(SAVE_KEYS.player, JSON.stringify(this.state));
     }
 
     loadFromStorage() {
         // Check for existing character data first
-        const saved = localStorage.getItem('ragnarok_player');
+        const saved = localStorage.getItem(SAVE_KEYS.player);
         if (saved) {
             const savedData = JSON.parse(saved);
             this.state = { ...this.state, ...savedData };

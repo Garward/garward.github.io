@@ -50,47 +50,17 @@ class Combat {
     applyLocationDifficulty(location) {
         if (!this.currentMonster) return;
 
-        const isField = MonsterUtils.isField(location);
-        const isDungeon = MonsterUtils.isDungeon(location);
-        const isMvpArea = MonsterUtils.isMvpArea(location);
+        const locationData = MonsterUtils.getLocationData(location);
+        const adjustedMonster = GloamFormula.applyLocationDifficulty(this.currentMonster, location, locationData);
+        Object.assign(this.currentMonster, adjustedMonster);
 
-        if (isField) {
-            // Fields: Easier for auto-battle (slightly reduced HP/DEF for faster kills)
-            this.currentMonster.maxHp = Math.floor(this.currentMonster.maxHp * 0.9);
-            this.currentMonster.currentHp = this.currentMonster.maxHp;
-            this.currentMonster.def = Math.floor(this.currentMonster.def * 0.8);
-
-            // Special case for starting area - much lower attack for beginners
-            if (location === 'prt_fild08') {
-                this.currentMonster.baseAttack = this.currentMonster.level * 2 + 5; // Very low for beginners
-            } else {
-                // Other fields: Moderate attack increase
-                this.currentMonster.baseAttack = this.currentMonster.level * 6 + 15; // Reduced from 8+20
-            }
-        } else if (isDungeon) {
-            // Dungeons: Much harder to compensate for equipment upgrades
-            this.currentMonster.maxHp = Math.floor(this.currentMonster.maxHp * 1.8); // Increased from 1.3
-            this.currentMonster.currentHp = this.currentMonster.maxHp;
-            this.currentMonster.def = Math.floor(this.currentMonster.def * 1.5); // Increased from 1.2
-
-            // Much higher attack for dungeons to compensate for upgrades
-            this.currentMonster.baseAttack = this.currentMonster.level * 15 + 50; // Increased from 12+35
-
-            // Apply dungeon reward multiplier
+        if (MonsterUtils.isDungeon(location)) {
             const difficultyMultiplier = MonsterUtils.getDifficultyMultiplier(location);
             this.currentMonster.exp = Math.floor(this.currentMonster.exp * difficultyMultiplier);
             this.currentMonster.gold = Math.floor(this.currentMonster.gold * difficultyMultiplier);
         }
 
-        // MVP areas: Extreme difficulty scaling
-        if (isMvpArea && this.currentMonster.isMvp) {
-            // MVP bosses are significantly harder
-            this.currentMonster.maxHp = Math.floor(this.currentMonster.maxHp * 1.2); // Additional HP boost
-            this.currentMonster.currentHp = this.currentMonster.maxHp;
-            this.currentMonster.def = Math.floor(this.currentMonster.def * 1.3); // Additional defense
-            this.currentMonster.baseAttack = Math.floor(this.currentMonster.baseAttack * 1.5); // Much higher attack
-
-            // Initialize MVP-specific properties
+        if (MonsterUtils.isMvpArea(location) && this.currentMonster.isMvp) {
             this.currentMonster.mvpSkillCooldowns = {};
             this.currentMonster.usedPhases = new Set();
             this.currentMonster.hasUsedResurrection = false;
@@ -98,12 +68,12 @@ class Combat {
         }
     }
 
-    // Track MVP defeats for unlocking other MVP areas
+    // Track world-boss defeats for unlocking other boss areas
     trackMvpDefeat(mvpName) {
-        let defeatedMvps = JSON.parse(localStorage.getItem('ragnarok_defeated_mvps') || '[]');
+        let defeatedMvps = JSON.parse(localStorage.getItem(SAVE_KEYS.defeatedMvps) || '[]');
         if (!defeatedMvps.includes(mvpName)) {
             defeatedMvps.push(mvpName);
-            localStorage.setItem('ragnarok_defeated_mvps', JSON.stringify(defeatedMvps));
+            localStorage.setItem(SAVE_KEYS.defeatedMvps, JSON.stringify(defeatedMvps));
 
             // Check if this unlocks new MVP areas
             this.checkMvpAreaUnlocks(defeatedMvps);
@@ -113,14 +83,14 @@ class Combat {
     // Check if defeating this MVP unlocks new areas
     checkMvpAreaUnlocks(defeatedMvps) {
         const playerLevel = Game.player.level;
-        const mvpAreas = ['mvp_baphomet', 'mvp_osiris', 'mvp_thanatos'];
+        const mvpAreas = ['boss_vargath', 'boss_neferok', 'boss_seraphel'];
 
         mvpAreas.forEach(area => {
             if (!Game.player.state.unlockedAreas.includes(area)) {
                 if (MonsterUtils.canAccessMvpArea(area, playerLevel, defeatedMvps)) {
                     Game.player.state.unlockedAreas.push(area);
                     const areaName = MonsterUtils.getLocationDisplayName(area);
-                    Game.ui.showLootNotification(`🗺️ NEW MVP AREA UNLOCKED: ${areaName}!`, 5000);
+                    Game.ui.showLootNotification(`🗺️ NEW WORLD BOSS AREA UNLOCKED: ${areaName}!`, 5000);
                 }
             }
         });
@@ -147,54 +117,19 @@ class Combat {
         this.lastActivity = Date.now();
         this.isPaused = false;
 
-        let damage = Game.player.atk;
-        let isCrit = false;
-
-        // Get status effect bonuses from skills
         const statusBonuses = Game.skills.getActiveStatusEffects();
-        damage *= statusBonuses.atkMultiplier;
-
-        // Apply skill effects if skill was used
-        if (skillUsed) {
-            damage *= skillUsed.damageMultiplier + (skillUsed.currentLevel * 0.1);
-            if (skillUsed.critBonus && Math.random() < (skillUsed.critBonus / 100)) {
-                damage *= 2;
-                isCrit = true;
-            }
-
-            // Apply skill damage bonus from accessories (only for skills, not basic attacks)
-            let skillDamageBonus = 0;
-            Object.values(Game.player.state.equipped).forEach(item => {
-                if (item && item.stats && item.stats.skillDamage) {
-                    skillDamageBonus += item.stats.skillDamage;
-                }
-            });
-
-            if (skillDamageBonus > 0) {
-                damage *= (1 + skillDamageBonus / 100);
-            }
-        }
-
-        // Check for critical hit (base 15% + accessories)
-        if (!isCrit && Math.random() < (Game.player.critChance / 100)) {
-            // Critical hit! Apply crit damage multiplier
-            const critMultiplier = 1 + (Game.player.critDamage / 100);
-            damage *= critMultiplier;
-            isCrit = true;
-        }
-
-        // Apply status damage bonus (like Magnum Break buff)
-        damage *= (1 + statusBonuses.damageBonus);
-        
-        // Armor Pierce: reduce enemy DEF by a % if specified
-        let defense = this.currentMonster.def;
-        if (skillUsed && skillUsed.armorPiercePercent) {
-                defense = Math.floor(defense * (1 - skillUsed.armorPiercePercent / 100));
-            }
-            damage = Math.max(1, damage - defense);
-        
-        // Random variance (±10%)
-        damage = Math.floor(damage * (0.9 + Math.random() * 0.2));
+        const damageResult = GloamFormula.calculatePlayerAttackDamage({
+            player: Game.player,
+            monster: this.currentMonster,
+            skill: skillUsed,
+            statusBonuses,
+            equipped: Game.player.state.equipped,
+            variance: 0.9 + Math.random() * 0.2,
+            critRoll: Math.random(),
+            skillCritRoll: Math.random()
+        });
+        const damage = damageResult.damage;
+        const isCrit = damageResult.isCrit;
         
         // Deal damage to monster
         this.currentMonster.currentHp -= damage;
@@ -248,38 +183,12 @@ class Combat {
 
         if (Game.player.hp <= 0) return; // Player is already dead
 
-        // Use the base attack value set by location difficulty
-        let monsterDamage = this.currentMonster.baseAttack || (this.currentMonster.level * 8 + 20); // Increased base damage
-        if (monsterDamage < 1) monsterDamage = 1;
-        // Boss monsters hit much harder
-        if (this.currentMonster.isBoss) {
-            monsterDamage *= 2.5; // Increased from 1.5x for more challenge
-        }
-
-        // Get status effect bonuses from skills
         const statusBonuses = Game.skills.getActiveStatusEffects();
-
-        // Total defense including buffs
-        const totalDefense = (Game.player.def + statusBonuses.defenseBonus) * statusBonuses.defMultiplier;
-
-        // Scale defense: diminishing returns based on monster level
-        const defenseScaling = totalDefense / (totalDefense + 100 + this.currentMonster.level * 2);
-        let reducedDamage = monsterDamage * (1 - defenseScaling);
-
-        // Apply skill-based % reduction (like Endure)
-        if (statusBonuses.skillDamageReduction > 0) {
-        reducedDamage *= (1 - statusBonuses.skillDamageReduction);
-        }
-
-        // Apply flat damage reduction (capped to 70% of incoming damage)
-        const flatReduction = Math.min(0.5 * totalDefense, monsterDamage * 0.7);
-        reducedDamage -= flatReduction;
-
-        // Clamp *after* flooring for safety
-        reducedDamage = Math.floor(Math.max(0, reducedDamage)); // round and prevent negative
-
-        // Final damage can't be less than 1% of original base
-        const actualDamage = Math.max(Math.floor(monsterDamage * 0.01), reducedDamage);
+        let actualDamage = GloamFormula.calculateMonsterAttackDamage({
+            monster: this.currentMonster,
+            player: Game.player,
+            statusBonuses
+        }).damage;
         
 
         // Apply Arcane Shield (MP absorbs portion of incoming damage)
@@ -368,7 +277,7 @@ class Combat {
             }
 
             // Special MVP defeat notification
-            Game.ui.showLootNotification(`🏆 MVP DEFEATED: ${this.currentMonster.name}! 🏆`, 5000);
+            Game.ui.showLootNotification(`🏆 WORLD BOSS DEFEATED: ${this.currentMonster.name}! 🏆`, 5000);
         }
 
         // Location-based healing

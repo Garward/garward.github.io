@@ -1,4 +1,4 @@
-// main.js - Game initialization and main game loop with FIXED character switching
+// main.js - Game initialization and main game loop
 
 // Declare global variables first
 let Game;
@@ -10,7 +10,7 @@ class CharacterManager {
     }
 
     loadAllCharacters() {
-        const saved = localStorage.getItem('ragnarok_characters');
+        const saved = localStorage.getItem(SAVE_KEYS.characters);
         if (saved) {
             return JSON.parse(saved);
         }
@@ -18,7 +18,7 @@ class CharacterManager {
     }
 
     saveAllCharacters() {
-        localStorage.setItem('ragnarok_characters', JSON.stringify(this.characters));
+        localStorage.setItem(SAVE_KEYS.characters, JSON.stringify(this.characters));
     }
 
     saveCharacter(slot, characterData) {
@@ -41,7 +41,7 @@ class CharacterManager {
                 statusEffects: currentStatusEffects,
                 // Ensure area progression is saved
                 areaProgress: characterData.areaProgress || {},
-                unlockedAreas: characterData.unlockedAreas || ["prt_fild08"],
+                unlockedAreas: characterData.unlockedAreas || ["verdant_meadow"],
                 savedAt: Date.now(),
                 slot: slot
             };
@@ -97,7 +97,7 @@ class CharacterManager {
             Game.player.state.areaProgress = {};
         }
         if (!Game.player.state.unlockedAreas) {
-            Game.player.state.unlockedAreas = ["prt_fild08"];
+            Game.player.state.unlockedAreas = ["verdant_meadow"];
         }
 
         // Load inventory
@@ -250,7 +250,7 @@ class CharacterManager {
             isDragonKnight: false,
             isArchMage: false,
             rebirthCount: 0,
-            currentLocation: "prt_fild08",
+            currentLocation: "verdant_meadow",
             isNewPlayer: true,
             currentSlot: slot
         };
@@ -506,14 +506,14 @@ class CharacterManager {
 
     createBackup(slot) {
         try {
-            const currentData = localStorage.getItem(`ragnarok_character_${slot}`);
+            const currentData = localStorage.getItem(`gloamreach_character_${slot}`);
             if (currentData) {
-                const backupKey = `ragnarok_character_${slot}_backup_${Date.now()}`;
+                const backupKey = `gloamreach_character_${slot}_backup_${Date.now()}`;
                 localStorage.setItem(backupKey, currentData);
 
                 // Keep only the 3 most recent backups per slot
                 const backupKeys = Object.keys(localStorage)
-                    .filter(k => k.startsWith(`ragnarok_character_${slot}_backup_`))
+                    .filter(k => k.startsWith(`gloamreach_character_${slot}_backup_`))
                     .sort();
 
                 while (backupKeys.length > 3) {
@@ -536,7 +536,7 @@ class CharacterManager {
     }
 }
 
-class RagnarokGame {
+class GloamreachGame {
     constructor() {
         this.player = new Player();
         this.combat = new Combat();
@@ -549,7 +549,7 @@ class RagnarokGame {
     }
 
     initialize() {
-        console.log("🎮 Initializing Ragnarok Online Clicker RPG...");
+        console.log("🎮 Initializing Gloamreach Clicker RPG...");
         
         // Add character manager button to UI
         this.addCharacterManagerButton();
@@ -694,11 +694,11 @@ class RagnarokGame {
 
     ensureStartingAreaUnlocked() {
         // Make sure the starting area is always unlocked
-        if (!this.player.state.unlockedAreas || !this.player.state.unlockedAreas.includes("prt_fild08")) {
+        if (!this.player.state.unlockedAreas || !this.player.state.unlockedAreas.includes("verdant_meadow")) {
             if (!this.player.state.unlockedAreas) {
                 this.player.state.unlockedAreas = [];
             }
-            this.player.state.unlockedAreas.push("prt_fild08");
+            this.player.state.unlockedAreas.push("verdant_meadow");
         }
 
         // Initialize area progress if not exists
@@ -862,13 +862,9 @@ class RagnarokGame {
     // Emergency reset function
     resetGame() {
         if (confirm("Are you sure you want to reset ALL progress and characters?")) {
-            // Remove character data
-            localStorage.removeItem('ragnarok_characters');
-            // Remove any old global storage just in case
-            localStorage.removeItem('ragnarok_player');
-            localStorage.removeItem('ragnarok_inventory');
-            localStorage.removeItem('ragnarok_skills');
-            localStorage.removeItem('ragnarok_hotbar');
+            // Remove character data (current keys and any legacy saves)
+            Object.values(SAVE_KEYS).forEach(key => localStorage.removeItem(key));
+            Object.values(LEGACY_SAVE_KEYS).forEach(key => localStorage.removeItem(key));
             location.reload();
         }
     }
@@ -912,7 +908,7 @@ window.resetGame = resetGame;
 window.learnSkill = learnSkill;
 
 // Create global game instance (ONLY ONCE)
-Game = new RagnarokGame();
+Game = new GloamreachGame();
 
 // Also expose Game to window
 window.Game = Game;
@@ -979,7 +975,7 @@ window.emergencyRecover = () => {
     console.log("🚨 EMERGENCY RECOVERY INITIATED");
 
     // Try to restore from localStorage backup
-    const backupKeys = Object.keys(localStorage).filter(k => k.includes('ragnarok') && k.includes('backup'));
+    const backupKeys = Object.keys(localStorage).filter(k => k.includes('gloamreach') && k.includes('backup'));
     if (backupKeys.length > 0) {
         console.log("📦 Found backup saves:", backupKeys);
         backupKeys.forEach(key => {
@@ -1015,9 +1011,9 @@ window.emergencyRecover = () => {
             ring2: null,
             necklace: null
         },
-        currentLocation: "prt_fild08",
+        currentLocation: "verdant_meadow",
         areaProgress: {},
-        unlockedAreas: ["prt_fild08"],
+        unlockedAreas: ["verdant_meadow"],
         currentSlot: 0
     };
 
@@ -1355,7 +1351,7 @@ if (typeof EnhancedCombatUI !== 'undefined') {
 
 // Console welcome message
 console.log(`
-🎮 Ragnarok Online Clicker RPG - FIXED Character Switching
+🎮 Gloamreach Clicker RPG
 🔧 Fixed Issues:
    ✅ Characters now save inventory before switching
    ✅ Auto-save before opening character selector

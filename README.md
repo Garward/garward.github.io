@@ -4,7 +4,7 @@ Professional portfolio showcasing systematic optimization projects and AI-assist
 
 ## Interactive Applications
 Rapid web development through AI-assisted prototyping
-[RPG Clicker](games/index.html)
+[Gloamreach Clicker](games/index.html)
 
 ## ✨ Features
 

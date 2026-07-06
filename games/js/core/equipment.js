@@ -53,19 +53,19 @@ const EXP_POTION_OPTIONS = [
     { name: "512x EXP Potion", type: "exp_potion", rarity: "mythic", price: 7680000, expMultiplier: 512, level: 1 }
 ];
 
-// ===== MVP BOSS EXP POTION DROPS =====
+// ===== WORLD BOSS EXP POTION DROPS =====
 const MVP_EXP_POTION_DROPS = {
-    "Baphomet": {
+    "Vargath": {
         dropChance: 0.25, // 25% chance
         potionTypes: ["4x EXP Potion", "8x EXP Potion", "16x EXP Potion"],
         weights: [60, 30, 10] // 60% for 4x, 30% for 8x, 10% for 16x
     },
-    "Osiris": {
+    "King Neferok": {
         dropChance: 0.30, // 30% chance
         potionTypes: ["8x EXP Potion", "16x EXP Potion", "32x EXP Potion"],
         weights: [50, 35, 15] // 50% for 8x, 35% for 16x, 15% for 32x
     },
-    "Thanatos": {
+    "Seraphel": {
         dropChance: 0.35, // 35% chance
         potionTypes: ["16x EXP Potion", "32x EXP Potion", "64x EXP Potion", "128x EXP Potion"],
         weights: [40, 30, 20, 10] // 40% for 16x, 30% for 32x, 20% for 64x, 10% for 128x
@@ -74,21 +74,21 @@ const MVP_EXP_POTION_DROPS = {
 
 // MVP Boss Accessory Drops
 const MVP_ACCESSORY_DROPS = {
-    "Baphomet": {
+    "Vargath": {
         dropChance: 0.15, // 15% chance
         accessoryTypes: ["ring", "necklace"],
         rarities: ["epic", "legendary"],
         rarityWeights: [70, 30], // 70% epic, 30% legendary
         statMultiplier: 2.0 // Double normal accessory stats
     },
-    "Osiris": {
+    "King Neferok": {
         dropChance: 0.18, // 18% chance
         accessoryTypes: ["ring", "necklace"],
         rarities: ["epic", "legendary", "mythic"],
         rarityWeights: [50, 40, 10], // 50% epic, 40% legendary, 10% mythic
         statMultiplier: 2.5 // 2.5x normal accessory stats
     },
-    "Thanatos": {
+    "Seraphel": {
         dropChance: 0.22, // 22% chance
         accessoryTypes: ["ring", "necklace"],
         rarities: ["legendary", "mythic"],
@@ -124,7 +124,7 @@ function handleMvpExpPotionDrop(mvpName) {
 
                     // Add to inventory
                     if (Game.equipment.addToInventory(potion, 1)) {
-                        Game.ui.showLootNotification(`🎉 MVP DROP: ${potionName}!`, 3000);
+                        Game.ui.showLootNotification(`🎉 BOSS DROP: ${potionName}!`, 3000);
                         return potion;
                     }
                 }
@@ -176,7 +176,7 @@ function handleMvpAccessoryDrop(mvpName) {
 
         // Add to inventory
         if (Game.equipment.addToInventory(accessory, 1)) {
-            Game.ui.showLootNotification(`🎉 MVP DROP: ${accessory.name}!`, 3000);
+            Game.ui.showLootNotification(`🎉 BOSS DROP: ${accessory.name}!`, 3000);
             return accessory;
         }
     }
@@ -572,17 +572,17 @@ class ActualSpriteDatabase {
             return null;
         }
         
-        // Calculate required level and stats based on monster level and rarity
-        const requiredLevel = Math.max(1, Math.floor(monsterLevel * 0.9)); // Equipment requires 90% of monster level
-
-        // Scale stats with required level for balanced progression
-        // REBALANCED: Much lower base scaling to account for upgrade system
-        const levelScaling = requiredLevel * 0.8; // Reduced from 2.5 to 0.8
         const rarityMult = RARITY_MULTIPLIERS[rarity];
 
         // Add variance (±15%) and ensure minimum stats
         const variance = 0.85 + Math.random() * 0.3;
-        const statValue = Math.max(1, Math.floor(levelScaling * rarityMult * variance));
+        const statRoll = GloamFormula.calculateEquipmentStatValue({
+            monsterLevel,
+            rarityMultiplier: rarityMult,
+            variance
+        });
+        const requiredLevel = statRoll.requiredLevel;
+        const statValue = statRoll.statValue;
 
         const item = {
             name: template.name,
@@ -614,20 +614,16 @@ class ActualSpriteDatabase {
             item.baseStats = { ...accessoryStats.stats };
         } else {
             const statType = ITEM_TYPES[type].statType;
-            let finalStatValue = statValue;
+            const generatedStats = GloamFormula.calculateEquipmentStats({
+                type,
+                statType,
+                monsterLevel,
+                rarityMultiplier: rarityMult,
+                variance
+            });
 
-            // Multiply maxHp items by 10 to make them meaningful
-            if (statType === 'maxHp') {
-                finalStatValue = statValue * 10;
-            }
-
-            item.stats = {
-                [statType]: finalStatValue
-            };
-            // Store base stats for upgrade calculations
-            item.baseStats = {
-                [statType]: finalStatValue
-            };
+            item.stats = generatedStats.stats;
+            item.baseStats = generatedStats.baseStats;
         }
 
         return item;
@@ -639,13 +635,7 @@ class ActualSpriteDatabase {
 
     generateAccessoryStats(rarity, baseValue) {
         const stats = {};
-        const rarityIndex = RARITIES.indexOf(rarity);
-
-        // Determine number of stat lines based on rarity
-        let numStats = 1; // Common, rare get 1 stat
-        if (rarityIndex >= 2) numStats = 2; // Epic gets 2 stats
-        if (rarityIndex >= 3) numStats = 3; // Legendary gets 3 stats
-        if (rarityIndex >= 4) numStats = 4; // Mythic gets 4 stats
+        const numStats = GloamFormula.getAccessoryStatLineCount(rarity, RARITIES);
 
         const statKeys = Object.keys(ACCESSORY_STATS);
 
@@ -654,13 +644,7 @@ class ActualSpriteDatabase {
             const statType = statKeys[Math.floor(Math.random() * statKeys.length)];
             const statConfig = ACCESSORY_STATS[statType];
 
-            // Calculate stat value based on base value and multiplier
-            let statValue = Math.floor(baseValue * statConfig.multiplier);
-
-            // Special handling for percentage stats
-            if (statConfig.suffix === '%') {
-                statValue = Math.max(1, Math.floor(statValue / 5)); // Scale down percentage stats
-            }
+            const statValue = GloamFormula.calculateAccessoryStatValue({ baseValue, statConfig });
 
             // Add to existing stat if duplicate, otherwise create new
             if (stats[statType]) {
@@ -3149,15 +3133,11 @@ constructor() {
     }
 
     getUpgradeCost(currentLevel) {
-        // Base cost 1000, doubles each level
-        return 1000 * Math.pow(2, currentLevel);
+        return GloamFormula.getUpgradeCost(currentLevel);
     }
 
     getUpgradeChance(currentLevel) {
-        // Decreasing success rate: 90% at +0, down to 10% at +14
-        const baseChance = 90;
-        const reduction = currentLevel * 5.33; // Reduces by ~5.33% per level
-        return Math.max(10, Math.round(baseChance - reduction));
+        return GloamFormula.getUpgradeChance(currentLevel);
     }
 
     getItemStats(item) {
@@ -3189,12 +3169,8 @@ constructor() {
         // Use base stats if available, otherwise current stats
         const baseStats = item.baseStats || item.stats;
 
-        // Each upgrade level increases stats by 25%
-        const multiplier = Math.pow(1.25, nextLevel);
-
-        const statEntries = Object.entries(baseStats);
-        return statEntries.map(([stat, baseValue]) => {
-            const newValue = Math.floor(baseValue * multiplier);
+        const nextStats = GloamFormula.calculateUpgradedStats(baseStats, nextLevel);
+        return Object.entries(nextStats).map(([stat, newValue]) => {
             const displayStat = stat === 'maxHp' ? 'MAX HP' : stat.toUpperCase();
             return `${displayStat}: ${newValue}`;
         }).join(', ');
@@ -3281,7 +3257,7 @@ constructor() {
             const currentLevel = item.upgradeLevel || 0;
             if (currentLevel > 0) {
                 // Reverse the upgrade multiplier to get base stats
-                const currentMultiplier = Math.pow(1.25, currentLevel - 1);
+                const currentMultiplier = GloamFormula.calculateUpgradeMultiplier(currentLevel - 1);
                 item.baseStats = {};
                 Object.keys(item.stats).forEach(stat => {
                     item.baseStats[stat] = Math.floor(item.stats[stat] / currentMultiplier);
@@ -3291,14 +3267,8 @@ constructor() {
             }
         }
 
-        // Each upgrade level increases stats by 25% from base
         const upgradeLevel = item.upgradeLevel || 0;
-        const multiplier = Math.pow(1.25, upgradeLevel);
-
-        // Apply multiplier to base stats
-        Object.keys(item.baseStats).forEach(stat => {
-            item.stats[stat] = Math.floor(item.baseStats[stat] * multiplier);
-        });
+        item.stats = GloamFormula.calculateUpgradedStats(item.baseStats, upgradeLevel);
     }
 
     // === INVENTORY MANAGEMENT FUNCTIONS ===

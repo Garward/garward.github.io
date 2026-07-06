@@ -2,7 +2,7 @@
 const SWORDSMAN_SKILLS = [
     {
         id: "magnum_break",
-        name: "Magnum Break",
+        name: "Shatter Strike",
         description: "Deals fire damage and increases your attack temporarily.",
         maxLevel: 10,
         currentLevel: 0,
@@ -209,7 +209,7 @@ const ARCH_MAGE_SKILLS = [
     },
     {
         id: "energy_coat",
-        name: "Energy Coat",
+        name: "Mana Veil",
         maxLevel: 10,
         currentLevel: 0,
         description: "Creates a magical barrier that reduces damage",
@@ -230,7 +230,7 @@ const ARCH_MAGE_SKILLS = [
     },
     {
         id: "soul_vulcan_strike",
-        name: "Soul Vulcan Strike",
+        name: "Spirit Barrage",
         maxLevel: 10,
         currentLevel: 0,
         description: "Rapid-fire magical projectiles - main DPS skill",
@@ -246,7 +246,7 @@ const ARCH_MAGE_SKILLS = [
     },
     {
         id: "mystical_amplification",
-        name: "Mystical Amplification",
+        name: "Arcane Amplification",
         maxLevel: 10,
         currentLevel: 0,
         description: "Temporarily amplifies physical damage",
@@ -322,7 +322,7 @@ const DRAGON_KNIGHT_SKILLS = [
     },
     {
         id: "storm_slash",
-        name: "Storm Slash",
+        name: "Gale Slash",
         maxLevel: 10,
         currentLevel: 0,
         description: "Critical strike with wind element",
@@ -338,7 +338,7 @@ const DRAGON_KNIGHT_SKILLS = [
     },
     {
         id: "dragonic_aura",
-        name: "Dragonic Aura",
+        name: "Wyrmblood Aura",
         maxLevel: 10,
         currentLevel: 0,
         description: "+50% ATK and DEF for 20s",
@@ -495,7 +495,7 @@ class SkillManager {
             case "magnum_break":
                 const magAtkBuff = 1 + (skill.currentLevel * skill.atkMultiplierPerLevel);
                 const magDuration = skill.effect?.duration || skill.durationBase + (skill.currentLevel * skill.durationPerLevel);
-                this.addStatusEffect("magnumBreak", "Magnum Break", "🔥", magDuration, {
+                this.addStatusEffect("magnumBreak", "Shatter Strike", "🔥", magDuration, {
                     atkMultiplier: magAtkBuff
                 });
                 break;
@@ -518,7 +518,7 @@ class SkillManager {
             // Dragon Knight Skills
             case "dragonic_aura":
                 const multiplier = 1.5 + (skill.currentLevel * 0.1);
-                this.addStatusEffect("dragonicAura", "Dragonic Aura", "🔴", 20000 + (skill.currentLevel * 3000), { 
+                this.addStatusEffect("dragonicAura", "Wyrmblood Aura", "🔴", 20000 + (skill.currentLevel * 3000), { 
                     atkMultiplier: multiplier, 
                     defMultiplier: multiplier 
                 });

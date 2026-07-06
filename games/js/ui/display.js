@@ -62,7 +62,7 @@ class Display {
 
     // Advanced progression tracking
     loadProgressionData() {
-        const saved = localStorage.getItem('ragnarok_progression');
+        const saved = localStorage.getItem(SAVE_KEYS.progression);
         if (saved) {
             const data = JSON.parse(saved);
             this.progressionTracker.locationsVisited = new Set(data.locationsVisited || []);
@@ -77,7 +77,7 @@ class Display {
             bossesDefeated: Array.from(this.progressionTracker.bossesDefeated),
             milestones: Array.from(this.progressionTracker.milestones)
         };
-        localStorage.setItem('ragnarok_progression', JSON.stringify(data));
+        localStorage.setItem(SAVE_KEYS.progression, JSON.stringify(data));
     }
 
     // Track when player visits new location
@@ -1127,6 +1127,7 @@ addBossIndicators(monster) {
         const lockBtn = document.createElement('div');
         lockBtn.className = 'hotbar-lock-btn';
         lockBtn.innerHTML = this.hotbarConfig.locked ? '🔒' : '🔓';
+        lockBtn.title = this.hotbarConfig.locked ? 'Hotbar locked: drag editing disabled' : 'Hotbar unlocked: drag editing enabled';
         lockBtn.style.cssText = `
             width: 40px;
             height: 70px;
@@ -1172,7 +1173,7 @@ addBossIndicators(monster) {
                     ${onCooldown ? `<div class="cooldown-overlay">${Math.ceil(skill.cooldown / 1000)}</div>` : ''}
                 `;
                 
-                if (!onCooldown && canUse && battleActive && !this.hotbarConfig.locked) {
+                if (!onCooldown && canUse && battleActive) {
                     slotDiv.onclick = () => Game.skills.useSkill(skill.id);
                 } else if (!battleActive) {
                     slotDiv.onclick = () => Game.ui.showMessage("Start battle first to use skills!");
@@ -1189,6 +1190,13 @@ addBossIndicators(monster) {
                     <div style="color: var(--text-secondary); font-size: 0.8rem;">Empty</div>
                 `;
                 slotDiv.style.opacity = '0.5';
+                slotDiv.onclick = () => {
+                    if (this.hotbarConfig.locked) {
+                        this.showLootNotification("Unlock hotbar to assign a skill");
+                    } else {
+                        this.openHotbarSlotMenu(i);
+                    }
+                };
             }
             
             // Drag and drop functionality
@@ -1211,7 +1219,213 @@ addBossIndicators(monster) {
         this.hotbarConfig.locked = !this.hotbarConfig.locked;
         this.saveHotbarConfig();
         this.updateHotbar();
-        this.showLootNotification(this.hotbarConfig.locked ? "Hotbar locked" : "Hotbar unlocked");
+        this.showLootNotification(this.hotbarConfig.locked ? "Hotbar drag editing locked" : "Hotbar drag editing unlocked");
+    }
+
+    getAssignableSkills() {
+        if (!Game.skills || !Game.skills.getCurrentSkills) return [];
+        return Game.skills.getCurrentSkills()
+            .filter(skill => skill.currentLevel > 0 && !skill.isPassive);
+    }
+
+    assignSkillToHotbar(skillId, slotIndex) {
+        if (!this.hotbarConfig || slotIndex < 0 || slotIndex >= this.hotbarConfig.slots.length) return;
+
+        const skill = this.getAssignableSkills().find(s => s.id === skillId);
+        if (!skill) {
+            this.showLootNotification("Learn an active skill first");
+            return;
+        }
+
+        // Keep hotbar assignments unique so one skill does not occupy several slots accidentally.
+        this.hotbarConfig.slots = this.hotbarConfig.slots.map((existing, index) =>
+            existing === skillId && index !== slotIndex ? null : existing
+        );
+        this.hotbarConfig.slots[slotIndex] = skillId;
+        this.saveHotbarConfig();
+        this.updateHotbar();
+        this.renderSkills();
+        this.closeSkillPicker();
+        this.showLootNotification(`${skill.name} assigned to slot ${slotIndex + 1}`);
+    }
+
+    clearHotbarSlot(slotIndex) {
+        if (!this.hotbarConfig || slotIndex < 0 || slotIndex >= this.hotbarConfig.slots.length) return;
+        this.hotbarConfig.slots[slotIndex] = null;
+        this.saveHotbarConfig();
+        this.updateHotbar();
+        this.renderSkills();
+        this.closeSkillPicker();
+        this.showLootNotification(`Cleared slot ${slotIndex + 1}`);
+    }
+
+    closeSkillPicker() {
+        const existing = document.getElementById('skill-picker-modal');
+        if (existing) existing.remove();
+    }
+
+    createSkillPicker(title) {
+        this.closeSkillPicker();
+
+        const overlay = document.createElement('div');
+        overlay.id = 'skill-picker-modal';
+        overlay.style.cssText = `
+            position: fixed;
+            inset: 0;
+            z-index: 2600;
+            background: rgba(0, 0, 0, 0.65);
+            display: flex;
+            align-items: flex-end;
+            justify-content: center;
+            padding: 12px;
+        `;
+
+        const panel = document.createElement('div');
+        panel.style.cssText = `
+            width: min(520px, 100%);
+            max-height: min(80vh, 620px);
+            overflow-y: auto;
+            background: var(--secondary-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 14px;
+            box-shadow: var(--shadow-strong);
+            padding: 14px;
+        `;
+
+        panel.innerHTML = `
+            <div style="display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 12px;">
+                <h3 style="color: var(--gold); font-size: 1rem; margin: 0;">${title}</h3>
+                <button type="button" id="skill-picker-close" class="menu-close-btn" aria-label="Close skill picker">✕</button>
+            </div>
+            <div id="skill-picker-content"></div>
+        `;
+
+        overlay.appendChild(panel);
+        document.body.appendChild(overlay);
+
+        overlay.addEventListener('click', (e) => {
+            if (e.target === overlay) this.closeSkillPicker();
+        });
+        panel.querySelector('#skill-picker-close').onclick = () => this.closeSkillPicker();
+
+        return panel.querySelector('#skill-picker-content');
+    }
+
+    openSkillAssignMenu(skillId) {
+        const skill = this.getAssignableSkills().find(s => s.id === skillId);
+        if (!skill) {
+            this.showLootNotification("Learn an active skill first");
+            return;
+        }
+
+        const content = this.createSkillPicker(`Assign ${skill.name}`);
+        const currentSlot = this.hotbarConfig.slots.findIndex(id => id === skillId);
+        const slots = this.hotbarConfig.slots.map((assignedId, index) => {
+            const assignedSkill = assignedId ? Game.skills.getCurrentSkills().find(s => s.id === assignedId) : null;
+            const label = assignedSkill ? `Replace ${assignedSkill.name}` : 'Empty slot';
+            return `
+                <button type="button" class="skill-picker-option" data-slot="${index}">
+                    <span style="color: var(--gold); font-weight: 700;">${index + 1}</span>
+                    <span>${label}</span>
+                </button>
+            `;
+        }).join('');
+
+        content.innerHTML = `
+            ${currentSlot >= 0 ? `<div style="color: var(--text-secondary); font-size: 0.85rem; margin-bottom: 10px;">Currently assigned to slot ${currentSlot + 1}.</div>` : ''}
+            <div class="skill-picker-options">${slots}</div>
+            ${currentSlot >= 0 ? `<button type="button" class="skill-picker-danger" data-clear="${currentSlot}">Clear current assignment</button>` : ''}
+        `;
+
+        content.querySelectorAll('[data-slot]').forEach(button => {
+            button.onclick = () => this.assignSkillToHotbar(skillId, Number(button.dataset.slot));
+        });
+        const clearButton = content.querySelector('[data-clear]');
+        if (clearButton) {
+            clearButton.onclick = () => this.clearHotbarSlot(Number(clearButton.dataset.clear));
+        }
+        this.ensureSkillPickerStyles();
+    }
+
+    openHotbarSlotMenu(slotIndex) {
+        const content = this.createSkillPicker(`Hotbar Slot ${slotIndex + 1}`);
+        const skills = this.getAssignableSkills();
+        const assignedId = this.hotbarConfig.slots[slotIndex];
+
+        if (skills.length === 0) {
+            content.innerHTML = `<div style="color: var(--text-secondary); text-align: center; padding: 16px;">Learn an active skill before assigning hotbar slots.</div>`;
+            return;
+        }
+
+        content.innerHTML = `
+            <div class="skill-picker-options">
+                ${skills.map(skill => `
+                    <button type="button" class="skill-picker-option" data-skill-id="${skill.id}">
+                        <span style="font-size: 1.25rem;">${skill.icon || '❓'}</span>
+                        <span>
+                            <strong>${skill.name}</strong>
+                            <small>Lv.${skill.currentLevel}${skill.mpCost ? ` · ${skill.mpCost + (skill.currentLevel - 1) * 2} MP` : ''}</small>
+                        </span>
+                    </button>
+                `).join('')}
+            </div>
+            ${assignedId ? `<button type="button" class="skill-picker-danger" data-clear="${slotIndex}">Clear this slot</button>` : ''}
+        `;
+
+        content.querySelectorAll('[data-skill-id]').forEach(button => {
+            button.onclick = () => this.assignSkillToHotbar(button.dataset.skillId, slotIndex);
+        });
+        const clearButton = content.querySelector('[data-clear]');
+        if (clearButton) {
+            clearButton.onclick = () => this.clearHotbarSlot(Number(clearButton.dataset.clear));
+        }
+        this.ensureSkillPickerStyles();
+    }
+
+    ensureSkillPickerStyles() {
+        if (document.getElementById('skill-picker-styles')) return;
+        const style = document.createElement('style');
+        style.id = 'skill-picker-styles';
+        style.textContent = `
+            .skill-picker-options {
+                display: grid;
+                gap: 8px;
+            }
+            .skill-picker-option,
+            .skill-picker-danger {
+                width: 100%;
+                min-height: 48px;
+                border-radius: 10px;
+                border: 1px solid var(--border-color);
+                background: rgba(255, 255, 255, 0.06);
+                color: var(--text-primary);
+                display: flex;
+                align-items: center;
+                gap: 10px;
+                padding: 10px 12px;
+                cursor: pointer;
+                text-align: left;
+            }
+            .skill-picker-option:hover,
+            .skill-picker-option:focus-visible {
+                border-color: var(--blue);
+                background: rgba(79, 195, 247, 0.16);
+            }
+            .skill-picker-option small {
+                display: block;
+                color: var(--text-secondary);
+                margin-top: 2px;
+            }
+            .skill-picker-danger {
+                justify-content: center;
+                margin-top: 10px;
+                border-color: rgba(255, 107, 107, 0.45);
+                background: rgba(255, 107, 107, 0.12);
+                color: #ffb3b3;
+                text-align: center;
+            }
+        `;
+        document.head.appendChild(style);
     }
 
     dragSkillFromHotbar(e, slotIndex) {
@@ -1342,6 +1556,11 @@ addBossIndicators(monster) {
                             ${skill.currentLevel >= skill.maxLevel || Game.player.state.skillPoints < 1 ? 'disabled' : ''}>
                             Learn (${Game.player.state.skillPoints} points)
                         </button>
+                        ${skill.currentLevel > 0 && !skill.isPassive ? `
+                            <button class="button-learn assign-skill-btn" data-skill-id="${skill.id}" style="margin-left: 8px; background: linear-gradient(135deg, var(--blue), #0288d1);">
+                                Assign
+                            </button>
+                        ` : ''}
                     ` : `<div style="color: #888; font-size: 0.8em;">Unlocks at level ${skill.unlockLevel}</div>`}
                 `;
             } else {
@@ -1357,7 +1576,7 @@ addBossIndicators(monster) {
                     text-align: center;
                     line-height: 40px;
                     margin: 4px;
-                    cursor: ${skill.currentLevel > 0 ? 'grab' : 'default'};
+                    cursor: ${skill.currentLevel > 0 && !skill.isPassive ? 'pointer' : 'default'};
                     font-size: 1.2rem;
                     position: relative;
                     opacity: ${skill.currentLevel > 0 ? '1' : '0.3'};
@@ -1415,6 +1634,10 @@ addBossIndicators(monster) {
             
             // Add drag functionality for learned skills
             if (skill.currentLevel > 0 && !skill.isPassive) {
+                skillDiv.onclick = (e) => {
+                    if (e.target.closest('button')) return;
+                    this.openSkillAssignMenu(skill.id);
+                };
                 skillDiv.draggable = true;
                 skillDiv.ondragstart = (e) => {
                     e.dataTransfer.setData('skill-id', skill.id);
@@ -1433,6 +1656,14 @@ addBossIndicators(monster) {
             skillDiv.onmousemove = (e) => this.moveTooltip(e);
             
             container.appendChild(skillDiv);
+        });
+
+        container.querySelectorAll('.assign-skill-btn').forEach(button => {
+            button.onclick = (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                this.openSkillAssignMenu(button.dataset.skillId);
+            };
         });
         
         this.initializeTooltips();
@@ -2112,11 +2343,11 @@ addBossIndicators(monster) {
 
     // HELPER METHODS FOR HOTBAR SYSTEM
     saveHotbarConfig() {
-        localStorage.setItem('ragnarok_hotbar', JSON.stringify(this.hotbarConfig));
+        localStorage.setItem(SAVE_KEYS.hotbar, JSON.stringify(this.hotbarConfig));
     }
 
     loadHotbarConfig() {
-        const saved = localStorage.getItem('ragnarok_hotbar');
+        const saved = localStorage.getItem(SAVE_KEYS.hotbar);
         if (saved) {
             this.hotbarConfig = JSON.parse(saved);
         }

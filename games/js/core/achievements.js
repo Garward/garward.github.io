@@ -1,4 +1,4 @@
-// achievements.js - Comprehensive Achievement System for Ragnarok Online Clicker
+// achievements.js - Comprehensive Achievement System for Gloamreach Clicker
 
 // Achievement Categories
 const ACHIEVEMENT_CATEGORIES = {
@@ -59,8 +59,8 @@ const ACHIEVEMENTS = {
     },
     mvp_challenger: {
         id: 'mvp_challenger',
-        name: 'MVP Challenger',
-        description: 'Defeat your first MVP boss',
+        name: 'Boss Challenger',
+        description: 'Defeat your first world boss',
         category: ACHIEVEMENT_CATEGORIES.COMBAT,
         icon: '🏆',
         requirement: { type: 'mvps_killed', value: 1 },
@@ -68,8 +68,8 @@ const ACHIEVEMENTS = {
     },
     mvp_master: {
         id: 'mvp_master',
-        name: 'MVP Master',
-        description: 'Defeat all 3 MVP bosses',
+        name: 'Boss Master',
+        description: 'Defeat all 3 world bosses',
         category: ACHIEVEMENT_CATEGORIES.COMBAT,
         icon: '👹',
         requirement: { type: 'unique_mvps_killed', value: 3 },
@@ -279,7 +279,7 @@ class AchievementManager {
     }
 
     loadFromStorage() {
-        const saved = localStorage.getItem('ragnarok_achievements');
+        const saved = localStorage.getItem(SAVE_KEYS.achievements);
         if (saved) {
             const data = JSON.parse(saved);
             this.unlockedAchievements = new Set(data.unlocked || []);
@@ -310,7 +310,7 @@ class AchievementManager {
                 dungeons_visited: Array.from(this.statistics.dungeons_visited)
             }
         };
-        localStorage.setItem('ragnarok_achievements', JSON.stringify(data));
+        localStorage.setItem(SAVE_KEYS.achievements, JSON.stringify(data));
     }
 
     // Update statistics and check for achievements

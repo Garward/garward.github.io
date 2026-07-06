@@ -1,4 +1,4 @@
-// enhanced-combat.js - Complete Enhanced Combat Area System for Ragnarok Online Clicker
+// enhanced-combat.js - Complete Enhanced Combat Area System for Gloamreach Clicker
 
 class EnhancedCombatUI {
     constructor() {
@@ -35,9 +35,9 @@ class EnhancedCombatUI {
                 <div class="status-panel" id="enhanced-status-panel">
                     <div class="panel-title" onclick="toggleStatusPanel()" style="cursor: pointer; display: flex; justify-content: space-between; align-items: center;">
                         <span>⚡ Status Effects</span>
-                        <span class="dropdown-arrow" id="status-arrow">▼</span>
+                        <span class="dropdown-arrow collapsed" id="status-arrow">▶</span>
                     </div>
-                    <div id="enhanced-status-list" class="panel-content">
+                    <div id="enhanced-status-list" class="panel-content collapsed">
                         <div style="color: var(--text-secondary); font-size: 0.9rem;">No active effects</div>
                     </div>
                 </div>
@@ -46,9 +46,9 @@ class EnhancedCombatUI {
                 <div class="location-panel" id="enhanced-location-panel">
                     <div class="panel-title" onclick="toggleLocationPanel()" style="cursor: pointer; display: flex; justify-content: space-between; align-items: center;">
                         <span>🗺️ Location Info</span>
-                        <span class="dropdown-arrow" id="location-arrow">▼</span>
+                        <span class="dropdown-arrow collapsed" id="location-arrow">▶</span>
                     </div>
-                    <div id="enhanced-location-info" class="panel-content">
+                    <div id="enhanced-location-info" class="panel-content collapsed">
                         <div style="color: var(--text-secondary); font-size: 0.85rem;">Loading...</div>
                     </div>
                 </div>
@@ -57,9 +57,9 @@ class EnhancedCombatUI {
                 <div class="progression-panel" id="enhanced-progression-panel">
                     <div class="panel-title" onclick="toggleProgressionPanel()" style="cursor: pointer; display: flex; justify-content: space-between; align-items: center;">
                         <span>📊 Progression</span>
-                        <span class="dropdown-arrow" id="progression-arrow">▼</span>
+                        <span class="dropdown-arrow collapsed" id="progression-arrow">▶</span>
                     </div>
-                    <div id="enhanced-progression-info" class="panel-content">
+                    <div id="enhanced-progression-info" class="panel-content collapsed">
                         <div style="color: var(--text-secondary); font-size: 0.85rem;">Loading...</div>
                     </div>
                 </div>
@@ -523,9 +523,10 @@ class EnhancedCombatUI {
                 .combat-participants { padding: 0 50px; bottom: 80px; }
                 .player-sprite, .monster-sprite { width: 100px; height: 100px; }
                 .monster-sprite { font-size: 3rem; }
-                .combat-controls { flex-direction: column; gap: 10px; }
-                .combat-button { padding: 10px 20px; font-size: 0.9rem; min-width: 100px; }
-                .status-panel, .location-panel { font-size: 0.8rem; padding: 8px; max-width: 180px; }
+                .combat-controls { flex-direction: row; flex-wrap: wrap; gap: 8px; justify-content: center; width: 100%; padding: 0 10px; }
+                .combat-button { padding: 10px 12px; font-size: 0.85rem; min-width: 40%; flex: 1 1 40%; }
+                .status-panel, .location-panel, .progression-panel { font-size: 0.75rem; padding: 6px; max-width: 44%; }
+                .panel-title { font-size: 0.8rem; }
             }
         `;
         document.head.appendChild(style);
@@ -578,7 +579,7 @@ class EnhancedCombatUI {
             let spritePath = '';
             
             if (Game.player.isDragonKnight) {
-                spritePath = 'sprites/characters/dragon-knight.png';
+                spritePath = 'sprites/characters/swordsman.png';
                 playerSprite.style.borderColor = '#ff6b6b';
                 playerSprite.style.boxShadow = '0 0 20px rgba(255, 107, 107, 0.6)';
             } else {

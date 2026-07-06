@@ -1,4 +1,4 @@
-// classes.js - Modular class system for Ragnarok Online Clicker
+// classes.js - Modular class system for Gloamreach Clicker
 
 // Base class definition structure
 const CLASS_DEFINITIONS = {
