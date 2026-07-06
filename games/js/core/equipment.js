@@ -3101,10 +3101,31 @@ constructor() {
 
             // Show upgrade info
             const currentLevel = this.upgradeItem.upgradeLevel || 0;
+            const maxLevel = 15;
             const nextLevel = currentLevel + 1;
+            const currentStats = this.getItemStats(this.upgradeItem);
+
+            if (currentLevel >= maxLevel) {
+                document.getElementById('upgrade-stats').innerHTML = `
+                    <div style="color: var(--text-primary);">+${currentLevel} Max Level</div>
+                    <div style="color: var(--blue);">Current: ${currentStats}</div>
+                `;
+
+                document.getElementById('upgrade-cost').innerHTML = `
+                    <div>Fully upgraded</div>
+                `;
+
+                document.getElementById('upgrade-chance').innerHTML = `
+                    <div>No further upgrades available</div>
+                `;
+
+                info.style.display = 'block';
+                button.disabled = true;
+                return;
+            }
+
             const cost = this.getUpgradeCost(currentLevel);
             const chance = this.getUpgradeChance(currentLevel);
-            const currentStats = this.getItemStats(this.upgradeItem);
             const nextStats = this.getUpgradedStats(this.upgradeItem);
 
             document.getElementById('upgrade-stats').innerHTML = `
@@ -3180,6 +3201,12 @@ constructor() {
         if (!this.upgradeItem) return;
 
         const currentLevel = this.upgradeItem.upgradeLevel || 0;
+        if (currentLevel >= 15) {
+            Game.ui.showLootNotification(`${this.upgradeItem.name} is already fully upgraded!`);
+            this.renderUpgradeSlot();
+            return;
+        }
+
         const cost = this.getUpgradeCost(currentLevel);
         const chance = this.getUpgradeChance(currentLevel);
 
@@ -3225,23 +3252,8 @@ constructor() {
             setTimeout(() => slot.classList.remove('upgrade-fail'), 600);
         }
 
-        // Return item to appropriate location (inventory or equipped slot)
-        if (this.upgradeFromEquipped) {
-            // Return to equipped slot
-            Game.player.state.equipped[this.upgradeSlot] = this.upgradeItem;
-            // Recalculate stats since item was re-equipped
-            Game.player.calculateStats();
-        } else {
-            // Return to inventory
-            this.inventory[this.upgradeSlot] = this.upgradeItem;
-        }
-
-        // Clear upgrade slot
-        this.upgradeItem = null;
-        this.upgradeSlot = null;
-        this.upgradeFromEquipped = false;
-
-        // Update UI
+        // Keep the item in the upgrade slot so the player can attempt another
+        // upgrade immediately. The context menu still handles moving it back.
         this.renderUpgradeSlot();
         this.renderInventory();
         this.renderEquipment();
