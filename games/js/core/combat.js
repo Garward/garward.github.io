@@ -8,6 +8,8 @@ class Combat {
         this.battleActive = false;
         this.battleInterval = null;
         this.autoBattleEnabled = false;
+        this.battleTurn = 0;
+        this.mvpState = {};
     }
 
     spawnMonster() {
@@ -19,6 +21,9 @@ class Combat {
 
         // Clear respawning flag when new monster spawns
         this.isRespawning = false;
+        this.battleTurn = 0;
+        this.mvpState = {};
+        this.resetClassBattleState();
 
         // Generate new monster
         this.currentMonster = MonsterUtils.getRandomMonster(location, playerLevel);
@@ -53,12 +58,6 @@ class Combat {
         const locationData = MonsterUtils.getLocationData(location);
         const adjustedMonster = GloamFormula.applyLocationDifficulty(this.currentMonster, location, locationData);
         Object.assign(this.currentMonster, adjustedMonster);
-
-        if (MonsterUtils.isDungeon(location)) {
-            const difficultyMultiplier = MonsterUtils.getDifficultyMultiplier(location);
-            this.currentMonster.exp = Math.floor(this.currentMonster.exp * difficultyMultiplier);
-            this.currentMonster.gold = Math.floor(this.currentMonster.gold * difficultyMultiplier);
-        }
 
         if (MonsterUtils.isMvpArea(location) && this.currentMonster.isMvp) {
             this.currentMonster.mvpSkillCooldowns = {};
@@ -117,6 +116,16 @@ class Combat {
         this.lastActivity = Date.now();
         this.isPaused = false;
 
+        // Every attack is a battle turn; class hooks may ramp on it
+        this.battleTurn = (this.battleTurn || 0) + 1;
+        if (typeof ClassKit !== 'undefined') {
+            ClassKit.hooks(Game.player.state.classId).onBattleTurn({
+                classState: Game.player.state.classState,
+                turn: this.battleTurn,
+                rampPerTurnBonus: this.getRampPerTurnBonus()
+            });
+        }
+
         const statusBonuses = Game.skills.getActiveStatusEffects();
         const damageResult = GloamFormula.calculatePlayerAttackDamage({
             player: Game.player,
@@ -126,10 +135,22 @@ class Combat {
             equipped: Game.player.state.equipped,
             variance: 0.9 + Math.random() * 0.2,
             critRoll: Math.random(),
-            skillCritRoll: Math.random()
+            skillCritRoll: Math.random(),
+            classId: Game.player.state.classId,
+            classState: Game.player.state.classState,
+            turn: this.battleTurn,
+            rebirthCount: Game.player.state.rebirthCount
         });
-        const damage = damageResult.damage;
+        let damage = damageResult.damage;
+        let minionDamage = damageResult.minionDamage || 0;
         const isCrit = damageResult.isCrit;
+
+        if (this.currentMonster.isMvp && this.mvpState?.shieldTurns > 0) {
+            damage = Math.max(1, Math.floor(damage * 0.5));
+            minionDamage = Math.floor(minionDamage * 0.5);
+            this.mvpState.shieldTurns--;
+            Game.ui.showCombatText("🛡️ World boss shield dampened your strike!", "cyan");
+        }
         
         // Deal damage to monster
         this.currentMonster.currentHp -= damage;
@@ -147,6 +168,9 @@ class Combat {
         
         // Show damage number
         this.showDamageNumber(damage, isCrit);
+        if (minionDamage > 0) {
+            this.showMinionDamageNumber(minionDamage);
+        }
         
         // Animate monster hit
         this.animateMonsterHit();
@@ -183,12 +207,36 @@ class Combat {
 
         if (Game.player.hp <= 0) return; // Player is already dead
 
+        let mvpOut = { damageMultiplier: 1 };
+        if (this.currentMonster.isMvp && typeof GloamFormula !== 'undefined') {
+            this.mvpState = this.mvpState || {};
+            mvpOut = GloamFormula.mvpBattleTurn({
+                monster: this.currentMonster,
+                mvpState: this.mvpState,
+                turn: this.battleTurn || 1,
+                rng: Math.random
+            });
+
+            if (mvpOut.message) {
+                Game.ui.showMessage(mvpOut.message);
+            }
+
+            if (mvpOut.healPercent > 0) {
+                const healing = Math.ceil(this.currentMonster.maxHp * mvpOut.healPercent);
+                this.currentMonster.currentHp = Math.min(this.currentMonster.maxHp, this.currentMonster.currentHp + healing);
+                Game.ui.showCombatText(`✨ ${this.currentMonster.name} recovered ${healing} HP!`, "yellow");
+            }
+        }
+
         const statusBonuses = Game.skills.getActiveStatusEffects();
         let actualDamage = GloamFormula.calculateMonsterAttackDamage({
             monster: this.currentMonster,
             player: Game.player,
-            statusBonuses
+            statusBonuses,
+            classId: Game.player.state.classId,
+            classState: Game.player.state.classState
         }).damage;
+        actualDamage = Math.floor(actualDamage * (mvpOut.damageMultiplier || 1));
         
 
         // Apply Arcane Shield (MP absorbs portion of incoming damage)
@@ -224,6 +272,19 @@ class Combat {
         const currentLocation = Game.player.state.currentLocation;
         const isDungeon = MonsterUtils.isDungeon(currentLocation);
 
+        // Class on-kill hook (heals, streak counters) fires before rewards
+        if (typeof ClassKit !== 'undefined') {
+            const kctx = {
+                classState: Game.player.state.classState,
+                healPercent: 0,
+                monster: this.currentMonster
+            };
+            ClassKit.hooks(Game.player.state.classId).onKill(kctx);
+            if (kctx.healPercent > 0) {
+                Game.player.heal(Math.ceil(Game.player.maxHp * kctx.healPercent));
+            }
+        }
+
         // Calculate rewards with location bonuses
         let goldGained = this.currentMonster.gold + Math.floor(Math.random() * this.currentMonster.level * 2);
         let expGained = this.currentMonster.exp;
@@ -232,6 +293,12 @@ class Combat {
         if (isDungeon) {
             goldGained = Math.floor(goldGained * 1.3); // 30% more gold in dungeons
             expGained = Math.floor(expGained * 1.2);   // 20% more exp in dungeons
+        }
+
+        // Advanced dungeons are post-rebirth reward bands on top of dungeon rewards
+        if (MonsterUtils.isAdvancedArea(currentLocation)) {
+            goldGained = Math.floor(goldGained * 1.6);
+            expGained = Math.floor(expGained * 1.65);
         }
 
         // Boss bonus rewards
@@ -255,6 +322,10 @@ class Combat {
 
         // Check for item drops
         Game.equipment.checkItemDrop(this.currentMonster);
+
+        if (Game.player.state.classState) {
+            Game.player.state.classState.plunderMarked = false;
+        }
 
         // Track achievement progress
         if (Game.achievements) {
@@ -400,6 +471,13 @@ class Combat {
     // Enhanced method to handle player death and set respawn timer
     handlePlayerDeath() {
         this.isRespawning = true;
+
+        // Class on-death hook (e.g. berserker loses fury stacks)
+        if (typeof ClassKit !== 'undefined') {
+            ClassKit.hooks(Game.player.state.classId).onDeath({
+                classState: Game.player.state.classState
+            });
+        }
         
         // Disable auto battle during respawn
         if (Game.ui && Game.ui.autoBattle) {
@@ -412,14 +490,14 @@ class Combat {
         }, 1500);
     }
 
-    showDamageNumber(damage, isCrit = false) {
+    showDamageNumber(damage, isCrit = false, extraClass = '') {
         const battleArea = document.querySelector('.battle-area');
         const damageElement = document.createElement('div');
-        damageElement.className = 'damage-number' + (isCrit ? ' crit' : '');
+        damageElement.className = `damage-number${isCrit ? ' crit' : ''}${extraClass ? ` ${extraClass}` : ''}`;
         damageElement.textContent = damage + (isCrit ? '!' : '');
         damageElement.style.cssText = `
             position: absolute;
-            color: ${isCrit ? '#ff1744' : '#ffd700'};
+            color: ${extraClass === 'minion-damage' ? '#c084fc' : (isCrit ? '#ff1744' : '#ffd700')};
             font-size: ${isCrit ? '2.2rem' : '1.8rem'};
             font-weight: 700;
             pointer-events: none;
@@ -526,6 +604,9 @@ class Combat {
     startBattle() {
         if (this.battleActive) return;
 
+        this.battleTurn = 0;
+        this.resetClassBattleState();
+
         this.battleActive = true;
         this.updateActivity();
 
@@ -579,6 +660,27 @@ class Combat {
         if (Game.ui && Game.ui.enhancedCombatUI) {
             Game.ui.enhancedCombatUI.updateBattleButtons();
         }
+    }
+
+    resetClassBattleState() {
+        const classState = Game.player?.state?.classState;
+        if (classState && Object.prototype.hasOwnProperty.call(classState, 'ramp')) {
+            classState.ramp = 0;
+        }
+    }
+
+    getRampPerTurnBonus() {
+        const bond = Game.skills?.activeSkills?.find(skill => skill.id === 'bond_of_the_pack' && skill.currentLevel > 0);
+        return bond ? bond.currentLevel * (bond.rampPerTurnBonus || 0) : 0;
+    }
+
+    showMinionDamageNumber(damage) {
+        if (Game.ui?.enhancedCombatUI) {
+            Game.ui.enhancedCombatUI.showDamageNumber(`✦ ${damage}`, false, false, 'minion-damage');
+            return;
+        }
+
+        this.showDamageNumber(`✦ ${damage}`, false, 'minion-damage');
     }
 
     // Override spawnMonster to handle auto battle

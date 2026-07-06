@@ -17,6 +17,7 @@ require_path() {
 
 require_path "$SOURCE_DIR/index.html"
 require_path "$SOURCE_DIR/js"
+require_path "$SOURCE_DIR/css"
 require_path "$SOURCE_DIR/sprites/characters"
 require_path "$SOURCE_DIR/sprites/items"
 require_path "$SOURCE_DIR/sprites/monsters"
@@ -41,6 +42,11 @@ rsync -a --delete \
     --exclude 'desktop.ini' \
     --exclude '*Zone.Identifier' \
     "$SOURCE_DIR/js/" "$DEST_DIR/js/"
+
+rsync -a --delete \
+    --exclude 'desktop.ini' \
+    --exclude '*Zone.Identifier' \
+    "$SOURCE_DIR/css/" "$DEST_DIR/css/"
 
 for sprite_dir in characters items monsters; do
     rsync -a --delete \

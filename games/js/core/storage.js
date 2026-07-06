@@ -157,5 +157,51 @@ const SaveMigration = {
 // Run the migration immediately, before any other script reads from storage.
 SaveMigration.run();
 
+// v2: class booleans -> classId/rebirthCount, exp clamped into the polynomial
+// curve. Requires GloamFormula, so formulas.js must load before this file.
+const SaveMigrationV2 = {
+    mapClass(c) {
+        if (c.isDragonKnight) return { classId: 'dragon_knight', rebirthCount: 1 };
+        if (c.isArchMage) return { classId: 'arch_mage', rebirthCount: 1 };
+        const id = String(c.classId || c.class || 'swordsman').toLowerCase();
+        return { classId: id === 'dragon knight' ? 'dragon_knight' : id, rebirthCount: c.rebirthCount || 0 };
+    },
+    migrateCharacter(c) {
+        if (!c || typeof c !== 'object') return c;
+        const m = this.mapClass(c);
+        c.classId = m.classId;
+        c.rebirthCount = m.rebirthCount;
+        c.classState = c.classState || {};
+        delete c.isDragonKnight; delete c.isArchMage;
+        if (typeof c.level === 'number') {
+            c.maxExp = GloamFormula.maxExpForLevel(c.level);
+            if (typeof c.exp === 'number') c.exp = Math.min(c.exp, Math.max(0, c.maxExp - 1));
+        }
+        return c;
+    },
+    run() {
+        try {
+            if (localStorage.getItem('gloamreach_migrated_v2')) return;
+            const charsRaw = localStorage.getItem(SAVE_KEYS.characters);
+            if (charsRaw) {
+                const chars = JSON.parse(charsRaw);
+                if (Array.isArray(chars)) {
+                    chars.forEach(c => this.migrateCharacter(c));
+                    localStorage.setItem(SAVE_KEYS.characters, JSON.stringify(chars));
+                }
+            }
+            const playerRaw = localStorage.getItem(SAVE_KEYS.player);
+            if (playerRaw) {
+                localStorage.setItem(SAVE_KEYS.player, JSON.stringify(this.migrateCharacter(JSON.parse(playerRaw))));
+            }
+            localStorage.setItem('gloamreach_migrated_v2', '1');
+        } catch (error) {
+            console.warn('Save migration v2 failed:', error);
+        }
+    }
+};
+SaveMigrationV2.run();
+
 window.SAVE_KEYS = SAVE_KEYS;
 window.SaveMigration = SaveMigration;
+window.SaveMigrationV2 = SaveMigrationV2;

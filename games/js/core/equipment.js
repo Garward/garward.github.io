@@ -1,662 +1,12 @@
-// equipment.js - Complete Equipment and inventory management with sprite system and pagination
-const ITEM_TYPES = {
-    helmet: { icon: "⛑️", slot: "helmet", statType: "maxHp" },
-    chestplate: { icon: "🎽", slot: "chestplate", statType: "def" },
-    leggings: { icon: "👖", slot: "leggings", statType: "def" },
-    boots: { icon: "🥾", slot: "boots", statType: "maxHp" },
-    sword: { icon: "⚔️", slot: "sword", statType: "atk" },
-    shield: { icon: "🛡️", slot: "shield", statType: "def" },
-    ring: { icon: "💍", slot: "ring", statType: "random" },
-    necklace: { icon: "📿", slot: "necklace", statType: "random" },
-    potion: { icon: "🧪", slot: null, statType: "heal" },
-    mp_potion: { icon: "💙", slot: null, statType: "restore_mp" },
-    exp_potion: { icon: "⭐", slot: null, statType: "exp_boost" }
-};
-
-// Accessory stat types for randomization
-const ACCESSORY_STATS = {
-    maxHp: { name: "MAX HP", multiplier: 10 },
-    maxMp: { name: "MAX MP", multiplier: 10 },
-    expGain: { name: "EXP GAIN", multiplier: 1, suffix: "%" },
-    lootChance: { name: "LOOT CHANCE", multiplier: 1, suffix: "%" },
-    atkPercent: { name: "ATK", multiplier: 1, suffix: "%" },
-    critChance: { name: "CRIT CHANCE", multiplier: 1, suffix: "%" },
-    critDamage: { name: "CRIT DAMAGE", multiplier: 1, suffix: "%" },
-    skillDamage: { name: "SKILL DAMAGE", multiplier: 1, suffix: "%" }
-};
-
-const RARITIES = ["common", "rare", "epic", "legendary", "mythic"];
-const RARITY_MULTIPLIERS = { common: 1, rare: 1.5, epic: 2, legendary: 3, mythic: 5 };
-const RARITY_DROP_RATES = { common: 0.6, rare: 0.25, epic: 0.08, legendary: 0.015, mythic: 0.005 };
-
-const SHOP_ITEMS = [
-    { name: "Health Potion", type: "potion", rarity: "common", price: 50, healing: 50, level: 1 },
-    { name: "Greater Health Potion", type: "potion", rarity: "rare", price: 150, healing: 150, level: 10 },
-    { name: "Super Health Potion", type: "potion", rarity: "epic", price: 500, healing: 300, level: 25 },
-    { name: "Mana Potion", type: "mp_potion", rarity: "common", price: 40, mpRestore: 30, level: 1 },
-    { name: "Greater Mana Potion", type: "mp_potion", rarity: "rare", price: 120, mpRestore: 80, level: 5 },
-    { name: "Super Mana Potion", type: "mp_potion", rarity: "epic", price: 400, mpRestore: 150, level: 15 },
-    // Experience Potions - Context Menu Shop Item
-    { name: "Experience Potions", type: "exp_potion_menu", rarity: "legendary", price: 0, level: 1, isContextMenu: true }
-];
-
-// EXP Potion Options for Context Menu
-const EXP_POTION_OPTIONS = [
-    { name: "2x EXP Potion", type: "exp_potion", rarity: "legendary", price: 30000, expMultiplier: 2, level: 1 },
-    { name: "4x EXP Potion", type: "exp_potion", rarity: "legendary", price: 60000, expMultiplier: 4, level: 1 },
-    { name: "8x EXP Potion", type: "exp_potion", rarity: "legendary", price: 120000, expMultiplier: 8, level: 1 },
-    { name: "16x EXP Potion", type: "exp_potion", rarity: "legendary", price: 240000, expMultiplier: 16, level: 1 },
-    { name: "32x EXP Potion", type: "exp_potion", rarity: "legendary", price: 480000, expMultiplier: 32, level: 1 },
-    { name: "64x EXP Potion", type: "exp_potion", rarity: "legendary", price: 960000, expMultiplier: 64, level: 1 },
-    { name: "128x EXP Potion", type: "exp_potion", rarity: "mythic", price: 1920000, expMultiplier: 128, level: 1 },
-    { name: "256x EXP Potion", type: "exp_potion", rarity: "mythic", price: 3840000, expMultiplier: 256, level: 1 },
-    { name: "512x EXP Potion", type: "exp_potion", rarity: "mythic", price: 7680000, expMultiplier: 512, level: 1 }
-];
-
-// ===== WORLD BOSS EXP POTION DROPS =====
-const MVP_EXP_POTION_DROPS = {
-    "Vargath": {
-        dropChance: 0.25, // 25% chance
-        potionTypes: ["4x EXP Potion", "8x EXP Potion", "16x EXP Potion"],
-        weights: [60, 30, 10] // 60% for 4x, 30% for 8x, 10% for 16x
-    },
-    "King Neferok": {
-        dropChance: 0.30, // 30% chance
-        potionTypes: ["8x EXP Potion", "16x EXP Potion", "32x EXP Potion"],
-        weights: [50, 35, 15] // 50% for 8x, 35% for 16x, 15% for 32x
-    },
-    "Seraphel": {
-        dropChance: 0.35, // 35% chance
-        potionTypes: ["16x EXP Potion", "32x EXP Potion", "64x EXP Potion", "128x EXP Potion"],
-        weights: [40, 30, 20, 10] // 40% for 16x, 30% for 32x, 20% for 64x, 10% for 128x
-    }
-};
-
-// MVP Boss Accessory Drops
-const MVP_ACCESSORY_DROPS = {
-    "Vargath": {
-        dropChance: 0.15, // 15% chance
-        accessoryTypes: ["ring", "necklace"],
-        rarities: ["epic", "legendary"],
-        rarityWeights: [70, 30], // 70% epic, 30% legendary
-        statMultiplier: 2.0 // Double normal accessory stats
-    },
-    "King Neferok": {
-        dropChance: 0.18, // 18% chance
-        accessoryTypes: ["ring", "necklace"],
-        rarities: ["epic", "legendary", "mythic"],
-        rarityWeights: [50, 40, 10], // 50% epic, 40% legendary, 10% mythic
-        statMultiplier: 2.5 // 2.5x normal accessory stats
-    },
-    "Seraphel": {
-        dropChance: 0.22, // 22% chance
-        accessoryTypes: ["ring", "necklace"],
-        rarities: ["legendary", "mythic"],
-        rarityWeights: [60, 40], // 60% legendary, 40% mythic
-        statMultiplier: 3.0 // Triple normal accessory stats
-    }
-};
-
-// Function to handle MVP EXP potion drops (to be called when MVP is defeated)
-function handleMvpExpPotionDrop(mvpName) {
-    const mvpConfig = MVP_EXP_POTION_DROPS[mvpName];
-    if (!mvpConfig || !Game.equipment) return null;
-
-    // Check if drop occurs
-    if (Math.random() > mvpConfig.dropChance) return null;
-
-    // Select which potion type to drop based on weights
-    const totalWeight = mvpConfig.weights.reduce((sum, weight) => sum + weight, 0);
-    let randomValue = Math.random() * totalWeight;
-
-    for (let i = 0; i < mvpConfig.potionTypes.length; i++) {
-        randomValue -= mvpConfig.weights[i];
-        if (randomValue <= 0) {
-            const potionName = mvpConfig.potionTypes[i];
-            const shopItem = EXP_POTION_OPTIONS.find(item => item.name === potionName);
-
-            if (shopItem) {
-                // Create the potion item
-                const potion = Game.equipment.generateItem(shopItem.type, shopItem.rarity, 1);
-                if (potion) {
-                    potion.stats = { exp_boost: shopItem.expMultiplier };
-                    potion.name = shopItem.name;
-
-                    // Add to inventory
-                    if (Game.equipment.addToInventory(potion, 1)) {
-                        Game.ui.showLootNotification(`🎉 BOSS DROP: ${potionName}!`, 3000);
-                        return potion;
-                    }
-                }
-            }
-            break;
-        }
-    }
-
-    return null;
-}
-
-// Function to handle MVP accessory drops
-function handleMvpAccessoryDrop(mvpName) {
-    const mvpConfig = MVP_ACCESSORY_DROPS[mvpName];
-    if (!mvpConfig || !Game.equipment) return null;
-
-    // Check if drop occurs
-    if (Math.random() > mvpConfig.dropChance) return null;
-
-    // Select accessory type
-    const accessoryType = mvpConfig.accessoryTypes[Math.floor(Math.random() * mvpConfig.accessoryTypes.length)];
-
-    // Select rarity based on weights
-    const totalWeight = mvpConfig.rarityWeights.reduce((sum, weight) => sum + weight, 0);
-    let randomValue = Math.random() * totalWeight;
-    let selectedRarity = mvpConfig.rarities[0];
-
-    for (let i = 0; i < mvpConfig.rarities.length; i++) {
-        randomValue -= mvpConfig.rarityWeights[i];
-        if (randomValue <= 0) {
-            selectedRarity = mvpConfig.rarities[i];
-            break;
-        }
-    }
-
-    // Generate the accessory with enhanced stats
-    const accessory = Game.equipment.generateItem(accessoryType, selectedRarity, 120);
-
-    if (accessory) {
-        // Enhance stats based on MVP multiplier
-        if (accessory.stats) {
-            Object.keys(accessory.stats).forEach(stat => {
-                accessory.stats[stat] = Math.floor(accessory.stats[stat] * mvpConfig.statMultiplier);
-            });
-        }
-
-        // Add MVP prefix to name
-        accessory.name = `${mvpName}'s ${accessory.name}`;
-
-        // Add to inventory
-        if (Game.equipment.addToInventory(accessory, 1)) {
-            Game.ui.showLootNotification(`🎉 BOSS DROP: ${accessory.name}!`, 3000);
-            return accessory;
-        }
-    }
-
-    return null;
-}
-
-// Export for future use
-window.handleMvpExpPotionDrop = handleMvpExpPotionDrop;
-window.handleMvpAccessoryDrop = handleMvpAccessoryDrop;
-
-// FIXED: Sprite database that matches your ACTUAL files in the folder
-class ActualSpriteDatabase {
-    constructor() {
-        this.spriteBasePath = "sprites/items/";
-        
-        // This EXACTLY matches your actual sprite files
-        this.itemTemplates = {
-            // === SWORDS ===
-            sword: {
-                common: { 
-                    name: "Iron Sword", 
-                    sprite: "iron_sword.png",  // ✅ You have this
-                    emoji: "⚔️",
-                    description: "A basic iron sword for beginners"
-                },
-                rare: { 
-                    name: "Steel Sword", 
-                    sprite: "steel_sword.png", // ✅ You have this
-                    emoji: "⚔️",
-                    description: "A well-crafted steel blade"
-                },
-                epic: { 
-                    name: "Enchanted Sword", 
-                    sprite: "steel_sword.png", // Reuse steel until you get more
-                    emoji: "🗡️",
-                    description: "A magically enhanced blade"
-                },
-                legendary: { 
-                    name: "Hero's Sword", 
-                    sprite: "crystal_sword.png",
-                    emoji: "🗡️",
-                    description: "A legendary weapon of heroes"
-                },
-                mythic: { 
-                    name: "DragonSlayer", 
-                    sprite: "dragonslayer.png", 
-                    emoji: "💎",
-                    description: "A cursed blade forged to slay dragons, its blood-red edge thirsts for vengeance."
-                }
-            },
-            
-            // === HELMETS ===
-            helmet: {
-                common: { 
-                    name: "Leather Cap", 
-                    sprite: "leather_cap.png", // ✅ You have this
-                    emoji: "🎭",
-                    description: "Simple leather headwear"
-                },
-                rare: { 
-                    name: "Reinforced Cap", 
-                    sprite: "leather_cap.png", // Reuse until you get more
-                    emoji: "⛑️",
-                    description: "Sturdy reinforced protection"
-                },
-                epic: { 
-                    name: "Battle Helm", 
-                    sprite: "leather_cap.png", // Reuse
-                    emoji: "⛑️",
-                    description: "Advanced helmet with face guard"
-                },
-                legendary: { 
-                    name: "Golden Crown", 
-                    sprite: "golden_crown.png", // ✅ You have this
-                    emoji: "👑",
-                    description: "A royal crown fit for kings"
-                },
-                mythic: { 
-                    name: "Divine Crown", 
-                    sprite: "golden_crown.png", // Reuse crown
-                    emoji: "💎",
-                    description: "A divine crystal circlet of immense power"
-                }
-            },
-            
-            // === CHESTPLATES ===
-            chestplate: {
-                common: { 
-                    name: "Cloth Shirt", 
-                    sprite: "cloth_shirt.png", // ✅ You have this
-                    emoji: "👕",
-                    description: "Basic cloth clothing offering minimal protection"
-                },
-                rare: { 
-                    name: "Leather Armor", 
-                    sprite: "leather_armor.png", // ✅ You have this
-                    emoji: "🎽",
-                    description: "Flexible leather armor for mobility"
-                },
-                epic: { 
-                    name: "Chain Mail", 
-                    sprite: "chain_mail.png", // ✅ You have this
-                    emoji: "⛓️",
-                    description: "Interlocking metal rings for solid defense"
-                },
-                legendary: { 
-                    name: "Plate Armor", 
-                    sprite: "plate_armor.png", // ✅ You have this
-                    emoji: "🛡️",
-                    description: "Heavy plate armor for maximum protection"
-                },
-                mythic: { 
-                    name: "Dragon Scale Armor", 
-                    sprite: "dragon_scale.png", // ✅ You have this
-                    emoji: "🐉",
-                    description: "Armor crafted from ancient dragon scales"
-                }
-            },
-            
-            // === SHIELDS ===
-            shield: {
-                common: { 
-                    name: "Wooden Shield", 
-                    sprite: "wooden_shield.png", // ✅ You have this
-                    emoji: "🛡️",
-                    description: "A simple wooden shield for basic defense"
-                },
-                rare: { 
-                    name: "Iron Shield", 
-                    sprite: "wooden_shield.png", // Reuse wooden until you get more
-                    emoji: "🛡️",
-                    description: "Solid iron shield with metal reinforcement"
-                },
-                epic: { 
-                    name: "Steel Shield", 
-                    sprite: "wooden_shield.png", // Reuse wooden
-                    emoji: "🛡️",
-                    description: "Advanced steel shield with intricate design"
-                },
-                legendary: { 
-                    name: "Magic Shield", 
-                    sprite: "crystal_shield.png", // ✅ You have this
-                    emoji: "🛡️",
-                    description: "A legendary shield of heroes"
-                },
-                mythic: { 
-                    name: "Crystal Shield", 
-                    sprite: "crystal_shield.png", // ✅ You have this
-                    emoji: "💎",
-                    description: "A mystical crystal shield with magical barriers"
-                }
-            },
-            
-            // === BOOTS ===
-            boots: {
-                common: { 
-                    name: "Cloth Shoes", 
-                    sprite: "cloth_boots.png", // ✅ You have this
-                    emoji: "👟",
-                    description: "Simple cloth footwear for everyday use"
-                },
-                rare: { 
-                    name: "Leather Boots", 
-                    sprite: "leather_boots.png", // ✅ You have this
-                    emoji: "🥾",
-                    description: "Durable leather boots for adventuring"
-                },
-                epic: { 
-                    name: "Iron Boots", 
-                    sprite: "iron_boots.png", // Reuse leather until you get more
-                    emoji: "🥾",
-                    description: "Heavy iron boots for extra protection"
-                },
-                legendary: { 
-                    name: "Golden Boots", 
-                    sprite: "gold_boots.png", // Reuse leather
-                    emoji: "👢",
-                    description: "Magnificent golden boots of swiftness"
-                },
-                mythic: { 
-                    name: "Crystal Boots", 
-                    sprite: "crystal_boots.png", // Reuse leather
-                    emoji: "💎",
-                    description: "Ethereal crystal boots that float above ground"
-                }
-            },
-            
-            // === LEGGINGS ===
-            leggings: {
-                common: { 
-                    name: "Cloth Pants", 
-                    sprite: "cloth_pants.png", // ✅ You have this
-                    emoji: "👖",
-                    description: "Basic cloth leg protection"
-                },
-                rare: { 
-                    name: "Leather Pants", 
-                    sprite: "leather_pants.png", // ✅ You have this
-                    emoji: "👖",
-                    description: "Flexible leather leg armor"
-                },
-                epic: { 
-                    name: "Chain Leggings", 
-                    sprite: "chain_pants.png", // Reuse until you get more
-                    emoji: "⛓️",
-                    description: "Chain mail leg protection"
-                },
-                legendary: { 
-                    name: "Plate Leggings", 
-                    sprite: "plate_pants.png", // Reuse
-                    emoji: "🦵",
-                    description: "Heavy plate leg armor"
-                },
-                mythic: { 
-                    name: "Crystal Leggings", 
-                    sprite: "crystal_pants.png", // Reuse
-                    emoji: "💎",
-                    description: "Mystical crystal leg guards"
-                }
-            },
-            
-            // === POTIONS - PERCENTAGE BASED HEALING ===
-            potion: {
-                common: {
-                    name: "Health Potion",
-                    sprite: "health_potion.png",
-                    emoji: "🧪",
-                    healPercent: 10,
-                    description: "Restores 10% Max HP"
-                },
-                rare: {
-                    name: "Greater Health Potion",
-                    sprite: "health_potion.png",
-                    emoji: "🧪",
-                    healPercent: 20,
-                    description: "Restores 20% Max HP"
-                },
-                epic: {
-                    name: "Super Health Potion",
-                    sprite: "health_potion.png",
-                    emoji: "🧪",
-                    healPercent: 30,
-                    description: "Restores 30% Max HP"
-                },
-                legendary: {
-                    name: "Ultimate Health Potion",
-                    sprite: "health_potion.png",
-                    emoji: "🧪",
-                    healPercent: 40,
-                    description: "Restores 40% Max HP"
-                },
-                mythic: {
-                    name: "Divine Health Potion",
-                    sprite: "health_potion.png",
-                    emoji: "🧪",
-                    healPercent: 50,
-                    description: "Restores 50% Max HP"
-                }
-            },
-
-            mp_potion: {
-                common: {
-                    name: "Mana Potion",
-                    sprite: "mana_potion.png",
-                    emoji: "💙",
-                    mpRestorePercent: 10,
-                    description: "Restores 10% Max MP"
-                },
-                rare: {
-                    name: "Greater Mana Potion",
-                    sprite: "mana_potion.png",
-                    emoji: "💙",
-                    mpRestorePercent: 20,
-                    description: "Restores 20% Max MP"
-                },
-                epic: {
-                    name: "Super Mana Potion",
-                    sprite: "mana_potion.png",
-                    emoji: "💙",
-                    mpRestorePercent: 30,
-                    description: "Restores 30% Max MP"
-                },
-                legendary: {
-                    name: "Ultimate Mana Potion",
-                    sprite: "mana_potion.png",
-                    emoji: "💙",
-                    mpRestorePercent: 40,
-                    description: "Restores 40% Max MP"
-                },
-                mythic: {
-                    name: "Divine Mana Potion",
-                    sprite: "mana_potion.png",
-                    emoji: "💙",
-                    mpRestorePercent: 50,
-                    description: "Restores 50% Max MP"
-                }
-            },
-            exp_potion: {
-                legendary: {
-                    name: "Experience Potion",
-                    sprite: "exp_potion.png", // Uses dedicated EXP potion sprite
-                    emoji: "⭐",
-                    expMultiplier: 2, // Default, will be overridden by shop item
-                    description: "Multiplies EXP gain for 30 minutes"
-                },
-                mythic: {
-                    name: "Greater Experience Potion",
-                    sprite: "exp_potion.png", // Uses dedicated EXP potion sprite
-                    emoji: "⭐",
-                    expMultiplier: 4, // Will be overridden by shop item
-                    description: "Multiplies EXP gain for 30 minutes"
-                }
-            },
-
-            // === ACCESSORIES ===
-            ring: {
-                common: {
-                    name: "Simple Ring",
-                    sprite: "ring_common.png", // Placeholder - ready for sprites
-                    emoji: "💍",
-                    description: "A basic ring with random properties"
-                },
-                rare: {
-                    name: "Silver Ring",
-                    sprite: "ring_rare.png",
-                    emoji: "💍",
-                    description: "A silver ring with enhanced properties"
-                },
-                epic: {
-                    name: "Gold Ring",
-                    sprite: "ring_epic.png",
-                    emoji: "💍",
-                    description: "A golden ring with multiple enchantments"
-                },
-                legendary: {
-                    name: "Platinum Ring",
-                    sprite: "ring_legendary.png",
-                    emoji: "💍",
-                    description: "A platinum ring with powerful magic"
-                },
-                mythic: {
-                    name: "Celestial Ring",
-                    sprite: "ring_mythic.png",
-                    emoji: "💍",
-                    description: "A ring forged from celestial materials"
-                }
-            },
-
-            necklace: {
-                common: {
-                    name: "Simple Necklace",
-                    sprite: "necklace_common.png", // Placeholder - ready for sprites
-                    emoji: "📿",
-                    description: "A basic necklace with random properties"
-                },
-                rare: {
-                    name: "Silver Necklace",
-                    sprite: "necklace_rare.png",
-                    emoji: "📿",
-                    description: "A silver necklace with enhanced properties"
-                },
-                epic: {
-                    name: "Gold Necklace",
-                    sprite: "necklace_epic.png",
-                    emoji: "📿",
-                    description: "A golden necklace with multiple enchantments"
-                },
-                legendary: {
-                    name: "Platinum Necklace",
-                    sprite: "necklace_legendary.png",
-                    emoji: "📿",
-                    description: "A platinum necklace with powerful magic"
-                },
-                mythic: {
-                    name: "Celestial Necklace",
-                    sprite: "necklace_mythic.png",
-                    emoji: "📿",
-                    description: "A necklace forged from celestial materials"
-                }
-            }
-        };
-    }
-    
-    getItemTemplate(type, rarity) {
-        return this.itemTemplates[type]?.[rarity] || null;
-    }
-    
-    generateItem(type, rarity, monsterLevel) {
-        const template = this.getItemTemplate(type, rarity);
-        if (!template) {
-            console.warn(`No template found for ${type} ${rarity}`);
-            return null;
-        }
-        
-        const rarityMult = RARITY_MULTIPLIERS[rarity];
-
-        // Add variance (±15%) and ensure minimum stats
-        const variance = 0.85 + Math.random() * 0.3;
-        const statRoll = GloamFormula.calculateEquipmentStatValue({
-            monsterLevel,
-            rarityMultiplier: rarityMult,
-            variance
-        });
-        const requiredLevel = statRoll.requiredLevel;
-        const statValue = statRoll.statValue;
-
-        const item = {
-            name: template.name,
-            type: type,
-            rarity: rarity,
-            icon: template.emoji,
-            sprite: template.sprite,
-            spriteUrl: this.spriteBasePath + template.sprite,
-            description: template.description,
-            slot: ITEM_TYPES[type]?.slot,
-            id: Date.now() + Math.random(),
-            level: requiredLevel, // Required level to equip
-            itemLevel: monsterLevel, // Monster level it dropped from
-            upgradeLevel: 0, // Starting upgrade level
-            baseStats: null // Will store original stats for upgrade calculations
-        };
-
-        // Add appropriate stats
-        if (type === 'potion') {
-            item.stats = { healPercent: template.healPercent || 10 };
-        } else if (type === 'mp_potion') {
-            item.stats = { mpRestorePercent: template.mpRestorePercent || 10 };
-        } else if (type === 'exp_potion') {
-            item.stats = { exp_boost: template.expMultiplier || 2 };
-        } else if (type === 'ring' || type === 'necklace') {
-            // Generate randomized accessory stats
-            const accessoryStats = this.generateAccessoryStats(rarity, statValue);
-            item.stats = accessoryStats.stats;
-            item.baseStats = { ...accessoryStats.stats };
-        } else {
-            const statType = ITEM_TYPES[type].statType;
-            const generatedStats = GloamFormula.calculateEquipmentStats({
-                type,
-                statType,
-                monsterLevel,
-                rarityMultiplier: rarityMult,
-                variance
-            });
-
-            item.stats = generatedStats.stats;
-            item.baseStats = generatedStats.baseStats;
-        }
-
-        return item;
-    }
-    
-    getSpriteUrl(sprite) {
-        return this.spriteBasePath + sprite;
-    }
-
-    generateAccessoryStats(rarity, baseValue) {
-        const stats = {};
-        const numStats = GloamFormula.getAccessoryStatLineCount(rarity, RARITIES);
-
-        const statKeys = Object.keys(ACCESSORY_STATS);
-
-        for (let i = 0; i < numStats; i++) {
-            // Pick random stat (can be duplicate)
-            const statType = statKeys[Math.floor(Math.random() * statKeys.length)];
-            const statConfig = ACCESSORY_STATS[statType];
-
-            const statValue = GloamFormula.calculateAccessoryStatValue({ baseValue, statConfig });
-
-            // Add to existing stat if duplicate, otherwise create new
-            if (stats[statType]) {
-                stats[statType] += statValue;
-            } else {
-                stats[statType] = statValue;
-            }
-        }
-
-        return { stats };
-    }
-}
+// equipment.js - Equipment inventory management.
+// Item data lives under js/data/items/. Item factory/drop helpers live under js/core/equipment/.
+const ITEM_TYPES = window.ITEM_TYPES;
+const ACCESSORY_STATS = window.ACCESSORY_STATS;
+const RARITIES = window.RARITIES;
+const RARITY_MULTIPLIERS = window.RARITY_MULTIPLIERS;
+const RARITY_DROP_RATES = window.RARITY_DROP_RATES;
+const SHOP_ITEMS = window.SHOP_ITEMS;
+const EXP_POTION_OPTIONS = window.EXP_POTION_OPTIONS;
 
 class EquipmentManager {
 constructor() {
@@ -667,7 +17,7 @@ constructor() {
     this.maxPages = 6; // 5 regular pages + 1 favorites page
     this.draggedItem = null;
     this.draggedFromSlot = null;
-    this.spriteDB = new ActualSpriteDatabase();
+    this.spriteDB = new window.ActualSpriteDatabase();
     this.maxStackSize = {
         potion: 50,
         mp_potion: 50,
@@ -790,358 +140,6 @@ constructor() {
         return -1; // No empty slot found
     }
 
-    // Create inventory grid with pagination
-    createInventoryGrid() {
-    const grid = document.getElementById('inventory-grid');
-    if (!grid) return;
-    
-    // Clear existing grid
-    grid.innerHTML = '';
-    
-    // Create page navigation
-    this.createPageNavigation();
-    
-    // Create 48 slots for current page (6x8 grid)
-    for (let i = 0; i < this.slotsPerPage; i++) {
-        const actualIndex = (this.currentPage * this.slotsPerPage) + i;
-        const slot = document.createElement('div');
-        slot.className = 'inventory-slot';
-        slot.dataset.slot = actualIndex;
-        slot.ondrop = (e) => this.dropItem(e, actualIndex);
-        slot.ondragover = (e) => this.allowDrop(e);
-        slot.ondragleave = (e) => this.dragLeave(e);
-        slot.onclick = (e) => {
-            e.preventDefault();
-            e.stopPropagation();
-            this.selectItem(actualIndex, e);
-        };
-
-        // Add right-click context menu support
-        slot.oncontextmenu = (e) => {
-            e.preventDefault();
-            const item = this.inventory[actualIndex];
-            if (item && item.slot) {
-                this.showEquipmentMenu(actualIndex, item);
-            }
-        };
-        grid.appendChild(slot);
-    }
-    
-    // Render items for current page
-    this.renderCurrentPage();
-}
-
-    createPageNavigation() {
-        const nav = document.querySelector('.inventory-nav');
-        if (!nav) return;
-
-        nav.innerHTML = '';
-
-        for (let i = 0; i < this.maxPages; i++) {
-            const btn = document.createElement('button');
-            btn.className = `page-btn ${i === this.currentPage ? 'active' : ''}`;
-            btn.dataset.page = i;
-
-            // Special handling for favorites page (last page)
-            if (i === this.maxPages - 1) {
-                btn.textContent = '⭐';
-                btn.classList.add('favorites-btn');
-                btn.title = 'Favorites - Full inventory page for protected items';
-            } else {
-                btn.textContent = i + 1;
-                btn.title = `Page ${i + 1} (Ctrl+${i + 1})`;
-            }
-
-            btn.onclick = () => this.switchPage(i);
-            nav.appendChild(btn);
-        }
-
-        // Update page indicators
-        this.updatePageIndicators();
-    }
-
-    switchPage(pageNumber) {
-        if (pageNumber < 0 || pageNumber >= this.maxPages) return;
-        
-        this.currentPage = pageNumber;
-        
-        // Update navigation
-        document.querySelectorAll('.page-btn').forEach((btn, index) => {
-            btn.classList.toggle('active', index === pageNumber);
-        });
-        
-        // Re-render grid for new page
-        this.createInventoryGrid();
-        
-        // Show page switch notification
-        if (Game && Game.ui) {
-            Game.ui.showLootNotification(`Switched to page ${pageNumber + 1}`);
-        }
-    }
-
-    renderCurrentPage() {
-        const grid = document.getElementById('inventory-grid');
-        if (!grid) return;
-
-        // Check if we're on the favorites page
-        const isFavoritesPage = this.currentPage === 5;
-
-        if (isFavoritesPage) {
-            // Render favorites inventory (48 slots - full page)
-            const slots = grid.querySelectorAll('.inventory-slot');
-
-            slots.forEach((slot, slotIndex) => {
-                slot.innerHTML = '';
-                slot.className = 'inventory-slot favorites-slot';
-                slot.dataset.index = `fav-${slotIndex}`;
-                slot.style.border = '2px solid gold';
-                slot.title = 'Favorites - Items here ignore sorting and selling';
-
-                const item = this.favorites[slotIndex];
-
-                if (item) {
-                    const itemDiv = document.createElement('div');
-                    itemDiv.className = `item ${item.rarity}`;
-
-                    this.renderItemIcon(item, itemDiv);
-
-                    // Add event listeners
-                    itemDiv.addEventListener('mouseenter', (e) => this.showTooltip(e, item));
-                    itemDiv.addEventListener('mouseleave', () => this.hideTooltip());
-                    itemDiv.addEventListener('mousemove', (e) => this.moveTooltip(e));
-
-                    itemDiv.ondblclick = () => {
-                        if (item.slot) {
-                            this.autoEquipFavoriteItem(slotIndex);
-                        }
-                    };
-
-                    slot.appendChild(itemDiv);
-                }
-
-                // Add event listeners for interaction
-                slot.onclick = (e) => {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    if (item) {
-                        this.selectFavoriteItem(slotIndex, e);
-                    }
-                };
-            });
-        } else {
-            // Render regular inventory
-            const slots = grid.querySelectorAll('.inventory-slot');
-
-            slots.forEach((slot, slotIndex) => {
-                const actualIndex = (this.currentPage * this.slotsPerPage) + slotIndex;
-                slot.innerHTML = '';
-
-                // Lock bottom 2 rows (slots 32-47) on first page for potions
-                if (this.currentPage === 0 && slotIndex >= 32) {
-                    slot.classList.add('potion-locked');
-                    slot.style.background = 'rgba(0, 100, 255, 0.1)';
-                    slot.style.border = '2px solid rgba(0, 100, 255, 0.5)';
-                    slot.title = 'Potion-only slot - Only potions can be placed here';
-                }
-
-                const item = this.inventory[actualIndex];
-                if (item) {
-                    const itemDiv = document.createElement('div');
-                    itemDiv.className = `item ${item.rarity}`;
-
-                    // Use existing render system
-                    this.renderItemIcon(item, itemDiv);
-
-                    itemDiv.draggable = true;
-                    itemDiv.ondragstart = (e) => this.dragStart(e, actualIndex);
-
-                    // Add event listeners
-                    itemDiv.addEventListener('mouseenter', (e) => this.showTooltip(e, item));
-                    itemDiv.addEventListener('mouseleave', () => this.hideTooltip());
-                    itemDiv.addEventListener('mousemove', (e) => this.moveTooltip(e));
-
-                    itemDiv.ondblclick = () => {
-                        if (item.slot) {
-                            this.autoEquipItem(actualIndex);
-                        } else if (item.type === 'potion') {
-                            this.usePotionFromInventory(actualIndex);
-                        } else if (item.type === 'mp_potion') {
-                            this.useMpPotionFromInventory(actualIndex);
-                        } else if (item.type === 'exp_potion') {
-                            this.useExpPotionFromInventory(actualIndex);
-                        }
-                    };
-
-                    // Remove right-click context menu - favorites moved to left-click menu
-
-                    // Add stack count if applicable
-                    if (this.maxStackSize[item.type] && (item.count > 1 || item.count === undefined)) {
-                        const count = document.createElement('div');
-                        count.className = 'item-count';
-                        const displayCount = item.count || 1;
-                        count.textContent = displayCount;
-
-                        if (displayCount >= 10) {
-                            count.classList.add('large-stack');
-                        }
-
-                        itemDiv.appendChild(count);
-                    }
-
-                    slot.appendChild(itemDiv);
-                }
-            });
-        }
-    }
-
-    // Override renderInventory to use pagination
-    renderInventory() {
-        this.renderCurrentPage();
-        this.updatePageIndicators();
-    }
-
-    updatePageIndicators() {
-    const pageButtons = document.querySelectorAll('.page-btn');
-
-    pageButtons.forEach((btn, pageIndex) => {
-        // Special handling for favorites page
-        if (pageIndex === this.maxPages - 1) {
-            // Check favorites inventory for items
-            const favoritesItemCount = this.favorites.filter(item => item !== null).length;
-            const hasFavorites = favoritesItemCount > 0;
-
-            btn.classList.toggle('has-items', hasFavorites);
-
-            if (pageIndex === this.currentPage) {
-                btn.title = `Favorites - Current (${favoritesItemCount}/48 items)`;
-            } else if (hasFavorites) {
-                btn.title = `Favorites - ${favoritesItemCount}/48 protected items`;
-            } else {
-                btn.title = `Favorites - Empty (48 slots available)`;
-            }
-        } else {
-            // Regular inventory pages
-            const startIndex = pageIndex * this.slotsPerPage;
-            const endIndex = startIndex + this.slotsPerPage;
-
-            // Check if this page has any items
-            const hasItems = this.inventory.slice(startIndex, endIndex).some(item => item !== null);
-            const itemCount = this.inventory.slice(startIndex, endIndex).filter(item => item !== null).length;
-
-            btn.classList.toggle('has-items', hasItems);
-
-            if (hasItems && pageIndex !== this.currentPage) {
-                btn.title = `Page ${pageIndex + 1} - ${itemCount}/48 items (Ctrl+${pageIndex + 1})`;
-            } else if (pageIndex === this.currentPage) {
-                btn.title = `Page ${pageIndex + 1} - Current (${itemCount}/48 items)`;
-            } else {
-                btn.title = `Page ${pageIndex + 1} - Empty (Ctrl+${pageIndex + 1})`;
-            }
-        }
-    });
-}
-
-    // Find best page for new items
-    findBestPageForItem(item) {
-        // First, try to find a page with stackable items
-        if (this.maxStackSize[item.type]) {
-            for (let page = 0; page < this.maxPages; page++) {
-                const startIndex = page * this.slotsPerPage;
-                const endIndex = startIndex + this.slotsPerPage;
-                
-                for (let i = startIndex; i < endIndex; i++) {
-                    if (this.canStack(this.inventory[i], item)) {
-                        return page;
-                    }
-                }
-            }
-        }
-        
-        // Then, find a page with empty slots (prefer current page)
-        const currentPageStart = this.currentPage * this.slotsPerPage;
-        const currentPageEnd = currentPageStart + this.slotsPerPage;
-        
-        if (this.inventory.slice(currentPageStart, currentPageEnd).some(slot => slot === null)) {
-            return this.currentPage;
-        }
-        
-        // Check other pages
-        for (let page = 0; page < this.maxPages; page++) {
-            if (page === this.currentPage) continue;
-            
-            const startIndex = page * this.slotsPerPage;
-            const endIndex = startIndex + this.slotsPerPage;
-            
-            if (this.inventory.slice(startIndex, endIndex).some(slot => slot === null)) {
-                return page;
-            }
-        }
-        
-        return -1; // No space available
-    }
-
-    findPageWithItem(searchItem) {
-        for (let page = 0; page < this.maxPages; page++) {
-            const startIndex = page * this.slotsPerPage;
-            const endIndex = startIndex + this.slotsPerPage;
-            
-            for (let i = startIndex; i < endIndex; i++) {
-                const item = this.inventory[i];
-                if (item && item.name === searchItem.name && item.type === searchItem.type) {
-                    return page;
-                }
-            }
-        }
-        return -1;
-    }
-
-    // Keyboard shortcuts for page navigation
-    handlePageNavigation(e) {
-        if (e.ctrlKey && e.key >= '1' && e.key <= '5') {
-            e.preventDefault();
-            const pageIndex = parseInt(e.key) - 1;
-            this.switchPage(pageIndex);
-            return true;
-        }
-        return false;
-    }
-
-    // Enhanced item rendering with sprite support and error handling
-    renderItemIcon(item, container) {
-        container.innerHTML = '';
-        
-        if (item.spriteUrl) {
-            const img = document.createElement('img');
-            img.src = item.spriteUrl;
-            img.style.cssText = `
-                width: 100%;
-                height: 100%;
-                image-rendering: pixelated;
-                image-rendering: -moz-crisp-edges;
-                image-rendering: -webkit-crisp-edges;
-                object-fit: contain;
-            `;
-            
-            // Enhanced error handling with debugging
-            img.onerror = (e) => {
-                console.warn(`Failed to load sprite: ${item.spriteUrl} for item: ${item.name}`);
-                container.innerHTML = '';
-                container.textContent = item.icon;
-                container.style.fontSize = 'clamp(1.2rem, 3vw, 1.8rem)';
-            };
-            
-            img.onload = () => {
-                console.log(`Successfully loaded sprite: ${item.spriteUrl}`);
-            };
-            
-            container.appendChild(img);
-        } else {
-            // Use emoji fallback
-            container.textContent = item.icon;
-            container.style.fontSize = 'clamp(1.2rem, 3vw, 1.8rem)';
-        }
-    }
-
     generateItem(type, rarity, monsterLevel) {
         return this.spriteDB.generateItem(type, rarity, monsterLevel);
     }
@@ -1170,6 +168,15 @@ constructor() {
                     lootBonus += item.stats.lootChance;
                 }
             });
+        }
+
+        // Class economy hook (e.g. rogue loot bonus)
+        if (Game.player && Game.player.state && typeof GloamFormula !== 'undefined') {
+            lootBonus += GloamFormula.rewardMultipliers({
+                classId: Game.player.state.classId,
+                classState: Game.player.state.classState,
+                rebirthCount: Game.player.state.rebirthCount
+            }).lootChanceBonus;
         }
 
         if (lootBonus > 0) {
@@ -1358,6 +365,7 @@ constructor() {
 
     equipItem(item, slot) {
         if (item.slot !== slot) return false;
+        if (!this.canEquipSlot(slot)) return false;
         if (Game.player.level < item.level) {
             if (Game && Game.ui) {
                 Game.ui.showLootNotification(`Requires level ${item.level} to equip!`);
@@ -1375,6 +383,20 @@ constructor() {
         }
 
         return oldItem;
+    }
+
+    canEquipSlot(slot) {
+        if (typeof ClassKit === 'undefined' || typeof Game === 'undefined' || !Game.player?.state) return true;
+        const classDef = ClassKit.get(Game.player.state.classId);
+        const forbiddenSlots = classDef?.forbiddenSlots || [];
+        if (!forbiddenSlots.includes(slot)) return true;
+
+        if (Game && Game.ui) {
+            const className = classDef?.name || 'This class';
+            const itemName = slot === 'shield' ? 'shields' : `${slot} items`;
+            Game.ui.showLootNotification(`${className} cannot equip ${itemName}!`);
+        }
+        return false;
     }
 
     unequipItem(slot) {
@@ -1445,12 +467,17 @@ constructor() {
         const potion = this.inventory[index];
         if (!potion || potion.type !== 'potion') return;
         
-        const healPercent = potion.stats.healPercent || 10;
-        const healing = Math.floor(Game.player.maxHp * (healPercent / 100));
+        const healing = typeof GloamFormula !== 'undefined'
+            ? GloamFormula.potionEffect(potion.stats, Game.player.maxHp)
+            : Math.floor(Game.player.maxHp * ((potion.stats.healPercent || 10) / 100));
         const actualHealing = Game.player.heal(healing);
+        const healRatio = typeof GloamFormula !== 'undefined'
+            ? GloamFormula.potionPercentRatio(potion.stats.healPercent || 0)
+            : (potion.stats.healPercent || 0) / 100;
 
         if (Game && Game.ui) {
-            Game.ui.showLootNotification(`Healed for ${actualHealing} HP (${healPercent}%)!`);
+            const pctText = healRatio > 0 ? ` (${Math.round(healRatio * 100)}%)` : '';
+            Game.ui.showLootNotification(`Healed for ${actualHealing} HP${pctText}!`);
         }
         
         if (potion.count && potion.count > 1) {
@@ -1469,12 +496,17 @@ constructor() {
         const mpPotion = this.inventory[index];
         if (!mpPotion || mpPotion.type !== 'mp_potion') return;
 
-        const mpRestorePercent = mpPotion.stats.mpRestorePercent || 10;
-        const mpRestore = Math.floor(Game.player.maxMp * (mpRestorePercent / 100));
+        const mpRestore = typeof GloamFormula !== 'undefined'
+            ? GloamFormula.potionEffect(mpPotion.stats, Game.player.maxMp)
+            : Math.floor(Game.player.maxMp * ((mpPotion.stats.mpRestorePercent || 10) / 100));
         const actualRestore = Game.player.restoreMp(mpRestore);
+        const mpRatio = typeof GloamFormula !== 'undefined'
+            ? GloamFormula.potionPercentRatio(mpPotion.stats.mpRestorePercent || 0)
+            : (mpPotion.stats.mpRestorePercent || 0) / 100;
 
         if (Game && Game.ui) {
-            Game.ui.showLootNotification(`Restored ${actualRestore} MP (${mpRestorePercent}%)!`);
+            const pctText = mpRatio > 0 ? ` (${Math.round(mpRatio * 100)}%)` : '';
+            Game.ui.showLootNotification(`Restored ${actualRestore} MP${pctText}!`);
         }
 
         if (mpPotion.count && mpPotion.count > 1) {
@@ -1652,7 +684,10 @@ constructor() {
     }
 
     buyItem(shopItem) {
-        if (Game.player.gold >= shopItem.price) {
+        const price = typeof GloamFormula !== 'undefined'
+            ? GloamFormula.potionPrice(shopItem, Game.player.level)
+            : (shopItem.price || 0);
+        if (Game.player.gold >= price) {
             if (Game.player.level < shopItem.level) {
                 if (Game && Game.ui) {
                     Game.ui.showLootNotification(`Requires level ${shopItem.level}!`);
@@ -1664,10 +699,14 @@ constructor() {
             const item = this.generateItem(shopItem.type, shopItem.rarity, 1);
             if (item) {
                 // Override with shop-specific stats
-                if (shopItem.healing) {
+                if (shopItem.healPercent) {
+                    item.stats = { healPercent: shopItem.healPercent };
+                } else if (shopItem.healing) {
                     item.stats = { heal: shopItem.healing };
                 }
-                if (shopItem.mpRestore) {
+                if (shopItem.mpRestorePercent) {
+                    item.stats = { mpRestorePercent: shopItem.mpRestorePercent };
+                } else if (shopItem.mpRestore) {
                     item.stats = { restore_mp: shopItem.mpRestore };
                 }
                 if (shopItem.expMultiplier) {
@@ -1676,7 +715,7 @@ constructor() {
                 }
                 
                 if (this.addToInventory(item, 1)) {
-                    Game.player.state.gold -= shopItem.price;
+                    Game.player.state.gold -= price;
                     this.renderInventory();
                     if (Game && Game.ui) {
                         Game.ui.updatePlayerDisplay();
@@ -2258,209 +1297,11 @@ constructor() {
         }, 100);
     }
 
-    moveToUpgradeSlot(index) {
-        const item = this.inventory[index];
-        if (!item || !this.canUpgradeItem(item)) return;
-
-        // Remove item from inventory
-        this.inventory[index] = null;
-
-        // Set as upgrade item
-        this.upgradeItem = item;
-        this.upgradeSlot = index;
-        this.upgradeFromEquipped = false;
-
-        // Update UI
-        this.renderUpgradeSlot();
-        this.renderInventory();
-
-        Game.ui.showLootNotification(`${item.name} moved to upgrade slot!`);
-    }
-
-    moveEquippedToUpgradeSlot(slot, item) {
-        if (!item || !this.canUpgradeItem(item)) return;
-
-        // Remove item from equipped slot
-        Game.player.state.equipped[slot] = null;
-
-        // Set as upgrade item
-        this.upgradeItem = item;
-        this.upgradeSlot = slot;
-        this.upgradeFromEquipped = true;
-
-        // Recalculate player stats since item was unequipped
-        Game.player.calculateStats();
-
-        // Update UI
-        this.renderUpgradeSlot();
-        this.renderEquipment();
-        Game.ui.updatePlayerDisplay();
-
-        Game.ui.showLootNotification(`${item.name} moved to upgrade slot!`);
-    }
-
-    // Duplicate unequipItem function removed - using the one at line 1206
-
-    showUpgradeSlotMenu(event) {
-        event.preventDefault();
-        event.stopPropagation();
-
-        if (!this.upgradeItem) return;
-
-        // Remove any existing menu
-        this.hideEquipmentMenu();
-
-        const menu = document.createElement('div');
-        menu.id = 'equipment-context-menu';
-        menu.style.cssText = `
-            position: fixed;
-            background: rgba(0, 0, 0, 0.95);
-            border: 2px solid var(--gold);
-            border-radius: 12px;
-            padding: 8px;
-            z-index: 10001;
-            backdrop-filter: blur(15px);
-            min-width: 150px;
-        `;
-
-        const buttons = [];
-
-        // Move to inventory button
-        buttons.push({
-            text: '📦 To Inventory',
-            action: () => {
-                this.moveUpgradeItemToInventory();
-                this.hideEquipmentMenu();
-            }
-        });
-
-        // Equip button (if item can be equipped)
-        if (this.upgradeItem.slot) {
-            buttons.push({
-                text: '⚔️ Equip',
-                action: () => {
-                    this.equipUpgradeItem();
-                    this.hideEquipmentMenu();
-                }
-            });
-        }
-
-        // Create buttons
-        buttons.forEach((btn) => {
-            const button = document.createElement('button');
-            button.textContent = btn.text;
-            button.style.cssText = `
-                width: 100%;
-                background: var(--glass-bg);
-                color: var(--text-primary);
-                border: 1px solid var(--border-color);
-                border-radius: 6px;
-                padding: 8px 12px;
-                margin: 2px 0;
-                cursor: pointer;
-                transition: all 0.2s ease;
-                font-size: 0.9rem;
-            `;
-            button.onmouseover = () => {
-                button.style.background = 'var(--blue)';
-                button.style.borderColor = 'var(--blue)';
-            };
-            button.onmouseout = () => {
-                button.style.background = 'var(--glass-bg)';
-                button.style.borderColor = 'var(--border-color)';
-            };
-            button.onclick = btn.action;
-            menu.appendChild(button);
-        });
-
-        document.body.appendChild(menu);
-
-        // Position menu near the clicked item
-        const rect = event.target.getBoundingClientRect();
-        menu.style.left = (rect.right + 10) + 'px';
-        menu.style.top = rect.top + 'px';
-
-        // Adjust if menu goes off screen
-        const menuRect = menu.getBoundingClientRect();
-        if (menuRect.right > window.innerWidth) {
-            menu.style.left = (rect.left - menuRect.width - 10) + 'px';
-        }
-        if (menuRect.bottom > window.innerHeight) {
-            menu.style.top = (rect.bottom - menuRect.height) + 'px';
-        }
-
-        // Close menu when clicking outside
-        setTimeout(() => {
-            document.addEventListener('click', this.hideEquipmentMenu.bind(this), { once: true });
-        }, 100);
-    }
-
-    moveUpgradeItemToInventory() {
-        if (!this.upgradeItem) return;
-
-        // Find empty inventory slot respecting potion-only slots
-        const emptySlot = this.findEmptyInventorySlot(this.upgradeItem);
-        if (emptySlot === -1) {
-            Game.ui.showLootNotification("Inventory is full!");
-            return;
-        }
-
-        // Move item to inventory
-        this.inventory[emptySlot] = this.upgradeItem;
-
-        // Clear upgrade slot
-        this.upgradeItem = null;
-        this.upgradeSlot = null;
-        this.upgradeFromEquipped = false;
-
-        // Update UI
-        this.renderUpgradeSlot();
-        this.renderInventory();
-
-        Game.ui.showLootNotification("Item moved to inventory!");
-    }
-
-    equipUpgradeItem() {
-        if (!this.upgradeItem || !this.upgradeItem.slot) return;
-
-        // Check level requirement
-        if (Game.player.level < this.upgradeItem.level) {
-            Game.ui.showLootNotification(`Need level ${this.upgradeItem.level} to equip this item!`);
-            return;
-        }
-
-        // Unequip current item if any
-        const currentItem = Game.player.state.equipped[this.upgradeItem.slot];
-        if (currentItem) {
-            const emptySlot = this.findEmptyInventorySlot(currentItem);
-            if (emptySlot === -1) {
-                Game.ui.showLootNotification("Inventory is full!");
-                return;
-            }
-            this.inventory[emptySlot] = currentItem;
-        }
-
-        // Equip the upgrade item
-        Game.player.state.equipped[this.upgradeItem.slot] = this.upgradeItem;
-
-        // Clear upgrade slot
-        this.upgradeItem = null;
-        this.upgradeSlot = null;
-        this.upgradeFromEquipped = false;
-
-        // Recalculate stats and update UI
-        Game.player.calculateStats();
-        this.renderUpgradeSlot();
-        this.renderInventory();
-        this.renderEquipment();
-        Game.ui.updatePlayerDisplay();
-
-        Game.ui.showLootNotification("Item equipped!");
-    }
-
     equipItemToSlot(index, targetSlot) {
         const item = this.inventory[index];
         if (!item) return;
+
+        if (!this.canEquipSlot(targetSlot)) return;
 
         // Check level requirement
         if (Game.player.level < item.level) {
@@ -3046,241 +1887,6 @@ constructor() {
             mythic: '#ff1744'
         };
         return colors[rarity] || '#ffffff';
-    }
-
-    // === EQUIPMENT UPGRADE SYSTEM ===
-
-    dropUpgradeItem(event) {
-        event.preventDefault();
-        const slot = event.target.closest('.upgrade-slot');
-
-        if (this.draggedItem && this.canUpgradeItem(this.draggedItem)) {
-            // Remove item from inventory
-            this.inventory[this.draggedFromSlot] = null;
-
-            // Set as upgrade item
-            this.upgradeItem = this.draggedItem;
-            this.upgradeSlot = this.draggedFromSlot;
-
-            // Update UI
-            this.renderUpgradeSlot();
-            this.renderInventory();
-
-            Game.ui.showLootNotification(`${this.draggedItem.name} ready for upgrade!`);
-        }
-
-        this.clearDragState();
-        slot.classList.remove('drag-over');
-    }
-
-    canUpgradeItem(item) {
-        // Only equipment can be upgraded (not potions)
-        const equipmentTypes = ['helmet', 'chestplate', 'leggings', 'boots', 'sword', 'shield', 'ring', 'necklace'];
-        return equipmentTypes.includes(item.type) && (!item.upgradeLevel || item.upgradeLevel < 15);
-    }
-
-    renderUpgradeSlot() {
-        const slot = document.getElementById('upgrade-slot');
-        const info = document.getElementById('upgrade-info');
-        const button = document.getElementById('upgrade-button');
-
-        if (!slot || !info || !button) return;
-
-        if (this.upgradeItem) {
-            // Show item in upgrade slot
-            const itemElement = document.createElement('div');
-            itemElement.className = `item ${this.upgradeItem.rarity}`;
-            this.renderItemIcon(this.upgradeItem, itemElement);
-
-            // Add click handler for context menu
-            itemElement.addEventListener('click', (e) => this.showUpgradeSlotMenu(e));
-
-            slot.innerHTML = '';
-            slot.appendChild(itemElement);
-            slot.classList.add('filled');
-
-            // Show upgrade info
-            const currentLevel = this.upgradeItem.upgradeLevel || 0;
-            const maxLevel = 15;
-            const nextLevel = currentLevel + 1;
-            const currentStats = this.getItemStats(this.upgradeItem);
-
-            if (currentLevel >= maxLevel) {
-                document.getElementById('upgrade-stats').innerHTML = `
-                    <div style="color: var(--text-primary);">+${currentLevel} Max Level</div>
-                    <div style="color: var(--blue);">Current: ${currentStats}</div>
-                `;
-
-                document.getElementById('upgrade-cost').innerHTML = `
-                    <div>Fully upgraded</div>
-                `;
-
-                document.getElementById('upgrade-chance').innerHTML = `
-                    <div>No further upgrades available</div>
-                `;
-
-                info.style.display = 'block';
-                button.disabled = true;
-                return;
-            }
-
-            const cost = this.getUpgradeCost(currentLevel);
-            const chance = this.getUpgradeChance(currentLevel);
-            const nextStats = this.getUpgradedStats(this.upgradeItem);
-
-            document.getElementById('upgrade-stats').innerHTML = `
-                <div style="color: var(--text-primary);">+${currentLevel} → +${nextLevel}</div>
-                <div style="color: var(--blue);">Current: ${currentStats}</div>
-                <div style="color: var(--gold);">Next: ${nextStats}</div>
-            `;
-
-            document.getElementById('upgrade-cost').innerHTML = `
-                <div>Cost: ${cost.toLocaleString()} Gold</div>
-            `;
-
-            document.getElementById('upgrade-chance').innerHTML = `
-                <div>Success Rate: ${chance}%</div>
-            `;
-
-            info.style.display = 'block';
-            button.disabled = Game.player.state.gold < cost;
-        } else {
-            // Empty slot
-            slot.innerHTML = '<div class="slot-label">Drop Equipment Here</div>';
-            slot.classList.remove('filled');
-            info.style.display = 'none';
-            button.disabled = true;
-        }
-    }
-
-    getUpgradeCost(currentLevel) {
-        return GloamFormula.getUpgradeCost(currentLevel);
-    }
-
-    getUpgradeChance(currentLevel) {
-        return GloamFormula.getUpgradeChance(currentLevel);
-    }
-
-    getItemStats(item) {
-        if (!item.stats) return "No stats";
-        const statEntries = Object.entries(item.stats);
-        return statEntries.map(([stat, value]) => {
-            // Handle accessory stats with proper display names
-            if (ACCESSORY_STATS[stat]) {
-                const config = ACCESSORY_STATS[stat];
-                // Special handling for expGain to show actual percentage change
-                if (stat === 'expGain') {
-                    return `${config.name}: +${value}%`;
-                }
-                return `${config.name}: ${value}${config.suffix || ''}`;
-            }
-            // Handle regular stats
-            const displayStat = stat === 'maxHp' ? 'MAX HP' :
-                               stat === 'maxMp' ? 'MAX MP' :
-                               stat.toUpperCase();
-            return `${displayStat}: ${value}`;
-        }).join(', ');
-    }
-
-    getUpgradedStats(item) {
-        if (!item.stats) return "No stats";
-        const upgradeLevel = item.upgradeLevel || 0;
-        const nextLevel = upgradeLevel + 1;
-
-        // Use base stats if available, otherwise current stats
-        const baseStats = item.baseStats || item.stats;
-
-        const nextStats = GloamFormula.calculateUpgradedStats(baseStats, nextLevel);
-        return Object.entries(nextStats).map(([stat, newValue]) => {
-            const displayStat = stat === 'maxHp' ? 'MAX HP' : stat.toUpperCase();
-            return `${displayStat}: ${newValue}`;
-        }).join(', ');
-    }
-
-    upgradeEquipment() {
-        if (!this.upgradeItem) return;
-
-        const currentLevel = this.upgradeItem.upgradeLevel || 0;
-        if (currentLevel >= 15) {
-            Game.ui.showLootNotification(`${this.upgradeItem.name} is already fully upgraded!`);
-            this.renderUpgradeSlot();
-            return;
-        }
-
-        const cost = this.getUpgradeCost(currentLevel);
-        const chance = this.getUpgradeChance(currentLevel);
-
-        // Check if player has enough gold
-        if (Game.player.state.gold < cost) {
-            Game.ui.showLootNotification("Not enough gold for upgrade!");
-            return;
-        }
-
-        // Deduct gold
-        Game.player.state.gold -= cost;
-
-        // Roll for success
-        const success = Math.random() * 100 < chance;
-
-        if (success) {
-            // Successful upgrade
-            this.upgradeItem.upgradeLevel = currentLevel + 1;
-            this.applyUpgradeStats(this.upgradeItem);
-
-            // Update item name to show upgrade level
-            const baseName = this.upgradeItem.name.replace(/ \+\d+$/, '');
-            this.upgradeItem.name = `${baseName} +${this.upgradeItem.upgradeLevel}`;
-
-            // Show success animation and message
-            const slot = document.getElementById('upgrade-slot');
-            slot.classList.add('upgrade-success');
-            setTimeout(() => slot.classList.remove('upgrade-success'), 600);
-
-            // Track achievement progress for item upgrade
-            if (Game.achievements) {
-                Game.achievements.onItemUpgraded(this.upgradeItem.upgradeLevel);
-            }
-
-            Game.ui.showLootNotification(`✅ Upgrade successful! ${this.upgradeItem.name}`);
-        } else {
-            // Failed upgrade - item remains but no upgrade
-            Game.ui.showLootNotification(`💥 Upgrade failed! ${this.upgradeItem.name} remains unchanged.`);
-
-            // Show fail animation
-            const slot = document.getElementById('upgrade-slot');
-            slot.classList.add('upgrade-fail');
-            setTimeout(() => slot.classList.remove('upgrade-fail'), 600);
-        }
-
-        // Keep the item in the upgrade slot so the player can attempt another
-        // upgrade immediately. The context menu still handles moving it back.
-        this.renderUpgradeSlot();
-        this.renderInventory();
-        this.renderEquipment();
-        Game.ui.updatePlayerDisplay();
-    }
-
-    applyUpgradeStats(item) {
-        if (!item.stats) return;
-
-        // Store base stats if not already stored (for existing items)
-        if (!item.baseStats) {
-            // Calculate base stats by reverse engineering from current upgrade level
-            const currentLevel = item.upgradeLevel || 0;
-            if (currentLevel > 0) {
-                // Reverse the upgrade multiplier to get base stats
-                const currentMultiplier = GloamFormula.calculateUpgradeMultiplier(currentLevel - 1);
-                item.baseStats = {};
-                Object.keys(item.stats).forEach(stat => {
-                    item.baseStats[stat] = Math.floor(item.stats[stat] / currentMultiplier);
-                });
-            } else {
-                item.baseStats = { ...item.stats };
-            }
-        }
-
-        const upgradeLevel = item.upgradeLevel || 0;
-        item.stats = GloamFormula.calculateUpgradedStats(item.baseStats, upgradeLevel);
     }
 
     // === INVENTORY MANAGEMENT FUNCTIONS ===
@@ -4002,7 +2608,10 @@ constructor() {
     }
 
     buyExpPotion(potionOption) {
-        if (Game.player.gold >= potionOption.price) {
+        const price = typeof GloamFormula !== 'undefined'
+            ? GloamFormula.potionPrice(potionOption, Game.player.level)
+            : (potionOption.price || 0);
+        if (Game.player.gold >= price) {
             if (Game.player.level < potionOption.level) {
                 if (Game && Game.ui) {
                     Game.ui.showLootNotification(`Requires level ${potionOption.level}!`);
@@ -4017,7 +2626,7 @@ constructor() {
                 item.name = potionOption.name;
 
                 if (this.addToInventory(item, 1)) {
-                    Game.player.state.gold -= potionOption.price;
+                    Game.player.state.gold -= price;
                     this.renderInventory();
                     if (Game && Game.ui) {
                         Game.ui.updatePlayerDisplay();
@@ -4038,3 +2647,5 @@ constructor() {
         }
     }
 }
+
+window.EquipmentManager = EquipmentManager;

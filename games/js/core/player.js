@@ -12,7 +12,7 @@ class Player {
             atk: 25,
             def: 0,
             exp: 0,
-            maxExp: 100,
+            maxExp: typeof GloamFormula !== 'undefined' ? GloamFormula.maxExpForLevel(1) : 80,
             skillPoints: 0,
             critChance: 15, // Base 15% crit chance
             critDamage: 100, // Base 100% crit damage (2x total)
@@ -28,7 +28,8 @@ class Player {
                 ring2: null,
                 necklace: null
             },
-            isDragonKnight: false,
+            classId: "swordsman",
+            classState: {},
             rebirthCount: 0,
             currentLocation: "verdant_meadow",
             isNewPlayer: true,
@@ -52,7 +53,9 @@ class Player {
     get maxExp() { return this.state.maxExp; }
     get critChance() { return this.state.critChance; }
     get critDamage() { return this.state.critDamage; }
-    get isDragonKnight() { return this.state.isDragonKnight; }
+    get classId() { return this.state.classId || 'swordsman'; }
+    get isDragonKnight() { return this.state.classId === 'dragon_knight'; }
+    get isArchMage() { return this.state.classId === 'arch_mage'; }
 
     // Setters
     set hp(value) { 
@@ -124,6 +127,16 @@ class Player {
             finalAmount += accessoryBonusAmount;
         }
 
+        if (typeof GloamFormula !== 'undefined') {
+            const rm = GloamFormula.rewardMultipliers({
+                classId: this.state.classId,
+                classState: this.state.classState,
+                rebirthCount: this.state.rebirthCount
+            });
+            finalAmount = Math.floor(finalAmount * rm.expMult);
+            multiplier *= rm.expMult;
+        }
+
         this.state.exp += finalAmount;
 
         // Check for level ups
@@ -142,11 +155,20 @@ class Player {
     }
 
     gainGold(amount) {
-        this.state.gold += amount;
+        let finalAmount = amount;
+        if (typeof GloamFormula !== 'undefined') {
+            finalAmount = Math.floor(amount * GloamFormula.rewardMultipliers({
+                classId: this.state.classId,
+                classState: this.state.classState,
+                rebirthCount: this.state.rebirthCount
+            }).goldMult);
+        }
+
+        this.state.gold += finalAmount;
 
         // Track achievement progress
         if (Game.achievements) {
-            Game.achievements.onGoldEarned(amount);
+            Game.achievements.onGoldEarned(finalAmount);
         }
     }
 
@@ -154,11 +176,9 @@ class Player {
         this.state.exp -= this.state.maxExp;
         this.state.level++;
         
-        // Increase base stats
-        this.state.maxHp = 150 + (this.state.level * 50);
-        this.state.maxMp = 50 + (this.state.level * 25);
-        this.state.atk = (this.state.isDragonKnight ? 50 : 25) + (this.state.level * 5);
-        this.state.maxExp = Math.floor(100 * Math.pow(1.2, this.state.level - 1));
+        this.state.maxExp = typeof GloamFormula !== 'undefined'
+            ? GloamFormula.maxExpForLevel(this.state.level)
+            : Math.round(80 * Math.pow(this.state.level, 1.9));
         this.state.skillPoints++;
 
         // Recalculate all stats including equipment bonuses
@@ -192,10 +212,16 @@ class Player {
             }, 100);
         }
 
-        // Check for rebirth option
-        if (this.state.level >= 100 && !this.state.isDragonKnight) {
-            this.showRebirthOption();
+        // Surface rebirth availability through the menu instead of an auto-popup.
+        if (this.state.level >= 100 && !this.state.rebirthOfferShown) {
+            this.state.rebirthOfferShown = true;
+            if (Game.ui) {
+                Game.ui.showMessage("Rebirth available in the Character menu.", 4000);
+                if (Game.ui.updateRebirthPanel) Game.ui.updateRebirthPanel();
+            }
         }
+
+        this.checkMvpAreaUnlocks();
 
         return true;
     }
@@ -248,28 +274,47 @@ class Player {
     }
 
     rebirthToDragonKnight() {
-        if (this.state.level < 100 || this.state.isDragonKnight) return false;
-        
-        // Reset to level 1 but keep some stats
-        this.state.isDragonKnight = true;
-        this.state.class = "Dragon Knight";
-        this.state.level = 1;
-        this.state.rebirthCount++;
-        
-        // Enhanced base stats for Dragon Knight
-        this.state.maxHp = 300;
-        this.state.maxMp = 150;
+        return this.performRebirth();
+    }
+
+    performRebirth() {
+        if (this.state.level < 100 || typeof GloamFormula === 'undefined') return false;
+
+        const currentClassId = this.state.classId || 'swordsman';
+        const evolution = typeof ClassKit !== 'undefined' ? ClassKit.evolutionOf(currentClassId) : null;
+        const nextClassId = evolution ? evolution.id : currentClassId;
+
+        GloamFormula.applyRebirth(this.state, nextClassId);
+
+        if (Game.skills) {
+            Game.skills.statusEffects.clear();
+            Game.skills.switchToClass(nextClassId);
+        }
+
+        this.calculateStats();
         this.hp = this.state.maxHp;
         this.mp = this.state.maxMp;
-        this.state.atk = 50;
-        this.state.def = 10;
-        // Magic defense removed - not implemented
-        this.state.exp = 0;
-        this.state.maxExp = 200;
-        this.state.skillPoints = 5; // Bonus skill points
-        
-        Game.ui.showMessage("You have been reborn as a Dragon Knight! New powers await!", 5000);
-        
+
+        if (Game.combat) {
+            Game.combat.stopBattle();
+            Game.combat.spawnMonster();
+        }
+
+        if (Game.ui) {
+            const className = typeof ClassKit !== 'undefined' && ClassKit.get(nextClassId)
+                ? ClassKit.get(nextClassId).name
+                : nextClassId;
+            const bonuses = GloamFormula.prestigeBonuses(this.state.rebirthCount);
+            Game.ui.showMessage(`Reborn as ${className}! Prestige bonuses: ${Math.round((bonuses.damageMultiplier - 1) * 100)}% damage/EXP, ${Math.round((bonuses.goldMultiplier - 1) * 100)}% gold.`, 6000);
+            Game.ui.updateAll();
+            if (Game.ui.updateRebirthPanel) Game.ui.updateRebirthPanel();
+        }
+
+        this.saveToStorage();
+        if (Game.characterManager) {
+            Game.characterManager.saveCurrentCharacter();
+        }
+
         return true;
     }
 
@@ -286,9 +331,7 @@ class Player {
         // Use modular class system if available
         if (typeof ClassManager !== 'undefined') {
             const classManager = new ClassManager();
-            const currentClass = this.state.isDragonKnight ? "dragon_knight" :
-                               this.state.isArchMage ? "arch_mage" :
-                               this.state.class || "swordsman";
+            const currentClass = this.state.classId || "swordsman";
 
             const classStats = classManager.calculateClassStats(currentClass, this.state.level);
 
@@ -298,20 +341,24 @@ class Player {
                 this.state.def = classStats.def;
                 this.state.maxHp = classStats.hp;
                 this.state.maxMp = classStats.mp;
+                this.state.critChance = classStats.critChance ?? 15;
+                this.state.critDamage = classStats.critDamage ?? 100;
             }
         } else {
             // Fallback to legacy system (RESET to base values)
-            const baseAtk = this.state.isDragonKnight ? 50 : 25;
-            const baseDef = this.state.isDragonKnight ? 10 : 0;
+            const baseAtk = this.isDragonKnight ? 50 : 25;
+            const baseDef = this.isDragonKnight ? 10 : 0;
             this.state.atk = baseAtk + (this.state.level * 5);
             this.state.def = baseDef;
             this.state.maxHp = 150 + (this.state.level * 50);
             this.state.maxMp = 50 + (this.state.level * 25);
+            this.state.critChance = 15;
+            this.state.critDamage = 100;
         }
 
         // Reset critical hit stats to base values
-        this.state.critChance = 15; // Base 15% crit chance
-        this.state.critDamage = 100; // Base 100% crit damage
+        this.state.critChance = this.state.critChance ?? 15;
+        this.state.critDamage = this.state.critDamage ?? 100;
 
         // Apply equipment bonuses
         Object.values(this.state.equipped).forEach(item => {
@@ -393,7 +440,7 @@ class Player {
         if (currentIndex !== -1 && currentIndex < allAreas.length - 1) {
             const nextArea = allAreas[currentIndex + 1];
 
-            if (!this.state.unlockedAreas.includes(nextArea.key)) {
+            if (!this.state.unlockedAreas.includes(nextArea.key) && this.canAccessArea(nextArea.key)) {
                 this.state.unlockedAreas.push(nextArea.key);
                 Game.ui.showLootNotification(`🗺️ New area unlocked: ${nextArea.name}!`, 4000);
 
@@ -406,15 +453,80 @@ class Player {
     }
 
     getAllAreasInOrder() {
-        // Get all areas in progression order (fields first, then dungeons)
-        const fields = MonsterUtils.getFieldsList().sort((a, b) => a.averageLevel - b.averageLevel);
-        const dungeons = MonsterUtils.getDungeonsList().sort((a, b) => a.averageLevel - b.averageLevel);
+        if (MonsterUtils.getProgressionOrder) {
+            return MonsterUtils.getProgressionOrder()
+                .filter(area => !MonsterUtils.isMvpArea(area.key));
+        }
 
-        return [...fields, ...dungeons];
+        return MonsterUtils.getLocationList()
+            .map(key => ({ key, ...MonsterUtils.getLocationData(key) }))
+            .filter(area => !MonsterUtils.isMvpArea(area.key))
+            .sort((a, b) => a.averageLevel - b.averageLevel);
+    }
+
+    checkMvpAreaUnlocks() {
+        if (typeof MonsterUtils === 'undefined') return;
+
+        let defeatedBosses = [];
+        try {
+            if (typeof localStorage !== 'undefined' && typeof SAVE_KEYS !== 'undefined') {
+                defeatedBosses = JSON.parse(localStorage.getItem(SAVE_KEYS.defeatedMvps) || '[]');
+            }
+        } catch (error) {
+            defeatedBosses = [];
+        }
+
+        const areas = MonsterUtils.getProgressionOrder
+            ? MonsterUtils.getProgressionOrder()
+            : MonsterUtils.getLocationList().map(key => ({ key, ...MonsterUtils.getLocationData(key) }));
+
+        areas
+            .filter(area => MonsterUtils.isMvpArea(area.key))
+            .forEach(area => {
+                if (this.state.unlockedAreas.includes(area.key)) return;
+                if (!MonsterUtils.canAccessMvpArea(area.key, this.state.level, defeatedBosses)) return;
+
+                this.state.unlockedAreas.push(area.key);
+                if (typeof Game !== 'undefined' && Game.ui) {
+                    Game.ui.showLootNotification(`🗺️ World boss unlocked: ${area.name}!`, 5000);
+                }
+            });
     }
 
     isAreaUnlocked(areaKey) {
-        return this.state.unlockedAreas.includes(areaKey);
+        return this.state.unlockedAreas.includes(areaKey) && this.canAccessArea(areaKey);
+    }
+
+    hasEvolvedClass() {
+        if (typeof ClassKit !== 'undefined') {
+            const def = ClassKit.get(this.state.classId);
+            if (def) return def.tier === 'evolved';
+        }
+        return this.state.classId === 'dragon_knight' || this.state.classId === 'arch_mage';
+    }
+
+    canAccessArea(areaKey) {
+        const location = MonsterUtils.getLocationData(areaKey);
+        if (!location) return false;
+
+        if (MonsterUtils.isAdvancedArea(areaKey) &&
+            ((this.state.rebirthCount || 0) < 1 || !this.hasEvolvedClass())) {
+            return false;
+        }
+
+        if (MonsterUtils.isMvpArea(areaKey)) {
+            let defeatedBosses = [];
+            try {
+                if (typeof localStorage !== 'undefined' && typeof SAVE_KEYS !== 'undefined') {
+                    defeatedBosses = JSON.parse(localStorage.getItem(SAVE_KEYS.defeatedMvps) || '[]');
+                }
+            } catch (error) {
+                defeatedBosses = [];
+            }
+            return MonsterUtils.canAccessMvpArea(areaKey, this.state.level, defeatedBosses);
+        }
+
+        return true;
     }
 
     getAreaProgress(areaKey) {
@@ -455,6 +567,9 @@ class Player {
     createCharacter(name, jobClass = "swordsman") {
         this.state.name = name || "Adventurer";
         this.state.class = jobClass.toLowerCase();
+        this.state.classId = jobClass.toLowerCase();
+        this.state.classState = typeof ClassKit !== 'undefined'
+            ? ClassKit.createState(this.state.classId) : {};
         this.state.isNewPlayer = false;
 
         // Initialize class-specific stats
@@ -493,11 +608,12 @@ class Player {
     getDisplayStats() {
         // Get proper class display name
         const getClassDisplayName = () => {
-            if (this.state.isDragonKnight) return 'Dragon Knight';
-            if (this.state.isArchMage) return 'Arch Mage';
-            if (this.state.class === 'mage') return 'Mage';
-            if (this.state.class === 'swordsman') return 'Swordsman';
-            return this.state.class ? this.state.class.charAt(0).toUpperCase() + this.state.class.slice(1) : 'Swordsman';
+            if (typeof ClassKit !== 'undefined') {
+                const def = ClassKit.get(this.state.classId);
+                if (def) return def.name;
+            }
+            const id = this.state.classId || 'swordsman';
+            return id.split('_').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
         };
 
         return {

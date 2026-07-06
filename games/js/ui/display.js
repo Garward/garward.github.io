@@ -3,7 +3,6 @@ class Display {
     constructor() {
         this.autoBattle = false;
         this.autoBattleInterval = null;
-        this.notifications = [];
         this.statusEffectsExpanded = false;
         
         // Enhanced hotbar configuration
@@ -52,6 +51,10 @@ class Display {
             autoBattleButton: document.getElementById('enhanced-auto-battle-btn'),
             locationSelect: document.getElementById('location-select')
         };
+
+        this.notificationUI = new NotificationUI(this.elements.message);
+        this.tooltipUI = new TooltipUI();
+        this.hotbarUI = new HotbarUI(this);
         
         // Initialize basic systems first
         this.initializeNotificationSystem();
@@ -90,22 +93,7 @@ class Display {
     }
 
     initializeNotificationSystem() {
-        // Create notification container
-        const container = document.createElement('div');
-        container.id = 'notification-container';
-        container.style.cssText = `
-            position: fixed;
-            bottom: 20px;
-            right: 20px;
-            display: flex;
-            flex-direction: column-reverse;
-            gap: 8px;
-            z-index: 1000;
-            max-height: 400px;
-            overflow: hidden;
-            pointer-events: none;
-        `;
-        document.body.appendChild(container);
+        this.notificationUI.initialize();
     }
 
     initializeStatusEffectsUI() {
@@ -554,43 +542,7 @@ trackMonsterEncounter(monster) {
     }
 
     showLootNotification(text) {
-        const container = document.getElementById('notification-container');
-        const notification = document.createElement('div');
-        notification.className = 'loot-notification';
-        notification.textContent = text;
-        notification.style.cssText = `
-            background: rgba(0, 0, 0, 0.9);
-            padding: 12px 20px;
-            border-radius: 8px;
-            border: 1px solid #4fc3f7;
-            color: #ffffff;
-            font-weight: 600;
-            backdrop-filter: blur(10px);
-            box-shadow: 0 4px 15px rgba(79, 195, 247, 0.3);
-            transform: translateX(100%);
-            opacity: 0;
-            transition: all 0.3s ease;
-            pointer-events: auto;
-        `;
-        
-        container.appendChild(notification);
-        
-        // Animate in
-        setTimeout(() => {
-            notification.style.transform = 'translateX(0)';
-            notification.style.opacity = '1';
-        }, 50);
-        
-        // Remove after delay
-        setTimeout(() => {
-            notification.style.transform = 'translateX(100%)';
-            notification.style.opacity = '0';
-            setTimeout(() => {
-                if (container.contains(notification)) {
-                    container.removeChild(notification);
-                }
-            }, 300);
-        }, 3000);
+        this.notificationUI.showLootNotification(text);
     }
 
     updateStatusEffectsDisplay() {
@@ -767,6 +719,123 @@ trackMonsterEncounter(monster) {
         }).sort((a, b) => Math.abs(a.averageLevel - playerLevel) - Math.abs(b.averageLevel - playerLevel));
     }
 
+    updateRebirthPanel() {
+        const panel = document.getElementById('rebirth-panel');
+        if (!panel || typeof GloamFormula === 'undefined') return;
+
+        const rebirthCount = Game.player.state.rebirthCount || 0;
+        const nextBonus = GloamFormula.prestigeBonuses(rebirthCount + 1);
+        const currentBonus = GloamFormula.prestigeBonuses(rebirthCount);
+        const currentClassId = Game.player.state.classId || 'swordsman';
+        const evolution = typeof ClassKit !== 'undefined' ? ClassKit.evolutionOf(currentClassId) : null;
+        const nextClassName = evolution ? evolution.name : (typeof ClassKit !== 'undefined' && ClassKit.get(currentClassId) ? ClassKit.get(currentClassId).name : currentClassId);
+        const eligible = Game.player.level >= 100;
+
+        panel.style.cssText = `
+            margin: 10px 0 14px;
+            padding: 10px;
+            border: 1px solid rgba(255, 215, 0, 0.35);
+            border-radius: 8px;
+            background: rgba(255, 215, 0, 0.08);
+            color: var(--text-primary);
+            font-size: 0.8rem;
+        `;
+
+        if (!eligible && rebirthCount === 0) {
+            panel.innerHTML = `
+                <div style="font-weight: 700; color: var(--gold); margin-bottom: 4px;">Rebirth</div>
+                <div style="color: var(--text-secondary);">Available at Lv.100.</div>
+            `;
+            return;
+        }
+
+        const summary = `${Math.round((currentBonus.damageMultiplier - 1) * 100)}% damage/EXP, ${Math.round((currentBonus.goldMultiplier - 1) * 100)}% gold`;
+        if (!eligible) {
+            panel.innerHTML = `
+                <div style="font-weight: 700; color: var(--gold); margin-bottom: 4px;">Prestige Rank ${rebirthCount}</div>
+                <div style="color: var(--text-secondary);">Current bonuses: ${summary}</div>
+                <div style="color: var(--text-secondary);">Next rebirth at Lv.100.</div>
+            `;
+            return;
+        }
+
+        panel.innerHTML = `
+            <div style="font-weight: 700; color: var(--gold); margin-bottom: 4px;">Rebirth Ready</div>
+            <div style="color: var(--text-secondary); margin-bottom: 8px;">Next class: ${nextClassName}. Next bonuses: ${Math.round((nextBonus.damageMultiplier - 1) * 100)}% damage/EXP, ${Math.round((nextBonus.goldMultiplier - 1) * 100)}% gold.</div>
+            <button class="action-button" id="rebirth-button" type="button">🔄 Rebirth</button>
+        `;
+
+        const button = panel.querySelector('#rebirth-button');
+        if (button) button.addEventListener('click', () => this.showRebirthDialog());
+    }
+
+    showRebirthDialog() {
+        if (Game.player.level < 100) {
+            this.showMessage("Reach Lv.100 to rebirth.", 2500);
+            return;
+        }
+
+        const currentClassId = Game.player.state.classId || 'swordsman';
+        const evolution = typeof ClassKit !== 'undefined' ? ClassKit.evolutionOf(currentClassId) : null;
+        const nextClassId = evolution ? evolution.id : currentClassId;
+        const nextClassName = typeof ClassKit !== 'undefined' && ClassKit.get(nextClassId)
+            ? ClassKit.get(nextClassId).name
+            : nextClassId;
+        const nextBonus = GloamFormula.prestigeBonuses((Game.player.state.rebirthCount || 0) + 1);
+
+        if (typeof UIPrimitives === 'undefined') {
+            if (confirm(`Rebirth as ${nextClassName}?`)) Game.player.performRebirth();
+            return;
+        }
+
+        const body = UIPrimitives.createElement('div', { className: 'rebirth-dialog-body' });
+        body.innerHTML = `
+            <p>Rebirth as <strong>${nextClassName}</strong>.</p>
+            <div style="display: grid; gap: 10px; margin: 12px 0;">
+                <div>
+                    <strong>Keep</strong>
+                    <div style="color: var(--text-secondary);">Gold, equipped gear, inventory, achievements, and prestige rank.</div>
+                </div>
+                <div>
+                    <strong>Reset</strong>
+                    <div style="color: var(--text-secondary);">Level, EXP, skill levels, area unlocks, area progress, and current location.</div>
+                </div>
+                <div>
+                    <strong>New bonus</strong>
+                    <div style="color: var(--text-secondary);">${Math.round((nextBonus.damageMultiplier - 1) * 100)}% damage/EXP, ${Math.round((nextBonus.goldMultiplier - 1) * 100)}% gold total.</div>
+                </div>
+            </div>
+        `;
+
+        const actions = UIPrimitives.createElement('div', { className: 'modal-actions' });
+        const dialog = UIPrimitives.createDialog({
+            id: 'rebirth-confirm-modal',
+            title: 'Confirm Rebirth',
+            icon: '🔄',
+            size: 'md',
+            content: body
+        });
+        const cancel = UIPrimitives.createButton({
+            label: 'Cancel',
+            variant: 'ghost',
+            onClick: () => dialog.close()
+        });
+        const confirmButton = UIPrimitives.createButton({
+            label: 'Rebirth',
+            icon: '⭐',
+            variant: 'primary',
+            onClick: () => {
+                dialog.close();
+                Game.player.performRebirth();
+            }
+        });
+        actions.appendChild(cancel);
+        actions.appendChild(confirmButton);
+        dialog.body.appendChild(actions);
+        document.body.appendChild(dialog.overlay);
+        dialog.overlay.style.display = 'flex';
+    }
+
     updatePlayerDisplay() {
         const stats = Game.player.getDisplayStats();
 
@@ -874,11 +943,7 @@ trackMonsterEncounter(monster) {
             if (advancedAreas) advancedAreas.style.display = 'block';
         }
         
-        // Show rebirth button if eligible
-        const rebirthButton = document.getElementById('rebirth-button');
-        if (rebirthButton && Game.player.level >= 100 && !Game.player.isDragonKnight) {
-            rebirthButton.style.display = 'block';
-        }
+        this.updateRebirthPanel();
     }
 
     // Enhanced monster display with progression tracking
@@ -1095,388 +1160,67 @@ addBossIndicators(monster) {
 }
 
     showMessage(text, duration = 2000) {
-        this.elements.message.textContent = text;
-        this.elements.message.style.display = 'block';
-        
-        setTimeout(() => {
-            this.elements.message.style.display = 'none';
-        }, duration);
+        this.notificationUI.showMessage(text, duration);
     }
 
     updateSkillsDisplay() {
         this.renderSkills();
     }
 
-    // ENHANCED HOTBAR SYSTEM
     updateHotbar() {
-        let hotbar = document.getElementById('skill-hotbar');
-        if (!hotbar) return;
-        
-        // Initialize hotbar configuration if not exists
-        if (!this.hotbarConfig) {
-            this.hotbarConfig = {
-                slots: [null, null, null, null, null], // 5 slots
-                locked: false
-            };
-            this.loadHotbarConfig();
-        }
-        
-        hotbar.innerHTML = '';
-        
-        // Add lock button
-        const lockBtn = document.createElement('div');
-        lockBtn.className = 'hotbar-lock-btn';
-        lockBtn.innerHTML = this.hotbarConfig.locked ? '🔒' : '🔓';
-        lockBtn.title = this.hotbarConfig.locked ? 'Hotbar locked: drag editing disabled' : 'Hotbar unlocked: drag editing enabled';
-        lockBtn.style.cssText = `
-            width: 40px;
-            height: 70px;
-            background: ${this.hotbarConfig.locked ? 'rgba(255, 68, 68, 0.8)' : 'rgba(76, 175, 80, 0.8)'};
-            border: 2px solid var(--border-color);
-            border-radius: 12px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            cursor: pointer;
-            font-size: 1.5rem;
-            margin-right: 8px;
-            min-height: 44px;
-            touch-action: manipulation;
-        `;
-        lockBtn.onclick = () => this.toggleHotbarLock();
-        hotbar.appendChild(lockBtn);
-        
-        // Create 5 skill slots
-        for (let i = 0; i < 5; i++) {
-            const slotDiv = document.createElement('div');
-            slotDiv.className = 'hotbar-skill';
-            slotDiv.dataset.slotIndex = i;
-            
-            const assignedSkill = this.hotbarConfig.slots[i];
-            const skill = assignedSkill ? Game.skills.getCurrentSkills().find(s => s.id === assignedSkill) : null;
-            
-            // Only show learned skills
-            if (skill && skill.currentLevel > 0) {
-                const onCooldown = skill.cooldown > 0;
-                const mpCost = skill.mpCost ? skill.mpCost + (skill.currentLevel - 1) * 2 : 0;
-                const canUse = mpCost === 0 || Game.player.mp >= mpCost;
-                const battleActive = Game.combat && Game.combat.battleActive;
-
-                if (onCooldown) slotDiv.classList.add('on-cooldown');
-                if (!canUse && !onCooldown) slotDiv.classList.add('no-mp');
-                if (!battleActive) slotDiv.classList.add('battle-inactive');
-                
-                slotDiv.innerHTML = `
-                    <div class="hotbar-skill-key">${i + 1}</div>
-                    <div class="hotbar-skill-icon">${skill.icon}</div>
-                    ${mpCost > 0 ? `<div class="hotbar-skill-mp">${mpCost}</div>` : ''}
-                    ${onCooldown ? `<div class="cooldown-overlay">${Math.ceil(skill.cooldown / 1000)}</div>` : ''}
-                `;
-                
-                if (!onCooldown && canUse && battleActive) {
-                    slotDiv.onclick = () => Game.skills.useSkill(skill.id);
-                } else if (!battleActive) {
-                    slotDiv.onclick = () => Game.ui.showMessage("Start battle first to use skills!");
-                }
-                
-                // Add tooltip
-                slotDiv.setAttribute('data-tooltip', this.getSkillTooltip(skill));
-                slotDiv.addEventListener('mouseenter', (e) => this.showTooltip(e));
-                slotDiv.addEventListener('mouseleave', () => this.hideTooltip());
-            } else {
-                // Empty slot
-                slotDiv.innerHTML = `
-                    <div class="hotbar-skill-key">${i + 1}</div>
-                    <div style="color: var(--text-secondary); font-size: 0.8rem;">Empty</div>
-                `;
-                slotDiv.style.opacity = '0.5';
-                slotDiv.onclick = () => {
-                    if (this.hotbarConfig.locked) {
-                        this.showLootNotification("Unlock hotbar to assign a skill");
-                    } else {
-                        this.openHotbarSlotMenu(i);
-                    }
-                };
-            }
-            
-            // Drag and drop functionality
-            if (!this.hotbarConfig.locked) {
-                slotDiv.ondrop = (e) => this.dropSkillOnHotbar(e, i);
-                slotDiv.ondragover = (e) => this.allowSkillDrop(e);
-                slotDiv.ondragleave = (e) => this.clearDropFeedback(e);
-                
-                if (skill && skill.currentLevel > 0) {
-                    slotDiv.draggable = true;
-                    slotDiv.ondragstart = (e) => this.dragSkillFromHotbar(e, i);
-                }
-            }
-            
-            hotbar.appendChild(slotDiv);
-        }
+        this.hotbarUI.render();
     }
 
     toggleHotbarLock() {
-        this.hotbarConfig.locked = !this.hotbarConfig.locked;
-        this.saveHotbarConfig();
-        this.updateHotbar();
-        this.showLootNotification(this.hotbarConfig.locked ? "Hotbar drag editing locked" : "Hotbar drag editing unlocked");
+        this.hotbarUI.toggleLock();
     }
 
     getAssignableSkills() {
-        if (!Game.skills || !Game.skills.getCurrentSkills) return [];
-        return Game.skills.getCurrentSkills()
-            .filter(skill => skill.currentLevel > 0 && !skill.isPassive);
+        return this.hotbarUI.getAssignableSkills();
     }
 
     assignSkillToHotbar(skillId, slotIndex) {
-        if (!this.hotbarConfig || slotIndex < 0 || slotIndex >= this.hotbarConfig.slots.length) return;
-
-        const skill = this.getAssignableSkills().find(s => s.id === skillId);
-        if (!skill) {
-            this.showLootNotification("Learn an active skill first");
-            return;
-        }
-
-        // Keep hotbar assignments unique so one skill does not occupy several slots accidentally.
-        this.hotbarConfig.slots = this.hotbarConfig.slots.map((existing, index) =>
-            existing === skillId && index !== slotIndex ? null : existing
-        );
-        this.hotbarConfig.slots[slotIndex] = skillId;
-        this.saveHotbarConfig();
-        this.updateHotbar();
-        this.renderSkills();
-        this.closeSkillPicker();
-        this.showLootNotification(`${skill.name} assigned to slot ${slotIndex + 1}`);
+        this.hotbarUI.assignSkill(skillId, slotIndex);
     }
 
     clearHotbarSlot(slotIndex) {
-        if (!this.hotbarConfig || slotIndex < 0 || slotIndex >= this.hotbarConfig.slots.length) return;
-        this.hotbarConfig.slots[slotIndex] = null;
-        this.saveHotbarConfig();
-        this.updateHotbar();
-        this.renderSkills();
-        this.closeSkillPicker();
-        this.showLootNotification(`Cleared slot ${slotIndex + 1}`);
+        this.hotbarUI.clearSlot(slotIndex);
     }
 
     closeSkillPicker() {
-        const existing = document.getElementById('skill-picker-modal');
-        if (existing) existing.remove();
+        this.hotbarUI.closePicker();
     }
 
     createSkillPicker(title) {
-        this.closeSkillPicker();
-
-        const overlay = document.createElement('div');
-        overlay.id = 'skill-picker-modal';
-        overlay.style.cssText = `
-            position: fixed;
-            inset: 0;
-            z-index: 2600;
-            background: rgba(0, 0, 0, 0.65);
-            display: flex;
-            align-items: flex-end;
-            justify-content: center;
-            padding: 12px;
-        `;
-
-        const panel = document.createElement('div');
-        panel.style.cssText = `
-            width: min(520px, 100%);
-            max-height: min(80vh, 620px);
-            overflow-y: auto;
-            background: var(--secondary-bg);
-            border: 1px solid var(--border-color);
-            border-radius: 14px;
-            box-shadow: var(--shadow-strong);
-            padding: 14px;
-        `;
-
-        panel.innerHTML = `
-            <div style="display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 12px;">
-                <h3 style="color: var(--gold); font-size: 1rem; margin: 0;">${title}</h3>
-                <button type="button" id="skill-picker-close" class="menu-close-btn" aria-label="Close skill picker">✕</button>
-            </div>
-            <div id="skill-picker-content"></div>
-        `;
-
-        overlay.appendChild(panel);
-        document.body.appendChild(overlay);
-
-        overlay.addEventListener('click', (e) => {
-            if (e.target === overlay) this.closeSkillPicker();
-        });
-        panel.querySelector('#skill-picker-close').onclick = () => this.closeSkillPicker();
-
-        return panel.querySelector('#skill-picker-content');
+        return this.hotbarUI.createPicker(title);
     }
 
     openSkillAssignMenu(skillId) {
-        const skill = this.getAssignableSkills().find(s => s.id === skillId);
-        if (!skill) {
-            this.showLootNotification("Learn an active skill first");
-            return;
-        }
-
-        const content = this.createSkillPicker(`Assign ${skill.name}`);
-        const currentSlot = this.hotbarConfig.slots.findIndex(id => id === skillId);
-        const slots = this.hotbarConfig.slots.map((assignedId, index) => {
-            const assignedSkill = assignedId ? Game.skills.getCurrentSkills().find(s => s.id === assignedId) : null;
-            const label = assignedSkill ? `Replace ${assignedSkill.name}` : 'Empty slot';
-            return `
-                <button type="button" class="skill-picker-option" data-slot="${index}">
-                    <span style="color: var(--gold); font-weight: 700;">${index + 1}</span>
-                    <span>${label}</span>
-                </button>
-            `;
-        }).join('');
-
-        content.innerHTML = `
-            ${currentSlot >= 0 ? `<div style="color: var(--text-secondary); font-size: 0.85rem; margin-bottom: 10px;">Currently assigned to slot ${currentSlot + 1}.</div>` : ''}
-            <div class="skill-picker-options">${slots}</div>
-            ${currentSlot >= 0 ? `<button type="button" class="skill-picker-danger" data-clear="${currentSlot}">Clear current assignment</button>` : ''}
-        `;
-
-        content.querySelectorAll('[data-slot]').forEach(button => {
-            button.onclick = () => this.assignSkillToHotbar(skillId, Number(button.dataset.slot));
-        });
-        const clearButton = content.querySelector('[data-clear]');
-        if (clearButton) {
-            clearButton.onclick = () => this.clearHotbarSlot(Number(clearButton.dataset.clear));
-        }
-        this.ensureSkillPickerStyles();
+        this.hotbarUI.openSkillAssignMenu(skillId);
     }
 
     openHotbarSlotMenu(slotIndex) {
-        const content = this.createSkillPicker(`Hotbar Slot ${slotIndex + 1}`);
-        const skills = this.getAssignableSkills();
-        const assignedId = this.hotbarConfig.slots[slotIndex];
-
-        if (skills.length === 0) {
-            content.innerHTML = `<div style="color: var(--text-secondary); text-align: center; padding: 16px;">Learn an active skill before assigning hotbar slots.</div>`;
-            return;
-        }
-
-        content.innerHTML = `
-            <div class="skill-picker-options">
-                ${skills.map(skill => `
-                    <button type="button" class="skill-picker-option" data-skill-id="${skill.id}">
-                        <span style="font-size: 1.25rem;">${skill.icon || '❓'}</span>
-                        <span>
-                            <strong>${skill.name}</strong>
-                            <small>Lv.${skill.currentLevel}${skill.mpCost ? ` · ${skill.mpCost + (skill.currentLevel - 1) * 2} MP` : ''}</small>
-                        </span>
-                    </button>
-                `).join('')}
-            </div>
-            ${assignedId ? `<button type="button" class="skill-picker-danger" data-clear="${slotIndex}">Clear this slot</button>` : ''}
-        `;
-
-        content.querySelectorAll('[data-skill-id]').forEach(button => {
-            button.onclick = () => this.assignSkillToHotbar(button.dataset.skillId, slotIndex);
-        });
-        const clearButton = content.querySelector('[data-clear]');
-        if (clearButton) {
-            clearButton.onclick = () => this.clearHotbarSlot(Number(clearButton.dataset.clear));
-        }
-        this.ensureSkillPickerStyles();
+        this.hotbarUI.openSlotMenu(slotIndex);
     }
 
     ensureSkillPickerStyles() {
-        if (document.getElementById('skill-picker-styles')) return;
-        const style = document.createElement('style');
-        style.id = 'skill-picker-styles';
-        style.textContent = `
-            .skill-picker-options {
-                display: grid;
-                gap: 8px;
-            }
-            .skill-picker-option,
-            .skill-picker-danger {
-                width: 100%;
-                min-height: 48px;
-                border-radius: 10px;
-                border: 1px solid var(--border-color);
-                background: rgba(255, 255, 255, 0.06);
-                color: var(--text-primary);
-                display: flex;
-                align-items: center;
-                gap: 10px;
-                padding: 10px 12px;
-                cursor: pointer;
-                text-align: left;
-            }
-            .skill-picker-option:hover,
-            .skill-picker-option:focus-visible {
-                border-color: var(--blue);
-                background: rgba(79, 195, 247, 0.16);
-            }
-            .skill-picker-option small {
-                display: block;
-                color: var(--text-secondary);
-                margin-top: 2px;
-            }
-            .skill-picker-danger {
-                justify-content: center;
-                margin-top: 10px;
-                border-color: rgba(255, 107, 107, 0.45);
-                background: rgba(255, 107, 107, 0.12);
-                color: #ffb3b3;
-                text-align: center;
-            }
-        `;
-        document.head.appendChild(style);
+        // Skill picker styles live in css/main.css.
     }
 
     dragSkillFromHotbar(e, slotIndex) {
-        const skill = this.hotbarConfig.slots[slotIndex];
-        e.dataTransfer.setData('skill-id', skill);
-        e.dataTransfer.setData('source', 'hotbar');
-        e.dataTransfer.setData('source-slot', slotIndex);
-        e.target.style.opacity = '0.5';
+        this.hotbarUI.dragSkill(e, slotIndex);
     }
 
     dropSkillOnHotbar(e, slotIndex) {
-        e.preventDefault();
-        this.clearDropFeedback(e);
-        
-        const skillId = e.dataTransfer.getData('skill-id');
-        const source = e.dataTransfer.getData('source');
-        const sourceSlot = e.dataTransfer.getData('source-slot');
-        
-        if (source === 'hotbar' && sourceSlot !== undefined) {
-            // Swap skills
-            const sourceIndex = parseInt(sourceSlot);
-            const temp = this.hotbarConfig.slots[slotIndex];
-            this.hotbarConfig.slots[slotIndex] = this.hotbarConfig.slots[sourceIndex];
-            this.hotbarConfig.slots[sourceIndex] = temp;
-        } else {
-            // Add skill from skills panel
-            const skill = Game.skills.getCurrentSkills().find(s => s.id === skillId);
-            if (skill && skill.currentLevel > 0) {
-                this.hotbarConfig.slots[slotIndex] = skillId;
-            }
-        }
-        
-        this.saveHotbarConfig();
-        this.updateHotbar();
-        this.renderSkills(); // Refresh skills panel
+        this.hotbarUI.dropSkill(e, slotIndex);
     }
 
     allowSkillDrop(e) {
-        e.preventDefault();
-        e.currentTarget.style.borderColor = '#4caf50';
-        e.currentTarget.style.background = 'rgba(76, 175, 80, 0.2)';
+        this.hotbarUI.allowSkillDrop(e);
     }
 
     clearDropFeedback(e) {
-        e.currentTarget.style.borderColor = '';
-        e.currentTarget.style.background = '';
-        
-        // Reset drag opacity
-        document.querySelectorAll('.hotbar-skill').forEach(skill => {
-            skill.style.opacity = '';
-        });
+        this.hotbarUI.clearDropFeedback(e);
     }
 
     renderSkills() {
@@ -1485,22 +1229,16 @@ addBossIndicators(monster) {
         
         // Add toggle button
         if (!document.getElementById('skills-toggle')) {
-            const toggle = document.createElement('button');
+            const toggle = UIPrimitives.createButton({
+                label: 'Skills',
+                icon: '▼',
+                variant: 'secondary',
+                className: 'skills-toggle-button',
+                onClick: () => this.toggleSkillsView()
+            });
             toggle.id = 'skills-toggle';
-            toggle.innerHTML = 'Skills ▼';
-            toggle.style.cssText = `
-                width: 100%;
-                background: rgba(79, 195, 247, 0.2);
-                border: 1px solid var(--blue);
-                color: var(--text-primary);
-                padding: 8px;
-                border-radius: 8px;
-                cursor: pointer;
-                margin-bottom: 10px;
-                min-height: 44px;
-                touch-action: manipulation;
-            `;
-            toggle.onclick = () => this.toggleSkillsView();
+            toggle.style.width = '100%';
+            toggle.style.marginBottom = '10px';
             container.parentNode.insertBefore(toggle, container);
         }
         
@@ -1676,7 +1414,7 @@ addBossIndicators(monster) {
         container.classList.toggle('expanded');
         const isExpanded = container.classList.contains('expanded');
         
-        toggle.innerHTML = isExpanded ? 'Skills ▲' : 'Skills ▼';
+        toggle.innerHTML = `<span class="ui-button-glyph" aria-hidden="true">${isExpanded ? '▲' : '▼'}</span><span class="ui-button-label">Skills</span>`;
         this.renderSkills();
     }
 
@@ -1715,106 +1453,19 @@ addBossIndicators(monster) {
     }
 
     initializeTooltips() {
-        // Remove existing tooltips
-        const existingTooltips = document.querySelectorAll('.custom-tooltip');
-        existingTooltips.forEach(t => t.remove());
-        
-        // Add tooltips to items and skills
-        document.querySelectorAll('[data-tooltip], .item, .skill-item').forEach(element => {
-            element.addEventListener('mouseenter', (e) => this.showTooltip(e));
-            element.addEventListener('mouseleave', () => this.hideTooltip());
-            element.addEventListener('mousemove', (e) => this.moveTooltip(e));
-        });
+        this.tooltipUI.initialize();
     }
 
     showTooltip(e) {
-        const element = e.currentTarget;
-        let tooltipContent = element.getAttribute('data-tooltip');
-        
-        // For inventory items, get tooltip from equipment manager
-        if (element.classList.contains('item') && !tooltipContent) {
-            return; // Let equipment manager handle this
-        }
-        
-        if (!tooltipContent) return;
-        
-        let tooltip = document.getElementById('custom-tooltip');
-        if (!tooltip) {
-            tooltip = document.createElement('div');
-            tooltip.id = 'custom-tooltip';
-            tooltip.className = 'custom-tooltip';
-            tooltip.style.cssText = `
-                position: fixed;
-                background: rgba(0, 0, 0, 0.95);
-                border: 2px solid var(--border-color);
-                border-radius: 8px;
-                padding: 12px;
-                color: var(--text-primary);
-                font-size: 0.9rem;
-                z-index: 10000;
-                pointer-events: none;
-                max-width: 300px;
-                backdrop-filter: blur(10px);
-                box-shadow: 0 8px 25px rgba(0, 0, 0, 0.6);
-                display: none;
-            `;
-            document.body.appendChild(tooltip);
-        }
-        
-        tooltip.innerHTML = tooltipContent;
-        tooltip.style.display = 'block';
-        this.moveTooltip(e);
+        this.tooltipUI.show(e);
     }
 
     moveTooltip(e) {
-        const tooltip = document.getElementById('custom-tooltip');
-        if (!tooltip || tooltip.style.display === 'none') return;
-        
-        // Get viewport dimensions
-        const viewportWidth = window.innerWidth;
-        const viewportHeight = window.innerHeight;
-        
-        // Get tooltip dimensions
-        const rect = tooltip.getBoundingClientRect();
-        
-        // Start with mouse position offset (use clientX/Y for viewport coordinates)
-        let left = e.clientX + 15;
-        let top = e.clientY + 15;
-        
-        // Check right edge
-        if (left + rect.width > viewportWidth) {
-            left = e.clientX - rect.width - 15;
-        }
-        
-        // Check left edge
-        if (left < 0) {
-            left = 10;
-        }
-        
-        // Check bottom edge
-        if (top + rect.height > viewportHeight) {
-            top = e.clientY - rect.height - 15;
-        }
-        
-        // Check top edge
-        if (top < 0) {
-            top = 10;
-        }
-        
-        // If tooltip is still too wide for viewport, place it centered
-        if (rect.width > viewportWidth - 20) {
-            left = 10;
-            tooltip.style.maxWidth = (viewportWidth - 20) + 'px';
-        }
-        
-        // Use fixed positioning (no scroll offset needed)
-        tooltip.style.left = left + 'px';
-        tooltip.style.top = top + 'px';
+        this.tooltipUI.move(e);
     }
 
     hideTooltip() {
-        const tooltip = document.getElementById('custom-tooltip');
-        if (tooltip) tooltip.style.display = 'none';
+        this.tooltipUI.hide();
     }
 
     // Enhanced shop rendering with better item display
@@ -1827,8 +1478,15 @@ addBossIndicators(monster) {
         SHOP_ITEMS.forEach(item => {
             const shopDiv = document.createElement('div');
             shopDiv.className = 'shop-item';
+            const itemPrice = typeof GloamFormula !== 'undefined'
+                ? GloamFormula.potionPrice(item, Game.player.level)
+                : (item.price || 0);
+            const effectPercent = item.healPercent ?? item.mpRestorePercent;
+            const effectText = effectPercent != null && typeof GloamFormula !== 'undefined'
+                ? `${Math.round(GloamFormula.potionPercentRatio(effectPercent) * 100)}% ${item.type === 'mp_potion' ? 'MP' : 'HP'}`
+                : '';
             
-            const canBuy = item.isContextMenu || (Game.player.level >= item.level && Game.player.gold >= item.price);
+            const canBuy = item.isContextMenu || (Game.player.level >= item.level && Game.player.gold >= itemPrice);
             if (!canBuy) {
                 shopDiv.classList.add('disabled');
             }
@@ -1877,10 +1535,11 @@ addBossIndicators(monster) {
                 iconDiv.textContent = itemIcon;
             }
             
-            const priceText = item.isContextMenu ? "Browse Options" : `${item.price} Gold`;
+            const priceText = item.isContextMenu ? "Browse Options" : `${itemPrice.toLocaleString()} Gold`;
             shopDiv.innerHTML = `
                 <div class="shop-item-name">${item.name}</div>
                 <div class="shop-item-level">Level ${item.level}</div>
+                ${effectText ? `<div class="shop-item-effect">${effectText}</div>` : ''}
                 <div class="shop-item-price">${priceText}</div>
             `;
             
@@ -1909,8 +1568,11 @@ addBossIndicators(monster) {
         SHOP_ITEMS.forEach((item, index) => {
             const shopDiv = shopItems[index];
             if (!shopDiv) return;
+            const itemPrice = typeof GloamFormula !== 'undefined'
+                ? GloamFormula.potionPrice(item, Game.player.level)
+                : (item.price || 0);
 
-            const canBuy = item.isContextMenu || (Game.player.level >= item.level && Game.player.gold >= item.price);
+            const canBuy = item.isContextMenu || (Game.player.level >= item.level && Game.player.gold >= itemPrice);
 
             if (canBuy) {
                 shopDiv.classList.remove('disabled');
@@ -1934,38 +1596,20 @@ addBossIndicators(monster) {
         const currentValue = locationSelect.value;
         locationSelect.innerHTML = '';
 
-        // Get all areas in progression order
-        const allAreas = Game.player.getAllAreasInOrder();
+        // Selector shows the full route, including world bosses. Kill-chain logic excludes MVP areas.
+        const allAreas = MonsterUtils.getProgressionOrder
+            ? MonsterUtils.getProgressionOrder()
+            : Game.player.getAllAreasInOrder();
 
-        // Group by type for better organization
-        const fields = allAreas.filter(area => MonsterUtils.isField(area.key));
-        const dungeons = allAreas.filter(area => MonsterUtils.isDungeon(area.key));
+        const progressionGroup = document.createElement('optgroup');
+        progressionGroup.label = '🗺️ Progression Route';
 
-        // Add fields
-        if (fields.length > 0) {
-            const fieldGroup = document.createElement('optgroup');
-            fieldGroup.label = '🌱 Fields (Safe Training)';
+        allAreas.forEach(area => {
+            const option = this.createLocationOption(area);
+            if (option) progressionGroup.appendChild(option);
+        });
 
-            fields.forEach(area => {
-                const option = this.createLocationOption(area);
-                if (option) fieldGroup.appendChild(option);
-            });
-
-            locationSelect.appendChild(fieldGroup);
-        }
-
-        // Add dungeons
-        if (dungeons.length > 0) {
-            const dungeonGroup = document.createElement('optgroup');
-            dungeonGroup.label = '⚔️ Dungeons (Higher Rewards)';
-
-            dungeons.forEach(area => {
-                const option = this.createLocationOption(area);
-                if (option) dungeonGroup.appendChild(option);
-            });
-
-            locationSelect.appendChild(dungeonGroup);
-        }
+        locationSelect.appendChild(progressionGroup);
 
         // Restore selection
         if (currentValue && Array.from(locationSelect.options).some(opt => opt.value === currentValue)) {
@@ -2206,6 +1850,7 @@ addBossIndicators(monster) {
     this.updateHotbar();
     this.updateStatusEffectsDisplay();
     this.updateLocationSelector();
+    this.updateRebirthPanel();
     // Legacy progression panel removed
     
     // Update enhanced combat UI if it exists
@@ -2257,13 +1902,7 @@ addBossIndicators(monster) {
             } else if (key >= '1' && key <= '5') {
                 e.preventDefault();
                 const slotIndex = parseInt(key) - 1;
-                if (this.hotbarConfig && this.hotbarConfig.slots[slotIndex]) {
-                    const skillId = this.hotbarConfig.slots[slotIndex];
-                    const skill = Game.skills.getCurrentSkills().find(s => s.id === skillId);
-                    if (skill && skill.currentLevel > 0) {
-                        Game.skills.useSkill(skill.id);
-                    }
-                }
+                this.hotbarUI.useSlot(slotIndex);
             } else if (key === 'f') {
                 e.preventDefault();
                 Game.combat.flee();
@@ -2343,14 +1982,11 @@ addBossIndicators(monster) {
 
     // HELPER METHODS FOR HOTBAR SYSTEM
     saveHotbarConfig() {
-        localStorage.setItem(SAVE_KEYS.hotbar, JSON.stringify(this.hotbarConfig));
+        this.hotbarUI.saveConfig();
     }
 
     loadHotbarConfig() {
-        const saved = localStorage.getItem(SAVE_KEYS.hotbar);
-        if (saved) {
-            this.hotbarConfig = JSON.parse(saved);
-        }
+        this.hotbarUI.loadConfig();
     }
 
     // Show loading state
@@ -2463,23 +2099,13 @@ function setupAchievementCategoryFilters() {
     const categoryButtons = document.querySelectorAll('.category-btn');
 
     categoryButtons.forEach(button => {
-        button.addEventListener('click', () => {
-            // Remove active class from all buttons
-            categoryButtons.forEach(btn => {
-                btn.classList.remove('active');
-                btn.style.background = 'rgba(255,255,255,0.1)';
-                btn.style.color = 'var(--text-primary)';
-            });
-
-            // Add active class to clicked button
-            button.classList.add('active');
-            button.style.background = 'var(--blue)';
-            button.style.color = 'white';
+        button.onclick = () => {
+            UIPrimitives.setActiveButton(Array.from(categoryButtons), button);
 
             // Update display
             const category = button.dataset.category;
             updateAchievementsDisplay(category);
-        });
+        };
     });
 }
 

@@ -116,13 +116,13 @@ class CharacterManager {
         // Load skills using modular class system
         if (Game.skills) {
             // Determine the correct class for skill loading
-            let characterClass = "swordsman"; // default
+            let characterClass = character.classId || "swordsman";
 
             if (character.isDragonKnight) {
                 characterClass = "dragon_knight";
             } else if (character.isArchMage) {
                 characterClass = "arch_mage";
-            } else if (character.class) {
+            } else if (!character.classId && character.class) {
                 characterClass = character.class.toLowerCase();
             }
 
@@ -247,8 +247,8 @@ class CharacterManager {
                 sword: null,
                 shield: null
             },
-            isDragonKnight: false,
-            isArchMage: false,
+            classId: "swordsman",
+            classState: {},
             rebirthCount: 0,
             currentLocation: "verdant_meadow",
             isNewPlayer: true,
@@ -279,74 +279,32 @@ class CharacterManager {
         const existing = document.getElementById('character-selector-modal');
         if (existing) existing.remove();
 
-        const modal = document.createElement('div');
-        modal.id = 'character-selector-modal';
-        modal.className = 'modal';
-        modal.style.cssText = `
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0, 0, 0, 0.8);
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            z-index: 2000;
-            backdrop-filter: blur(10px);
-        `;
+        const dialog = UIPrimitives.createDialog({
+            id: 'character-selector-modal',
+            title: 'Select Character',
+            icon: '👥',
+            size: 'lg',
+            closeLabel: 'Close character selector'
+        });
 
-        const content = document.createElement('div');
-        content.className = 'modal-content';
-        content.style.cssText = `
-            background: var(--glass-bg);
-            border: 2px solid var(--border-color);
-            border-radius: 20px;
-            padding: 40px;
-            max-width: 800px;
-            width: 90%;
-            text-align: center;
-            backdrop-filter: blur(20px);
-            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.8);
-            max-height: 80vh;
-            overflow-y: auto;
-        `;
+        const grid = UIPrimitives.createElement('div', {
+            id: 'character-grid',
+            className: 'character-grid'
+        });
+        const footer = UIPrimitives.createElement('div', {
+            className: 'ui-control-row',
+            attributes: { style: 'justify-content: center; margin-top: 18px;' }
+        }, UIPrimitives.createButton({
+            label: 'Close',
+            variant: 'secondary',
+            onClick: () => dialog.close()
+        }));
 
-        content.innerHTML = `
-            <h2 style="color: var(--gold); margin-bottom: 30px; font-size: 2rem;">Select Character</h2>
-            <div id="character-grid" style="
-                display: grid;
-                grid-template-columns: repeat(3, 1fr);
-                gap: 20px;
-                margin-bottom: 30px;
-            "></div>
-            <button id="close-selector" style="
-                background: linear-gradient(135deg, #666, #444);
-                color: white;
-                border: none;
-                padding: 12px 24px;
-                border-radius: 8px;
-                cursor: pointer;
-                font-weight: 600;
-            ">Close</button>
-        `;
-
-        modal.appendChild(content);
-        document.body.appendChild(modal);
+        dialog.body.appendChild(grid);
+        dialog.body.appendChild(footer);
+        document.body.appendChild(dialog.overlay);
 
         this.renderCharacterGrid();
-
-        // Close button
-        document.getElementById('close-selector').onclick = () => {
-            modal.remove();
-        };
-
-        // Close on background click
-        modal.onclick = (e) => {
-            if (e.target === modal) {
-                modal.remove();
-            }
-        };
     }
 
     renderCharacterGrid() {
@@ -357,21 +315,6 @@ class CharacterManager {
 
         for (let i = 0; i < this.maxSlots; i++) {
             const character = this.characters[i];
-            const slot = document.createElement('div');
-            slot.style.cssText = `
-                background: var(--glass-bg);
-                border: 2px solid var(--border-color);
-                border-radius: 12px;
-                padding: 20px;
-                min-height: 200px;
-                cursor: pointer;
-                transition: all 0.3s ease;
-                display: flex;
-                flex-direction: column;
-                justify-content: center;
-                align-items: center;
-                position: relative;
-            `;
 
             if (character) {
                 // Count items for display
@@ -380,71 +323,55 @@ class CharacterManager {
                 const isCurrentCharacter = i === currentSlot;
                 
                 // Existing character
-                const getClassIcon = (char) => {
-                    if (char.isDragonKnight) return '🐉';
-                    if (char.isArchMage) return '🧙‍♂️';
-                    if (char.class === 'mage') return '🔮';
-                    return '⚔️';
+                const resolveClassId = (char) => {
+                    if (char.classId) return char.classId;
+                    if (char.isDragonKnight) return 'dragon_knight';
+                    if (char.isArchMage) return 'arch_mage';
+                    return (char.class || 'swordsman').toLowerCase();
                 };
+
+                const CLASS_ICONS = {
+                    dragon_knight: '🐉', arch_mage: '🧙‍♂️', mage: '🔮',
+                    rogue: '🗡️', shadowblade: '🌑', berserker: '🪓', ravager: '💢',
+                    summoner: '🐾', archon: '👁️'
+                };
+
+                const getClassIcon = (char) => CLASS_ICONS[resolveClassId(char)] || '⚔️';
 
                 const getClassDisplayName = (char) => {
-                    if (char.isDragonKnight) return 'Dragon Knight';
-                    if (char.isArchMage) return 'Arch Mage';
-                    if (char.class === 'mage') return 'Mage';
-                    if (char.class === 'swordsman') return 'Swordsman';
-                    return char.class ? char.class.charAt(0).toUpperCase() + char.class.slice(1) : 'Swordsman';
+                    const id = resolveClassId(char);
+                    if (typeof ClassKit !== 'undefined' && ClassKit.get(id)) return ClassKit.get(id).name;
+                    return id.split('_').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
                 };
 
-                slot.innerHTML = `
-                    <div style="font-size: 3rem; margin-bottom: 10px;">
-                        ${getClassIcon(character)}
-                    </div>
-                    <div style="font-weight: bold; color: var(--gold); margin-bottom: 5px;">
-                        ${character.name} ${isCurrentCharacter ? '(Current)' : ''}
-                    </div>
-                    <div style="color: var(--blue); margin-bottom: 5px;">
-                        ${getClassDisplayName(character)}
-                    </div>
-                    <div style="color: var(--text-secondary); font-size: 0.9rem; margin-bottom: 10px;">
-                        Level ${character.level}
-                    </div>
-                    <div style="color: var(--gold); font-size: 0.8rem; margin-bottom: 5px;">
-                        💰 ${character.gold?.toLocaleString() || 0} Gold
-                    </div>
-                    <div style="color: var(--text-secondary); font-size: 0.7rem;">
-                        📦 ${itemCount} items
-                    </div>
-                    <button class="delete-char-btn" style="
-                        position: absolute;
-                        top: 8px;
-                        right: 8px;
-                        background: rgba(255, 68, 68, 0.8);
-                        border: none;
-                        color: white;
-                        width: 24px;
-                        height: 24px;
-                        border-radius: 50%;
-                        cursor: pointer;
-                        font-size: 0.8rem;
-                        display: flex;
-                        align-items: center;
-                        justify-content: center;
-                    ">×</button>
-                `;
-
-                // Highlight current character
-                if (isCurrentCharacter) {
-                    slot.style.borderColor = 'var(--gold)';
-                    slot.style.boxShadow = '0 0 20px rgba(255, 215, 0, 0.5)';
-                }
-
-                slot.onclick = (e) => {
-                    if (!e.target.classList.contains('delete-char-btn')) {
-                        if (!isCurrentCharacter) {
-                            this.selectCharacter(i);
-                        }
-                    }
-                };
+                const slot = UIPrimitives.createCard({
+                    className: 'character-slot-card',
+                    selected: isCurrentCharacter,
+                    disabled: isCurrentCharacter,
+                    ariaLabel: `${character.name}, ${getClassDisplayName(character)}, level ${character.level}`,
+                    onClick: () => this.selectCharacter(i)
+                }, [
+                    UIPrimitives.createElement('div', { className: 'character-slot-icon', text: getClassIcon(character) }),
+                    UIPrimitives.createElement('div', {
+                        className: 'character-slot-name',
+                        text: `${character.name}${isCurrentCharacter ? ' (Current)' : ''}`
+                    }),
+                    UIPrimitives.createElement('div', { className: 'character-slot-class', text: getClassDisplayName(character) }),
+                    UIPrimitives.createElement('div', { className: 'character-slot-meta', text: `Level ${character.level}` }),
+                    UIPrimitives.createElement('div', {
+                        className: 'character-slot-gold',
+                        text: `💰 ${character.gold?.toLocaleString() || 0} Gold`
+                    }),
+                    UIPrimitives.createElement('div', { className: 'character-slot-meta', text: `📦 ${itemCount} items` }),
+                    UIPrimitives.createButton({
+                        icon: '×',
+                        variant: 'danger',
+                        size: 'icon',
+                        className: 'delete-char-btn character-delete-button',
+                        title: `Delete ${character.name}`,
+                        ariaLabel: `Delete ${character.name}`
+                    })
+                ]);
 
                 slot.querySelector('.delete-char-btn').onclick = (e) => {
                     e.stopPropagation();
@@ -454,40 +381,27 @@ class CharacterManager {
                     }
                 };
 
-                if (!isCurrentCharacter) {
-                    slot.onmouseenter = () => {
-                        slot.style.borderColor = 'var(--blue)';
-                        slot.style.transform = 'translateY(-4px)';
-                    };
-
-                    slot.onmouseleave = () => {
-                        slot.style.borderColor = 'var(--border-color)';
-                        slot.style.transform = 'translateY(0)';
-                    };
-                }
+                grid.appendChild(slot);
             } else {
                 // Empty slot
-                slot.innerHTML = `
-                    <div style="font-size: 3rem; margin-bottom: 10px; opacity: 0.5;">➕</div>
-                    <div style="color: var(--text-secondary);">Create New Character</div>
-                `;
+                const slot = UIPrimitives.createCard({
+                    className: 'character-slot-card',
+                    ariaLabel: `Create new character in slot ${i + 1}`,
+                    onClick: () => this.createNewCharacter(i)
+                }, [
+                    UIPrimitives.createElement('div', {
+                        className: 'character-slot-icon',
+                        text: '➕',
+                        attributes: { style: 'opacity: 0.55;' }
+                    }),
+                    UIPrimitives.createElement('div', {
+                        className: 'character-slot-meta',
+                        text: 'Create New Character'
+                    })
+                ]);
 
-                slot.onclick = () => {
-                    this.createNewCharacter(i);
-                };
-
-                slot.onmouseenter = () => {
-                    slot.style.borderColor = 'var(--gold)';
-                    slot.style.transform = 'translateY(-4px)';
-                };
-
-                slot.onmouseleave = () => {
-                    slot.style.borderColor = 'var(--border-color)';
-                    slot.style.transform = 'translateY(0)';
-                };
+                grid.appendChild(slot);
             }
-
-            grid.appendChild(slot);
         }
     }
 
@@ -625,7 +539,10 @@ class GloamreachGame {
             const selectedClass = classSelect.value;
             const descriptions = {
                 swordsman: "<strong>Swordsman:</strong> A balanced warrior focused on physical combat. Great for auto-battle with steady damage and good defense. Can rebirth into Dragon Knight at level 100.",
-                mage: "<strong>Mage:</strong> A powerful spellcaster with devastating magical abilities. Requires active skill usage for maximum damage (2.5x DPS potential) but weak in auto-battle. Can rebirth into Arch Mage at level 100."
+                mage: "<strong>Mage:</strong> A powerful spellcaster with devastating magical abilities. Requires active skill usage for maximum damage (2.5x DPS potential) but weak in auto-battle. Can rebirth into Arch Mage at level 100.",
+                rogue: "<strong>Rogue:</strong> A crit-focused economy class. Earns more gold and loot through high crit uptime, then evolves into Shadowblade at level 100.",
+                berserker: "<strong>Berserker:</strong> A shieldless momentum class. Fury increases damage with each kill, but death resets the streak. Evolves into Ravager at level 100.",
+                summoner: "<strong>Summoner:</strong> A minion class built for long boss fights. Damage ramps every combat turn, but short trash fights end before the swarm reaches full strength. Evolves into Archon at level 100."
             };
 
             if (classDescription && descriptions[selectedClass]) {
@@ -820,6 +737,14 @@ class GloamreachGame {
                 const statusBonuses = this.skills.getActiveStatusEffects();
                 if (statusBonuses.mpRegenBoost) {
                  baseRegen *= (1 + statusBonuses.mpRegenBoost);
+                }
+
+                // Class-defined flat regen (e.g. mage mpRegenPerLevel)
+                if (typeof ClassKit !== 'undefined') {
+                    const classDef = ClassKit.get(this.player.state.classId);
+                    if (classDef && classDef.mpRegenPerLevel) {
+                        baseRegen += classDef.mpRegenPerLevel * this.player.state.level;
+                    }
                 }
 
                 const actualRestore = this.player.restoreMp(Math.floor(baseRegen));

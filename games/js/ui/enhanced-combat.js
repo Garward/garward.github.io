@@ -505,6 +505,12 @@ class EnhancedCombatUI {
                 color: #ff4444;
             }
 
+            .damage-number.minion-damage {
+                color: #c084fc;
+                font-size: 1.55rem;
+                text-shadow: 0 0 10px rgba(192, 132, 252, 0.85);
+            }
+
             @keyframes damageFloat {
                 0% { opacity: 1; transform: translateY(0) scale(1); }
                 50% { transform: translateY(-30px) scale(1.2); }
@@ -833,12 +839,13 @@ updateLocationDisplay() {
     }
 
     // Show enhanced damage numbers
-    showDamageNumber(damage, isCrit = false, isPlayerDamage = false) {
+    showDamageNumber(damage, isCrit = false, isPlayerDamage = false, extraClass = '') {
         const combatArea = document.querySelector('.enhanced-combat-area');
         if (!combatArea) return;
 
         const damageElement = document.createElement('div');
         damageElement.className = 'damage-number';
+        if (extraClass) damageElement.classList.add(extraClass);
         
         if (isCrit) {
             damageElement.classList.add('crit');

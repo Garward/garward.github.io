@@ -379,6 +379,379 @@ const DRAGON_KNIGHT_SKILLS = [
     }
 ];
 
+const ROGUE_SKILLS = [
+    {
+        id: "quick_stab",
+        name: "Quick Stab",
+        maxLevel: 10,
+        currentLevel: 0,
+        description: "A cheap strike with extra crit chance.",
+        damageMultiplier: 2.4,
+        critBonus: 20,
+        mpCost: 10,
+        unlockLevel: 1,
+        cooldown: 0,
+        maxCooldown: 2500,
+        hotkey: "1",
+        icon: "🗡️"
+    },
+    {
+        id: "mark_for_plunder",
+        name: "Mark for Plunder",
+        maxLevel: 10,
+        currentLevel: 0,
+        description: "Marks the next kill for a large gold payout.",
+        damageMultiplier: 1.4,
+        mpCost: 18,
+        unlockLevel: 5,
+        cooldown: 0,
+        maxCooldown: 15000,
+        hotkey: "2",
+        icon: "💰"
+    },
+    {
+        id: "shadowstep",
+        name: "Shadowstep",
+        maxLevel: 10,
+        currentLevel: 0,
+        description: "Briefly increases crit chance and damage.",
+        mpCost: 20,
+        unlockLevel: 10,
+        cooldown: 0,
+        maxCooldown: 20000,
+        hotkey: "3",
+        icon: "🌑"
+    },
+    {
+        id: "knife_work",
+        name: "Knife Work",
+        maxLevel: 10,
+        currentLevel: 0,
+        description: "Passive crit damage training.",
+        critDamagePerLevel: 3,
+        unlockLevel: 3,
+        isPassive: true,
+        icon: "🔪"
+    }
+];
+
+const SHADOWBLADE_SKILLS = [
+    {
+        id: "void_cut",
+        name: "Void Cut",
+        maxLevel: 10,
+        currentLevel: 0,
+        description: "A precise strike that pierces armor on crit.",
+        damageMultiplier: 3.4,
+        critBonus: 30,
+        mpCost: 18,
+        unlockLevel: 1,
+        cooldown: 0,
+        maxCooldown: 3000,
+        hotkey: "1",
+        icon: "🌘"
+    },
+    {
+        id: "kingpin_mark",
+        name: "Kingpin Mark",
+        maxLevel: 10,
+        currentLevel: 0,
+        description: "Marks the next kill for a huge gold payout.",
+        damageMultiplier: 1.7,
+        mpCost: 28,
+        unlockLevel: 5,
+        cooldown: 0,
+        maxCooldown: 15000,
+        hotkey: "2",
+        icon: "💎"
+    },
+    {
+        id: "night_veil",
+        name: "Night Veil",
+        maxLevel: 10,
+        currentLevel: 0,
+        description: "Greatly increases crit chance and damage.",
+        mpCost: 32,
+        unlockLevel: 10,
+        cooldown: 0,
+        maxCooldown: 22000,
+        hotkey: "3",
+        icon: "🌌"
+    },
+    {
+        id: "shadow_training",
+        name: "Shadow Training",
+        maxLevel: 10,
+        currentLevel: 0,
+        description: "Passive crit damage and loot discipline.",
+        critDamagePerLevel: 4,
+        unlockLevel: 1,
+        isPassive: true,
+        icon: "🕶️"
+    }
+];
+
+const BERSERKER_SKILLS = [
+    {
+        id: "reckless_leap",
+        name: "Reckless Leap",
+        maxLevel: 10,
+        currentLevel: 0,
+        description: "Spend 20% current HP, gain 10 Fury, and strike.",
+        damageMultiplier: 2.2,
+        mpCost: 0,
+        unlockLevel: 1,
+        cooldown: 0,
+        maxCooldown: 10000,
+        hotkey: "1",
+        icon: "🪓"
+    },
+    {
+        id: "blood_roar",
+        name: "Blood Roar",
+        maxLevel: 10,
+        currentLevel: 0,
+        description: "Temporarily increases attack while Fury builds.",
+        mpCost: 12,
+        unlockLevel: 5,
+        cooldown: 0,
+        maxCooldown: 18000,
+        hotkey: "2",
+        icon: "💢"
+    },
+    {
+        id: "cleave",
+        name: "Cleave",
+        maxLevel: 10,
+        currentLevel: 0,
+        description: "Heavy attack that scales well with Fury.",
+        damageMultiplier: 2.8,
+        mpCost: 14,
+        unlockLevel: 10,
+        cooldown: 0,
+        maxCooldown: 7000,
+        hotkey: "3",
+        icon: "⚔️"
+    },
+    {
+        id: "fury_training",
+        name: "Fury Training",
+        maxLevel: 10,
+        currentLevel: 0,
+        description: "Passive attack training for sustained farming.",
+        atkBonus: 2,
+        unlockLevel: 3,
+        isPassive: true,
+        icon: "🔥"
+    }
+];
+
+const RAVAGER_SKILLS = [
+    {
+        id: "ravager_leap",
+        name: "Ravager Leap",
+        maxLevel: 10,
+        currentLevel: 0,
+        description: "Spend 18% current HP, gain 12 Fury, and strike.",
+        damageMultiplier: 3.0,
+        mpCost: 0,
+        unlockLevel: 1,
+        cooldown: 0,
+        maxCooldown: 9000,
+        hotkey: "1",
+        icon: "💥"
+    },
+    {
+        id: "war_frenzy",
+        name: "War Frenzy",
+        maxLevel: 10,
+        currentLevel: 0,
+        description: "Increases attack and crit damage for a short time.",
+        mpCost: 18,
+        unlockLevel: 5,
+        cooldown: 0,
+        maxCooldown: 18000,
+        hotkey: "2",
+        icon: "🩸"
+    },
+    {
+        id: "skullsplitter",
+        name: "Skullsplitter",
+        maxLevel: 10,
+        currentLevel: 0,
+        description: "Brutal Fury-scaling attack.",
+        damageMultiplier: 3.8,
+        mpCost: 20,
+        unlockLevel: 10,
+        cooldown: 0,
+        maxCooldown: 8000,
+        hotkey: "3",
+        icon: "☠️"
+    },
+    {
+        id: "ravager_training",
+        name: "Ravager Training",
+        maxLevel: 10,
+        currentLevel: 0,
+        description: "Passive attack training for high-Fury combat.",
+        atkBonus: 3,
+        unlockLevel: 1,
+        isPassive: true,
+        icon: "🔴"
+    }
+];
+
+const SUMMONER_SKILLS = [
+    {
+        id: "spirit_bolt",
+        name: "Spirit Bolt",
+        maxLevel: 10,
+        currentLevel: 0,
+        description: "A focused spirit strike for longer fights.",
+        damageMultiplier: 2.0,
+        mpCost: 14,
+        unlockLevel: 1,
+        cooldown: 0,
+        maxCooldown: 6000,
+        hotkey: "1",
+        icon: "✦"
+    },
+    {
+        id: "overcharge",
+        name: "Overcharge",
+        maxLevel: 10,
+        currentLevel: 0,
+        description: "Instantly accelerates swarm ramp.",
+        rampBurst: 60,
+        mpCost: 30,
+        unlockLevel: 5,
+        cooldown: 0,
+        maxCooldown: 15000,
+        hotkey: "2",
+        icon: "⚡"
+    },
+    {
+        id: "swarm_frenzy",
+        name: "Swarm Frenzy",
+        maxLevel: 10,
+        currentLevel: 0,
+        description: "A strike where minion damage echoes twice.",
+        damageMultiplier: 1.2,
+        minionEcho: 2,
+        mpCost: 25,
+        unlockLevel: 10,
+        cooldown: 0,
+        maxCooldown: 12000,
+        hotkey: "3",
+        icon: "☄️"
+    },
+    {
+        id: "bond_of_the_pack",
+        name: "Bond of the Pack",
+        maxLevel: 10,
+        currentLevel: 0,
+        description: "Passive ramp gain per turn.",
+        rampPerTurnBonus: 1,
+        unlockLevel: 3,
+        isPassive: true,
+        icon: "🔗"
+    },
+    {
+        id: "vital_swarm",
+        name: "Vital Swarm",
+        maxLevel: 10,
+        currentLevel: 0,
+        description: "Passive max HP from the host bond.",
+        hpBonusPerLevel: 80,
+        unlockLevel: 7,
+        isPassive: true,
+        icon: "💚"
+    }
+];
+
+const ARCHON_SKILLS = [
+    {
+        id: "spirit_bolt",
+        name: "Spirit Bolt",
+        maxLevel: 10,
+        currentLevel: 0,
+        description: "A focused spirit strike for longer fights.",
+        damageMultiplier: 2.0,
+        mpCost: 14,
+        unlockLevel: 1,
+        cooldown: 0,
+        maxCooldown: 6000,
+        hotkey: "1",
+        icon: "✦"
+    },
+    {
+        id: "overcharge",
+        name: "Overcharge",
+        maxLevel: 10,
+        currentLevel: 0,
+        description: "Instantly accelerates swarm ramp.",
+        rampBurst: 60,
+        mpCost: 30,
+        unlockLevel: 5,
+        cooldown: 0,
+        maxCooldown: 15000,
+        hotkey: "2",
+        icon: "⚡"
+    },
+    {
+        id: "swarm_frenzy",
+        name: "Swarm Frenzy",
+        maxLevel: 10,
+        currentLevel: 0,
+        description: "A strike where minion damage echoes twice.",
+        damageMultiplier: 1.2,
+        minionEcho: 2,
+        mpCost: 25,
+        unlockLevel: 10,
+        cooldown: 0,
+        maxCooldown: 12000,
+        hotkey: "3",
+        icon: "☄️"
+    },
+    {
+        id: "bond_of_the_pack",
+        name: "Bond of the Pack",
+        maxLevel: 10,
+        currentLevel: 0,
+        description: "Passive ramp gain per turn.",
+        rampPerTurnBonus: 1,
+        unlockLevel: 1,
+        isPassive: true,
+        icon: "🔗"
+    },
+    {
+        id: "vital_swarm",
+        name: "Vital Swarm",
+        maxLevel: 10,
+        currentLevel: 0,
+        description: "Passive max HP from the host bond.",
+        hpBonusPerLevel: 80,
+        unlockLevel: 1,
+        isPassive: true,
+        icon: "💚"
+    },
+    {
+        id: "ascend_host",
+        name: "Ascend Host",
+        maxLevel: 10,
+        currentLevel: 0,
+        description: "Burst ramp and channel a heavy host strike.",
+        damageMultiplier: 3.0,
+        rampBurst: 150,
+        mpCost: 60,
+        unlockLevel: 10,
+        cooldown: 0,
+        maxCooldown: 25000,
+        hotkey: "4",
+        icon: "🌌"
+    }
+];
+
 class SkillManager {
     constructor() {
         this.activeSkills = [...SWORDSMAN_SKILLS];
@@ -405,6 +778,24 @@ class SkillManager {
                 break;
             case "arch_mage":
                 newSkills = [...ARCH_MAGE_SKILLS];
+                break;
+            case "rogue":
+                newSkills = [...ROGUE_SKILLS];
+                break;
+            case "shadowblade":
+                newSkills = [...SHADOWBLADE_SKILLS];
+                break;
+            case "berserker":
+                newSkills = [...BERSERKER_SKILLS];
+                break;
+            case "ravager":
+                newSkills = [...RAVAGER_SKILLS];
+                break;
+            case "summoner":
+                newSkills = [...SUMMONER_SKILLS];
+                break;
+            case "archon":
+                newSkills = [...ARCHON_SKILLS];
                 break;
             default:
                 newSkills = [...SWORDSMAN_SKILLS];
@@ -567,7 +958,63 @@ class SkillManager {
                      mpRegenBoost: regenBoost,
                      mpCostReduction: costReduction
                  });
-                 break;    
+                 break;
+
+            case "mark_for_plunder":
+            case "kingpin_mark":
+                if (Game.player.state.classState) {
+                    Game.player.state.classState.plunderMarked = true;
+                }
+                Game.ui.showLootNotification("Next kill marked for plunder!");
+                break;
+
+            case "shadowstep":
+                this.addStatusEffect("shadowstep", "Shadowstep", "🌑", 12000, {
+                    critChanceBonus: 12 + skill.currentLevel,
+                    critDamageBonus: 0.2 + (skill.currentLevel * 0.03)
+                });
+                break;
+
+            case "night_veil":
+                this.addStatusEffect("nightVeil", "Night Veil", "🌌", 14000, {
+                    critChanceBonus: 16 + skill.currentLevel,
+                    critDamageBonus: 0.3 + (skill.currentLevel * 0.04)
+                });
+                break;
+
+            case "reckless_leap":
+            case "ravager_leap":
+                if (Game.player.state.classState) {
+                    const furyGain = skill.id === "ravager_leap" ? 12 : 10;
+                    Game.player.state.classState.fury = Math.min(50, (Game.player.state.classState.fury || 0) + furyGain);
+                }
+                const hpCostRatio = skill.id === "ravager_leap" ? 0.18 : 0.2;
+                const hpCost = Math.max(1, Math.floor(Game.player.hp * hpCostRatio));
+                Game.player.hp = Math.max(1, Game.player.hp - hpCost);
+                Game.ui.showLootNotification(`Fury rises! (-${hpCost} HP)`);
+                break;
+
+            case "blood_roar":
+                this.addStatusEffect("bloodRoar", "Blood Roar", "💢", 12000, {
+                    atkMultiplier: 1.15 + (skill.currentLevel * 0.03)
+                });
+                break;
+
+            case "war_frenzy":
+                this.addStatusEffect("warFrenzy", "War Frenzy", "🩸", 14000, {
+                    atkMultiplier: 1.2 + (skill.currentLevel * 0.035),
+                    critDamageBonus: 0.15 + (skill.currentLevel * 0.025)
+                });
+                break;
+
+            case "overcharge":
+            case "ascend_host":
+                if (Game.player.state.classState) {
+                    const cap = Game.player.state.classId === "archon" ? 500 : 300;
+                    Game.player.state.classState.ramp = Math.min(cap, (Game.player.state.classState.ramp || 0) + skill.rampBurst);
+                }
+                Game.ui.showLootNotification("The swarm surges!");
+                break;
         }
     }
 
@@ -700,6 +1147,22 @@ class SkillManager {
         player.state.hp = Math.min(player.state.hp, player.state.maxHp); // Ensure current HP doesn't exceed max
     
     }
+
+        const critTraining = this.activeSkills.find(s => s.critDamagePerLevel && s.currentLevel > 0);
+        if (critTraining) {
+            player.state.critDamage += critTraining.critDamagePerLevel * critTraining.currentLevel;
+        }
+
+        const atkTraining = this.activeSkills.find(s => s.atkBonus && s.currentLevel > 0 && (s.id === "fury_training" || s.id === "ravager_training"));
+        if (atkTraining) {
+            player.state.atk += atkTraining.atkBonus * atkTraining.currentLevel;
+        }
+
+        const vitalSwarm = this.activeSkills.find(s => s.id === "vital_swarm" && s.currentLevel > 0);
+        if (vitalSwarm) {
+            player.state.maxHp += vitalSwarm.hpBonusPerLevel * vitalSwarm.currentLevel;
+            player.state.hp = Math.min(player.state.hp, player.state.maxHp);
+        }
     }
 
     getSkillByHotkey(key) {
@@ -765,5 +1228,13 @@ if (typeof Game !== "undefined") {
 
 // Export for global use
 window.MAGE_SKILLS = MAGE_SKILLS;
+window.SWORDSMAN_SKILLS = SWORDSMAN_SKILLS;
+window.DRAGON_KNIGHT_SKILLS = DRAGON_KNIGHT_SKILLS;
 window.ARCH_MAGE_SKILLS = ARCH_MAGE_SKILLS;
+window.ROGUE_SKILLS = ROGUE_SKILLS;
+window.SHADOWBLADE_SKILLS = SHADOWBLADE_SKILLS;
+window.BERSERKER_SKILLS = BERSERKER_SKILLS;
+window.RAVAGER_SKILLS = RAVAGER_SKILLS;
+window.SUMMONER_SKILLS = SUMMONER_SKILLS;
+window.ARCHON_SKILLS = ARCHON_SKILLS;
 window.SkillManager = SkillManager;

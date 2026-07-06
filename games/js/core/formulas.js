@@ -2,7 +2,54 @@
 //
 // Keep pure balance math here so the game and tooling use the same source.
 (function (root) {
+    const kit = () => root.ClassKit || null;
+
     const Formula = {
+        maxExpForLevel(level) {
+            const safeLevel = Math.max(1, Number(level) || 1);
+            return Math.round(80 * Math.pow(safeLevel, 1.9));
+        },
+
+        prestigeBonuses(rebirthCount = 0) {
+            const count = Math.max(0, Number(rebirthCount) || 0);
+            return {
+                damageMultiplier: 1 + (count * 0.10),
+                expMultiplier: 1 + (count * 0.10),
+                goldMultiplier: 1 + (count * 0.05)
+            };
+        },
+
+        applyRebirth(state, evolutionId = null) {
+            if (!state) throw new Error('applyRebirth requires a state object');
+            const nextClassId = evolutionId || state.classId || 'swordsman';
+            state.rebirthCount = (state.rebirthCount || 0) + 1;
+            state.classId = nextClassId;
+            state.class = nextClassId;
+            state.classState = kit() ? kit().createState(nextClassId) : {};
+            state.level = 1;
+            state.exp = 0;
+            state.maxExp = this.maxExpForLevel(1);
+            state.skillPoints = 1;
+            state.unlockedAreas = ['verdant_meadow'];
+            state.areaProgress = {};
+            state.currentLocation = 'verdant_meadow';
+            state.rebirthOfferShown = false;
+            state.isDragonKnight = nextClassId === 'dragon_knight';
+            state.isArchMage = nextClassId === 'arch_mage';
+            return state;
+        },
+
+        rewardMultipliers({ classId, classState, rebirthCount }) {
+            const eco = { goldMult: 1, expMult: 1, lootChanceBonus: 0, classState: classState || {} };
+            if (classId && kit()) kit().hooks(classId).economy(eco);
+            const p = this.prestigeBonuses(rebirthCount || 0);
+            return {
+                goldMult: eco.goldMult * p.goldMultiplier,
+                expMult: eco.expMult * p.expMultiplier,
+                lootChanceBonus: eco.lootChanceBonus
+            };
+        },
+
         defaultStatusBonuses() {
             return {
                 damageBonus: 0,
@@ -18,6 +65,30 @@
                 mpRegenBoost: 0,
                 mpCostReduction: 0
             };
+        },
+
+        potionPercentRatio(value) {
+            const numeric = Number(value) || 0;
+            return numeric > 1 ? numeric / 100 : numeric;
+        },
+
+        potionEffect(potion, playerMaxStat) {
+            if (!potion) return 0;
+            if (typeof potion.healing === 'number') return Math.floor(potion.healing);
+            if (typeof potion.heal === 'number') return Math.floor(potion.heal);
+            if (typeof potion.mpRestore === 'number') return Math.floor(potion.mpRestore);
+            if (typeof potion.restore_mp === 'number') return Math.floor(potion.restore_mp);
+            const percent = potion.healPercent ?? potion.mpRestorePercent;
+            if (percent == null) return 0;
+            return Math.floor((Number(playerMaxStat) || 0) * this.potionPercentRatio(percent));
+        },
+
+        potionPrice(potion, playerLevel) {
+            if (!potion) return 0;
+            if (typeof potion.priceBase === 'number') {
+                return Math.floor(potion.priceBase * Math.max(1, Number(playerLevel) || 1));
+            }
+            return Math.floor(potion.price || 0);
         },
 
         calculateClassStats(classDef, level) {
@@ -74,32 +145,34 @@
                 currentHp: monster.currentHp ?? monster.hp,
                 maxHp: monster.maxHp ?? monster.hp
             };
-            const isField = locationData?.type === 'field';
-            const isDungeon = locationData?.type === 'dungeon';
-            const isMvpArea = locationData?.isMvpArea === true;
-
-            if (isField) {
-                adjusted.maxHp = Math.floor(adjusted.maxHp * 0.9);
-                adjusted.currentHp = adjusted.maxHp;
-                adjusted.def = Math.floor(adjusted.def * 0.8);
-                adjusted.baseAttack = locationKey === 'verdant_meadow'
-                    ? adjusted.level * 2 + 5
-                    : adjusted.level * 6 + 15;
-            } else if (isDungeon) {
-                adjusted.maxHp = Math.floor(adjusted.maxHp * 1.8);
-                adjusted.currentHp = adjusted.maxHp;
-                adjusted.def = Math.floor(adjusted.def * 1.5);
-                adjusted.baseAttack = adjusted.level * 15 + 50;
-            }
-
-            if (isMvpArea && adjusted.isMvp) {
-                adjusted.maxHp = Math.floor(adjusted.maxHp * 1.2);
-                adjusted.currentHp = adjusted.maxHp;
-                adjusted.def = Math.floor(adjusted.def * 1.3);
-                adjusted.baseAttack = Math.floor(adjusted.baseAttack * 1.5);
-            }
+            adjusted.maxHp = adjusted.hp;
+            adjusted.currentHp = adjusted.maxHp;
+            adjusted.baseAttack = adjusted.baseAttack ||
+                this.calculateMonsterBaseAttack(this.getMonsterBand(monster, locationData), monster.level);
 
             return adjusted;
+        },
+
+        getMonsterBand(monster, locationData) {
+            if (monster?.isMvp || locationData?.isMvpArea) return 'worldBoss';
+            if (monster?.isBoss) return 'areaBoss';
+            if (locationData?.type === 'dungeon') return 'dungeonTrash';
+            return 'fieldTrash';
+        },
+
+        getMonsterBandConfig(band) {
+            const bands = {
+                fieldTrash: { attackPerLevel: 3.5, attackFlat: 5 },
+                dungeonTrash: { attackPerLevel: 4.4, attackFlat: 18 },
+                areaBoss: { attackPerLevel: 5.1, attackFlat: 40 },
+                worldBoss: { attackPerLevel: 5.5, attackFlat: 55 }
+            };
+            return bands[band] || bands.fieldTrash;
+        },
+
+        calculateMonsterBaseAttack(band, level) {
+            const cfg = this.getMonsterBandConfig(band);
+            return Math.max(1, Math.round(cfg.attackFlat + (level * cfg.attackPerLevel)));
         },
 
         getSkillDamageBonus(equipped = {}) {
@@ -108,16 +181,17 @@
             }, 0);
         },
 
-        calculatePlayerAttackDamage({
-            player,
-            monster,
-            skill = null,
-            statusBonuses = null,
-            equipped = {},
-            variance = 1,
-            critRoll = 1,
-            skillCritRoll = 1
-        }) {
+        calculatePlayerAttackDamage(args) {
+            const {
+                player,
+                monster,
+                skill = null,
+                statusBonuses = null,
+                equipped = {},
+                variance = 1,
+                critRoll = 1,
+                skillCritRoll = 1
+            } = args;
             const bonuses = { ...this.defaultStatusBonuses(), ...(statusBonuses || {}) };
             let damage = player.atk;
             let isCrit = false;
@@ -145,9 +219,35 @@
 
             damage *= (1 + bonuses.damageBonus);
 
+            const classId = args.classId;
+            let classDefenseMultiplier = 1;
+            let minionDamage = 0;
+            if (classId && kit()) {
+                const ctx = {
+                    damage, isSkill: !!skill, isCrit,
+                    player,
+                    monster,
+                    playerAtk: player.atk,
+                    classState: args.classState || {},
+                    turn: args.turn || 1,
+                    defenseMultiplier: 1,
+                    minionDamage: 0,
+                    minionEcho: skill?.minionEcho || 1
+                };
+                kit().hooks(classId).modifyOutgoing(ctx);
+                damage = ctx.damage;
+                classDefenseMultiplier = ctx.defenseMultiplier;
+                minionDamage = ctx.minionDamage || 0;
+            }
+            const rebirths = args.rebirthCount ?? player.rebirthCount ?? player.state?.rebirthCount ?? 0;
+            damage *= this.prestigeBonuses(rebirths).damageMultiplier;
+
             let defense = monster.def;
             if (skill?.armorPiercePercent) {
                 defense = Math.floor(defense * (1 - skill.armorPiercePercent / 100));
+            }
+            if (typeof classDefenseMultiplier === 'number') {
+                defense = Math.floor(defense * classDefenseMultiplier);
             }
 
             const beforeVariance = Math.max(1, damage - defense);
@@ -158,7 +258,8 @@
                 beforeVariance,
                 defense,
                 isCrit,
-                variance
+                variance,
+                minionDamage
             };
         },
 
@@ -172,7 +273,7 @@
             return { normalMin, normalAvg, normalMax, critAvg, critChance, expected };
         },
 
-        calculateMonsterAttackDamage({ monster, player, statusBonuses = null }) {
+        calculateMonsterAttackDamage({ monster, player, statusBonuses = null, classId = null, classState = null }) {
             const bonuses = { ...this.defaultStatusBonuses(), ...(statusBonuses || {}) };
             let monsterDamage = monster.baseAttack || (monster.level * 8 + 20);
             if (monsterDamage < 1) monsterDamage = 1;
@@ -186,11 +287,16 @@
                 reducedDamage *= (1 - bonuses.skillDamageReduction);
             }
 
-            const flatReduction = Math.min(0.5 * totalDefense, monsterDamage * 0.7);
+            const flatReduction = Math.min(0.5 * totalDefense, monsterDamage * 0.4);
             reducedDamage -= flatReduction;
             reducedDamage = Math.floor(Math.max(0, reducedDamage));
 
-            const damage = Math.max(Math.floor(monsterDamage * 0.01), reducedDamage);
+            let damage = Math.max(Math.ceil(monsterDamage * 0.05), reducedDamage);
+            if (classId && kit()) {
+                const ctx = { damage, monster, classState: classState || {} };
+                kit().hooks(classId).modifyIncoming(ctx);
+                damage = Math.max(0, Math.floor(ctx.damage));
+            }
             const mpAbsorbed = Math.floor(damage * (bonuses.mpShieldRatio || 0));
 
             return {
@@ -200,6 +306,73 @@
                 defenseScaling,
                 flatReduction,
                 mpAbsorbed
+            };
+        },
+
+        mvpBattleTurn({ monster, mvpState, turn, rng = Math.random }) {
+            const state = mvpState || {};
+            state.cooldowns = state.cooldowns || {};
+            state.phasesTriggered = state.phasesTriggered || [];
+            state.usedHeals = state.usedHeals || [];
+            state.damageBonus = state.damageBonus || 0;
+
+            let damageMultiplier = 1;
+            let healPercent = 0;
+            let shieldTurns = 0;
+            const messages = [];
+
+            const hpRatio = monster.maxHp > 0
+                ? Math.max(0, Math.min(1, (monster.currentHp ?? monster.hp) / monster.maxHp))
+                : 1;
+
+            (monster.phases || []).forEach(phase => {
+                const key = phase.effect || phase.message || String(phase.hpThreshold);
+                if (hpRatio <= phase.hpThreshold && !state.phasesTriggered.includes(key)) {
+                    state.phasesTriggered.push(key);
+                    messages.push(phase.message);
+                    if (['rage', 'curse', 'ascension'].includes(phase.effect)) {
+                        state.damageBonus += 0.25;
+                    } else if (['frenzy', 'desperation', 'judgment'].includes(phase.effect)) {
+                        state.damageBonus += 0.5;
+                    }
+                }
+            });
+
+            const readySkills = (monster.mvpSkills || []).filter(skill => {
+                const cooldownTurns = Math.max(1, Math.ceil((skill.cooldown || 1000) / 1000));
+                const lastTurn = state.cooldowns[skill.name] || 0;
+                return turn - lastTurn >= cooldownTurns;
+            });
+
+            if (readySkills.length > 0) {
+                const skill = readySkills[Math.floor(rng() * readySkills.length)] || readySkills[0];
+                state.cooldowns[skill.name] = turn;
+                messages.push(skill.name);
+
+                if (skill.damage) {
+                    damageMultiplier = skill.damage;
+                }
+
+                if (skill.effect === 'summon') {
+                    damageMultiplier = Math.max(damageMultiplier, 1.3);
+                } else if (skill.effect === 'shield') {
+                    shieldTurns = 3;
+                    state.shieldTurns = Math.max(state.shieldTurns || 0, shieldTurns);
+                } else if (skill.effect === 'heal' || skill.effect === 'fullheal') {
+                    if (!state.usedHeals.includes(skill.name)) {
+                        healPercent = skill.effect === 'fullheal' ? 1 : 0.25;
+                        state.usedHeals.push(skill.name);
+                    }
+                }
+            }
+
+            damageMultiplier *= 1 + (state.damageBonus || 0);
+
+            return {
+                damageMultiplier,
+                message: messages.filter(Boolean).join(' '),
+                healPercent,
+                shieldTurns
             };
         },
 

@@ -6,1157 +6,11 @@
     <title>Gloamreach Clicker</title>
     <meta name="description" content="Gloamreach Clicker - an original browser clicker RPG">
     <link rel="icon" type="image/png" href="sprites/monsters/gloop.png">
-   <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
-
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-            -webkit-tap-highlight-color: transparent;
-        }
-
-        :root {
-            --primary-bg: #0a0f1c;
-            --secondary-bg: #1a1f3a;
-            --glass-bg: rgba(26, 31, 58, 0.7);
-            --border-color: rgba(79, 195, 247, 0.3);
-            --gold: #ffd700;
-            --blue: #4fc3f7;
-            --red: #ff6b6b;
-            --mp-blue: #1e88e5;
-            --text-primary: #ffffff;
-            --text-secondary: #b0b3c1;
-            --shadow-glow: 0 0 30px rgba(79, 195, 247, 0.3);
-            --shadow-strong: 0 10px 30px rgba(0, 0, 0, 0.5);
-            --field-color: #4caf50;
-            --dungeon-color: #ff9800;
-            --nav-height: 64px;
-            --topbar-height: 52px;
-        }
-
-        html, body {
-            height: 100%;
-        }
-
-        body {
-            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-            background: linear-gradient(135deg, var(--primary-bg) 0%, #1e1b4b 50%, var(--secondary-bg) 100%);
-            color: var(--text-primary);
-            min-height: 100vh;
-            overflow-x: hidden;
-            position: relative;
-            touch-action: manipulation;
-            user-select: none;
-            -webkit-user-drag: none;
-        }
-
-        body::before {
-            content: '';
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background:
-                radial-gradient(circle at 20% 50%, rgba(79, 195, 247, 0.1) 0%, transparent 50%),
-                radial-gradient(circle at 80% 20%, rgba(255, 215, 0, 0.1) 0%, transparent 50%),
-                radial-gradient(circle at 40% 80%, rgba(156, 39, 176, 0.1) 0%, transparent 50%);
-            pointer-events: none;
-            z-index: 0;
-        }
-
-        /* === PREVENT TEXT SELECTION ON INTERACTIVE ELEMENTS === */
-        button,
-        .button-learn,
-        .action-button,
-        .combat-button,
-        .hotbar-slot,
-        .inventory-slot,
-        .equipment-slot,
-        .shop-item,
-        .skill-item,
-        .panel-title,
-        .dropdown-arrow,
-        .page-btn,
-        .close-btn,
-        .create-character-btn,
-        .skill-hotbar,
-        .skill-name,
-        .skill-description,
-        .skill-level,
-        .location-selector,
-        .stat-item,
-        .stat-label,
-        .stat-value,
-        .nav-btn,
-        [onclick],
-        [role="button"] {
-            -webkit-user-select: none;
-            user-select: none;
-            -webkit-touch-callout: none;
-            -webkit-tap-highlight-color: transparent;
-        }
-
-        .skill-item, .inventory-slot, .equipment-slot, .shop-item, .hotbar-slot {
-            -webkit-user-drag: none;
-            user-select: none;
-        }
-
-        *::selection { background: transparent; }
-        *::-moz-selection { background: transparent; }
-
-        /* ============ APP FRAME ============ */
-        #app {
-            position: relative;
-            z-index: 1;
-            max-width: 1000px;
-            margin: 0 auto;
-            min-height: 100vh;
-            display: flex;
-            flex-direction: column;
-        }
-
-        /* --- Top status bar --- */
-        .topbar {
-            position: sticky;
-            top: 0;
-            z-index: 900;
-            height: var(--topbar-height);
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            gap: 8px;
-            padding: 6px 12px;
-            background: rgba(10, 15, 28, 0.92);
-            backdrop-filter: blur(15px);
-            border-bottom: 1px solid var(--border-color);
-        }
-
-        .brand {
-            font-weight: 700;
-            font-size: 1.05rem;
-            letter-spacing: -0.01em;
-            color: var(--gold);
-            text-shadow: 0 0 12px rgba(255, 215, 0, 0.35);
-            white-space: nowrap;
-        }
-
-        .topbar-stats {
-            display: flex;
-            align-items: center;
-            gap: 6px;
-            flex-wrap: nowrap;
-            overflow: hidden;
-        }
-
-        .hud-chip {
-            display: inline-flex;
-            align-items: center;
-            gap: 4px;
-            background: rgba(255, 255, 255, 0.06);
-            border: 1px solid rgba(255, 255, 255, 0.12);
-            border-radius: 10px;
-            padding: 6px 10px;
-            font-size: 0.85rem;
-            font-weight: 600;
-            white-space: nowrap;
-        }
-
-        .hud-chip.gold { color: var(--gold); border-color: rgba(255, 215, 0, 0.35); }
-        .hud-chip.level { color: var(--blue); border-color: rgba(79, 195, 247, 0.35); }
-        .hud-chip.name { color: var(--text-secondary); max-width: 180px; overflow: hidden; text-overflow: ellipsis; }
-
-        /* --- Main combat column --- */
-        .combat-screen {
-            flex: 1;
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
-            padding: 10px 10px calc(var(--nav-height) + 16px) 10px;
-        }
-
-        /* ============ COMMON PANEL ============ */
-        .panel {
-            background: var(--glass-bg);
-            backdrop-filter: blur(15px);
-            border-radius: 14px;
-            padding: 12px;
-            border: 1px solid var(--border-color);
-            box-shadow: var(--shadow-strong);
-        }
-
-        .panel h2 {
-            color: var(--gold);
-            margin-bottom: 12px;
-            font-size: 1.05rem;
-            font-weight: 600;
-            text-align: center;
-            position: relative;
-            padding-bottom: 8px;
-        }
-
-        .panel h2::after {
-            content: '';
-            position: absolute;
-            bottom: 0;
-            left: 50%;
-            transform: translateX(-50%);
-            width: 60px;
-            height: 2px;
-            background: linear-gradient(90deg, transparent, var(--gold), transparent);
-        }
-
-        /* ============ LOCATION SELECTOR ============ */
-        .location-selector {
-            position: relative;
-        }
-
-        .location-selector select {
-            width: 100%;
-            padding: 12px 16px;
-            background: var(--glass-bg);
-            border: 1px solid var(--border-color);
-            color: var(--text-primary);
-            border-radius: 12px;
-            font-size: clamp(0.9rem, 2.5vw, 1rem);
-            cursor: pointer;
-            backdrop-filter: blur(10px);
-            min-height: 44px;
-        }
-
-        .location-selector select:hover {
-            border-color: var(--blue);
-            box-shadow: 0 0 15px rgba(79, 195, 247, 0.3);
-        }
-
-        select {
-            background: var(--secondary-bg) !important;
-            color: var(--text-primary) !important;
-            border: 1px solid var(--border-color) !important;
-            -webkit-appearance: none;
-            appearance: none;
-        }
-
-        select option, .location-selector option {
-            background: var(--secondary-bg) !important;
-            color: var(--text-primary) !important;
-            padding: 4px 8px !important;
-        }
-
-        .location-selector optgroup { font-weight: bold; font-size: 0.9rem; }
-        .location-selector optgroup[label*="Fields"] { color: var(--field-color); }
-        .location-selector optgroup[label*="Dungeons"] { color: var(--dungeon-color); }
-
-        /* ============ PLAYER VITALS ============ */
-        .vitals-panel {
-            padding: 10px 12px;
-        }
-
-        .player-hp-label, .player-mp-label, .player-exp-label {
-            font-size: 0.8rem;
-            margin-bottom: 3px;
-            font-weight: 600;
-        }
-
-        .player-hp-label { color: var(--red); }
-        .player-mp-label { color: var(--mp-blue); }
-        .player-exp-label { color: var(--blue); }
-
-        .player-hp-bar, .player-mp-bar {
-            width: 100%;
-            height: 24px;
-            background: rgba(0, 0, 0, 0.4);
-            border-radius: 12px;
-            overflow: hidden;
-            position: relative;
-            border: 1px solid var(--border-color);
-            margin-bottom: 6px;
-        }
-
-        .player-hp-fill {
-            height: 100%;
-            background: linear-gradient(90deg, var(--red), #ff8a80);
-            transition: width 0.5s ease;
-            border-radius: 12px;
-        }
-
-        .player-mp-fill {
-            height: 100%;
-            background: linear-gradient(90deg, var(--mp-blue), #2196f3);
-            transition: width 0.5s ease;
-            border-radius: 12px;
-        }
-
-        .player-hp-text, .player-mp-text {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            font-weight: 600;
-            font-size: 0.78rem;
-            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.8);
-            z-index: 2;
-        }
-
-        .exp-bar {
-            width: 100%;
-            height: 12px;
-            background: rgba(0, 0, 0, 0.4);
-            border-radius: 6px;
-            overflow: hidden;
-            border: 1px solid var(--border-color);
-        }
-
-        .exp-fill {
-            height: 100%;
-            background: linear-gradient(90deg, var(--blue), #29b6f6);
-            transition: width 0.5s ease;
-            border-radius: 6px;
-        }
-
-        .exp-text {
-            text-align: center;
-            font-size: 0.72rem;
-            color: var(--text-secondary);
-            margin-top: 2px;
-        }
-
-        /* ============ BATTLE AREA ============ */
-        .battle-area {
-            padding: 0;
-            overflow: hidden;
-            position: relative;
-            display: flex;
-            align-items: stretch;
-            justify-content: center;
-            min-height: 380px;
-        }
-
-        .battle-area > * { width: 100%; }
-
-        .enhanced-combat-area * {
-            user-select: none;
-            -webkit-user-drag: none;
-            pointer-events: auto;
-        }
-
-        /* ============ HOTBAR ============ */
-        .hotbar-section {
-            display: flex;
-            justify-content: center;
-            padding: 6px 0;
-        }
-
-        .hotbar-section .skill-hotbar {
-            background: rgba(0, 0, 0, 0.75);
-            border: 2px solid var(--border-color);
-            border-radius: 12px;
-            padding: 8px;
-            backdrop-filter: blur(15px);
-            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.4);
-            display: flex;
-            gap: 8px;
-        }
-
-        .hotbar-skill {
-            width: clamp(48px, 12vw, 64px);
-            height: clamp(48px, 12vw, 64px);
-            background: var(--glass-bg);
-            border: 2px solid var(--border-color);
-            border-radius: 10px;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            cursor: pointer;
-            position: relative;
-            transition: all 0.3s ease;
-            min-height: 44px;
-            min-width: 44px;
-            touch-action: manipulation;
-        }
-
-        .hotbar-skill:hover, .hotbar-skill:active {
-            background: rgba(79, 195, 247, 0.2);
-            transform: translateY(-2px) scale(1.05);
-            border-color: var(--blue);
-        }
-
-        .hotbar-skill.on-cooldown {
-            cursor: not-allowed;
-            opacity: 0.4;
-            filter: grayscale(0.8);
-        }
-
-        .hotbar-skill-icon { font-size: clamp(1.2rem, 4vw, 1.8rem); margin-bottom: 2px; }
-
-        .hotbar-skill-key {
-            position: absolute;
-            top: 2px;
-            left: 4px;
-            font-size: 0.65rem;
-            color: var(--gold);
-            font-weight: 700;
-            background: rgba(0, 0, 0, 0.7);
-            padding: 1px 4px;
-            border-radius: 3px;
-        }
-
-        .cooldown-overlay {
-            position: absolute;
-            inset: 0;
-            background: rgba(0, 0, 0, 0.8);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            border-radius: 8px;
-            font-weight: 700;
-            color: var(--text-primary);
-            font-size: 1.1rem;
-        }
-
-        .hotbar-skill-mp {
-            position: absolute;
-            top: 2px;
-            right: 2px;
-            background: var(--mp-blue);
-            color: white;
-            font-size: 0.62rem;
-            padding: 1px 3px;
-            border-radius: 3px;
-            font-weight: bold;
-        }
-
-        .hotbar-skill.no-mp { opacity: 0.4; cursor: not-allowed; }
-        .hotbar-skill.no-mp .hotbar-skill-mp { background: #f44336; }
-
-        /* ============ QUICK ACTIONS ============ */
-        .quick-actions {
-            display: flex;
-            gap: 8px;
-            justify-content: center;
-        }
-
-        .quick-actions .action-button { max-width: 220px; }
-
-        /* ============ BOTTOM NAVIGATION ============ */
-        .bottom-nav {
-            position: fixed;
-            bottom: 0;
-            left: 0;
-            right: 0;
-            z-index: 1600; /* stays clickable above menu overlay/sheets */
-            height: var(--nav-height);
-            display: flex;
-            justify-content: center;
-            gap: 2px;
-            padding: 4px 6px calc(4px + env(safe-area-inset-bottom, 0px)) 6px;
-            background: rgba(10, 15, 28, 0.95);
-            backdrop-filter: blur(20px);
-            border-top: 1px solid var(--border-color);
-        }
-
-        .nav-btn {
-            flex: 1;
-            max-width: 110px;
-            min-width: 44px;
-            min-height: 44px;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            gap: 2px;
-            background: transparent;
-            border: none;
-            border-radius: 10px;
-            color: var(--text-secondary);
-            cursor: pointer;
-            font-family: inherit;
-            transition: background 0.2s ease, color 0.2s ease;
-        }
-
-        .nav-btn .nav-icon { font-size: 1.3rem; line-height: 1; }
-        .nav-btn .nav-label { font-size: 0.66rem; font-weight: 600; letter-spacing: 0.02em; }
-
-        .nav-btn:hover { background: rgba(79, 195, 247, 0.12); color: var(--text-primary); }
-
-        .nav-btn.active {
-            color: var(--blue);
-            background: rgba(79, 195, 247, 0.16);
-        }
-
-        /* ============ MENU SHEETS ============ */
-        .menu-overlay {
-            position: fixed;
-            inset: 0;
-            background: rgba(0, 0, 0, 0.6);
-            backdrop-filter: blur(4px);
-            z-index: 1400;
-            display: none;
-        }
-
-        .menu-overlay.open { display: block; }
-
-        .menu-sheet {
-            position: fixed;
-            z-index: 1500;
-            display: none;
-            flex-direction: column;
-            background: rgba(16, 21, 44, 0.97);
-            border: 1px solid var(--border-color);
-            box-shadow: var(--shadow-strong);
-            left: 50%;
-            top: 48%;
-            transform: translate(-50%, -50%);
-            width: min(560px, calc(100vw - 20px));
-            max-height: min(82vh, 780px);
-            border-radius: 16px;
-            overflow: hidden;
-        }
-
-        .menu-sheet.open { display: flex; }
-
-        .menu-sheet-header {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            padding: 12px 16px;
-            border-bottom: 1px solid var(--border-color);
-            background: rgba(0, 0, 0, 0.25);
-            flex-shrink: 0;
-        }
-
-        .menu-sheet-header h2 {
-            color: var(--gold);
-            font-size: 1.1rem;
-            font-weight: 700;
-        }
-
-        .menu-close-btn {
-            min-width: 44px;
-            min-height: 44px;
-            background: rgba(255, 255, 255, 0.06);
-            border: 1px solid rgba(255, 255, 255, 0.15);
-            border-radius: 10px;
-            color: var(--text-primary);
-            font-size: 1.2rem;
-            cursor: pointer;
-        }
-
-        .menu-close-btn:hover { background: rgba(255, 107, 107, 0.25); border-color: var(--red); }
-
-        .menu-sheet-body {
-            padding: 14px;
-            overflow-y: auto;
-            -webkit-overflow-scrolling: touch;
-        }
-
-        .menu-section-title {
-            color: var(--gold);
-            font-size: 0.95rem;
-            font-weight: 600;
-            margin: 16px 0 8px 0;
-        }
-
-        .menu-section-title:first-child { margin-top: 0; }
-
-        @media (max-width: 640px) {
-            .menu-sheet {
-                left: 0;
-                top: 0;
-                transform: none;
-                width: 100vw;
-                height: calc(100vh - var(--nav-height));
-                max-height: none;
-                border-radius: 0;
-                border: none;
-            }
-        }
-
-        /* ============ CHARACTER STATS ============ */
-        .stat-item {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin: 6px 0;
-            padding: 10px 12px;
-            background: rgba(255, 255, 255, 0.05);
-            border-radius: 8px;
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            min-height: 44px;
-        }
-
-        .stat-label { color: var(--text-secondary); font-weight: 500; font-size: 0.9rem; }
-        .stat-value { color: var(--blue); font-weight: 600; font-size: 0.9rem; text-align: right; }
-
-        /* ============ EQUIPMENT ============ */
-        .equipment-slots {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 8px;
-            margin-bottom: 8px;
-        }
-
-        .equipment-slot {
-            background: var(--glass-bg);
-            border: 2px dashed var(--border-color);
-            border-radius: 8px;
-            padding: 10px;
-            text-align: center;
-            min-height: 70px;
-            position: relative;
-            transition: all 0.3s ease;
-            touch-action: manipulation;
-        }
-
-        .equipment-slot:hover { border-color: var(--blue); background: rgba(79, 195, 247, 0.1); }
-        .equipment-slot.drag-over { border-color: var(--gold); background: rgba(255, 215, 0, 0.15); transform: scale(1.05); }
-        .equipment-slot.filled { border-style: solid; border-color: var(--blue); background: rgba(79, 195, 247, 0.1); }
-        .equipment-slot.drag-over.invalid {
-            border-color: #f44336 !important;
-            background: rgba(244, 67, 54, 0.2) !important;
-            animation: shake 0.3s ease-in-out;
-        }
-
-        .slot-label {
-            font-size: 0.75rem;
-            color: var(--text-secondary);
-            margin-bottom: 4px;
-            font-weight: 500;
-        }
-
-        /* ============ EQUIPMENT UPGRADE ============ */
-        .upgrade-section {
-            display: flex;
-            flex-direction: column;
-            gap: 12px;
-        }
-
-        .upgrade-slot {
-            background: var(--glass-bg);
-            border: 2px dashed var(--border-color);
-            border-radius: 8px;
-            padding: 16px;
-            text-align: center;
-            min-height: 110px;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            transition: all 0.3s ease;
-            position: relative;
-        }
-
-        .upgrade-slot:hover { border-color: var(--blue); background: rgba(79, 195, 247, 0.1); }
-        .upgrade-slot.drag-over { border-color: var(--gold); background: rgba(255, 215, 0, 0.15); transform: scale(1.02); }
-        .upgrade-slot.filled { border-style: solid; border-color: var(--gold); background: rgba(255, 215, 0, 0.1); }
-
-        .upgrade-info { margin-top: 8px; font-size: 0.9rem; }
-        .upgrade-stats { color: var(--text-primary); margin-bottom: 4px; font-weight: bold; }
-        .upgrade-cost { color: var(--gold); margin-bottom: 4px; }
-        .upgrade-chance { color: var(--text-secondary); }
-
-        .upgrade-button {
-            background: linear-gradient(135deg, var(--gold), #f39c12);
-            color: #000;
-            border: none;
-            padding: 12px 20px;
-            border-radius: 8px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            font-size: 1rem;
-            min-height: 44px;
-        }
-
-        .upgrade-button:hover:not(:disabled) {
-            background: linear-gradient(135deg, #f39c12, var(--gold));
-            transform: translateY(-2px);
-        }
-
-        .upgrade-button:disabled {
-            background: var(--glass-bg);
-            color: var(--text-secondary);
-            cursor: not-allowed;
-            opacity: 0.5;
-        }
-
-        .upgrade-success { animation: upgradeSuccess 0.6s ease-out; }
-        .upgrade-fail { animation: upgradeFail 0.6s ease-out; }
-
-        @keyframes upgradeSuccess {
-            0% { transform: scale(1); }
-            50% { transform: scale(1.1); background: rgba(76, 175, 80, 0.3); }
-            100% { transform: scale(1); }
-        }
-
-        @keyframes upgradeFail {
-            0% { transform: scale(1); }
-            25% { transform: translateX(-5px); background: rgba(244, 67, 54, 0.3); }
-            75% { transform: translateX(5px); }
-            100% { transform: scale(1); }
-        }
-
-        /* ============ SKILLS ============ */
-        .skills-container {
-            display: grid;
-            gap: 8px;
-            margin-top: 8px;
-        }
-
-        .skill-item {
-            background: var(--glass-bg);
-            padding: 12px;
-            border-radius: 8px;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            border: 1px solid transparent;
-            min-height: 44px;
-            touch-action: manipulation;
-        }
-
-        .skill-item:hover, .skill-item:active {
-            background: rgba(79, 195, 247, 0.15);
-            border-color: var(--blue);
-        }
-
-        .skill-item.unlocked { border-color: var(--blue); background: rgba(79, 195, 247, 0.1); }
-        .skill-item.dragon-skill { border-color: var(--red); background: rgba(255, 107, 107, 0.1); }
-        .skill-item.dragon-skill:hover { background: rgba(255, 107, 107, 0.2); }
-
-        .skill-name { font-weight: 600; color: var(--blue); font-size: 0.95rem; }
-        .skill-name.dragon-skill { color: var(--red); }
-        .skill-level { color: var(--gold); float: right; font-weight: 600; font-size: 0.85rem; }
-        .skill-description { font-size: 0.85rem; color: var(--text-secondary); margin-top: 6px; line-height: 1.4; }
-
-        .button-learn {
-            background: linear-gradient(135deg, var(--blue), #29b6f6);
-            color: white;
-            border: none;
-            padding: 8px 16px;
-            border-radius: 6px;
-            cursor: pointer;
-            font-size: 0.85rem;
-            font-weight: 600;
-            margin-top: 6px;
-            transition: all 0.3s ease;
-            min-height: 44px;
-            touch-action: manipulation;
-        }
-
-        .button-learn:hover:not(:disabled) { transform: translateY(-1px); }
-        .button-learn:disabled { background: #555; cursor: not-allowed; }
-
-        .skill-points-display {
-            margin-bottom: 12px;
-            padding: 10px;
-            background: rgba(255, 215, 0, 0.1);
-            border: 1px solid var(--gold);
-            border-radius: 8px;
-            text-align: center;
-        }
-
-        /* ============ ITEMS & RARITIES ============ */
-        .item { cursor: grab; position: relative; transition: all 0.2s ease; }
-        .item:active { cursor: grabbing; }
-        .item.dragging { opacity: 0.6; cursor: grabbing; transform: scale(1.1); }
-
-        .item.common { background: linear-gradient(135deg, #6b7280, #4b5563); }
-        .item.rare { background: linear-gradient(135deg, var(--blue), #2196f3); }
-        .item.epic { background: linear-gradient(135deg, #9c27b0, #7b1fa2); }
-        .item.legendary { background: linear-gradient(135deg, #ff9800, #f57c00); }
-        .item.mythic {
-            background: linear-gradient(135deg, #ff1744, #d50000);
-            animation: mythicGlow 2s ease-in-out infinite alternate;
-        }
-
-        @keyframes mythicGlow {
-            from { box-shadow: 0 2px 15px rgba(255, 23, 68, 0.6); }
-            to { box-shadow: 0 4px 25px rgba(255, 23, 68, 0.9); }
-        }
-
-        .item-count.large-stack {
-            background: rgba(255, 215, 0, 0.9) !important;
-            color: #000 !important;
-            font-weight: bold;
-        }
-
-        /* ============ INVENTORY ============ */
-        .inventory-nav {
-            display: flex;
-            gap: 4px;
-            margin-bottom: 12px;
-            justify-content: center;
-            flex-wrap: wrap;
-        }
-
-        .page-btn {
-            background: rgba(79, 195, 247, 0.2);
-            border: 1px solid var(--border-color);
-            color: var(--text-primary);
-            padding: 8px 12px;
-            border-radius: 6px;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            min-height: 44px;
-            min-width: 44px;
-            font-weight: 600;
-        }
-
-        .page-btn:hover { background: rgba(79, 195, 247, 0.4); border-color: var(--blue); }
-        .page-btn.active { background: var(--blue); color: white; border-color: var(--blue); }
-        .page-btn.has-items { border-color: var(--gold); background: rgba(255, 215, 0, 0.1); }
-        .page-btn.has-items.active { background: var(--gold); color: #000; }
-
-        .page-btn.favorites-btn {
-            background: linear-gradient(135deg, #ffd700, #ffed4e);
-            color: #333;
-            border-color: #ffd700;
-            font-weight: bold;
-            font-size: 1.1rem;
-        }
-
-        .page-btn.favorites-btn.active {
-            background: linear-gradient(135deg, #ffb300, #ffd700);
-            border-color: #ffb300;
-            box-shadow: 0 0 10px rgba(255, 215, 0, 0.5);
-        }
-
-        .inventory-body {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-        }
-
-        .inventory-grid-paginated {
-            display: grid;
-            grid-template-columns: repeat(6, 64px);
-            grid-template-rows: repeat(8, 64px);
-            gap: 4px;
-            margin-bottom: 12px;
-            width: 404px;
-            height: 540px;
-            justify-content: center;
-            overflow: hidden;
-            animation: fadeIn 0.3s ease-in-out;
-        }
-
-        .inventory-grid-paginated .inventory-slot {
-            width: 64px !important;
-            height: 64px !important;
-            background: var(--glass-bg);
-            border: 1px solid var(--border-color);
-            border-radius: 6px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            cursor: pointer;
-            position: relative;
-            transition: all 0.2s ease;
-            touch-action: manipulation;
-        }
-
-        .inventory-grid-paginated .item {
-            width: 60px !important;
-            height: 60px !important;
-            border-radius: 4px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            cursor: grab;
-            position: relative;
-        }
-
-        .inventory-grid-paginated .item img {
-            width: 60px !important;
-            height: 60px !important;
-            object-fit: contain !important;
-            image-rendering: pixelated;
-        }
-
-        .inventory-grid-paginated .item:not(:has(img)) {
-            font-size: 2rem !important;
-            line-height: 1;
-        }
-
-        .inventory-grid-paginated .item-count {
-            position: absolute;
-            bottom: 2px;
-            right: 2px;
-            background: rgba(0, 0, 0, 0.9);
-            color: white;
-            font-size: 0.7rem;
-            font-weight: 600;
-            padding: 1px 4px;
-            border-radius: 3px;
-            border: 1px solid var(--border-color);
-            min-width: 12px;
-            text-align: center;
-        }
-
-        .inventory-grid-paginated .inventory-slot:hover {
-            background: rgba(79, 195, 247, 0.15);
-            border-color: var(--blue);
-            z-index: 10;
-        }
-
-        .inventory-grid-paginated .inventory-slot.drag-over {
-            border-color: var(--gold) !important;
-            background: rgba(255, 215, 0, 0.15) !important;
-        }
-
-        /* ============ ACTION BUTTONS ============ */
-        .action-buttons {
-            display: flex;
-            gap: 8px;
-            margin-top: 12px;
-            flex-wrap: wrap;
-            justify-content: center;
-        }
-
-        .action-button {
-            flex: 1;
-            min-width: 130px;
-            background: linear-gradient(135deg, var(--blue), #29b6f6);
-            color: white;
-            border: none;
-            padding: 10px 12px;
-            border-radius: 8px;
-            cursor: pointer;
-            font-weight: 600;
-            font-size: 0.85rem;
-            transition: all 0.3s ease;
-            min-height: 44px;
-            touch-action: manipulation;
-        }
-
-        .action-button:hover, .action-button:active { transform: translateY(-1px); }
-        .action-button.sell { background: linear-gradient(135deg, #ff9800, #f57c00); }
-
-        .inventory-controls {
-            width: 100%;
-            margin-bottom: 10px;
-            padding: 8px;
-            background: rgba(0, 0, 0, 0.3);
-            border-radius: 6px;
-        }
-
-        /* ============ SHOP ============ */
-        .shop-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
-            gap: 12px;
-        }
-
-        .shop-item {
-            background: var(--glass-bg);
-            border: 1px solid var(--border-color);
-            border-radius: 8px;
-            padding: 12px;
-            text-align: center;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            min-height: 120px;
-            touch-action: manipulation;
-        }
-
-        .shop-item:hover, .shop-item:active {
-            background: rgba(79, 195, 247, 0.15);
-            transform: translateY(-2px);
-            border-color: var(--blue);
-        }
-
-        .shop-item.disabled { opacity: 0.5; cursor: not-allowed; }
-        .shop-item.disabled:hover { transform: none; background: var(--glass-bg); border-color: var(--border-color); }
-
-        .shop-item-icon { font-size: 2rem; margin-bottom: 8px; }
-        .shop-item-name { font-weight: 600; margin-bottom: 6px; color: var(--text-primary); font-size: 0.85rem; }
-        .shop-item-level { font-size: 0.75rem; color: var(--text-secondary); margin-bottom: 6px; }
-        .shop-item-price { color: var(--gold); font-weight: 700; font-size: 0.95rem; }
-
-        /* ============ MESSAGES AND MODALS ============ */
-        .message {
-            position: fixed;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            background: rgba(0, 0, 0, 0.95);
-            padding: 20px 30px;
-            border-radius: 12px;
-            border: 2px solid var(--gold);
-            font-size: clamp(1rem, 3vw, 1.4rem);
-            color: var(--gold);
-            display: none;
-            z-index: 2500;
-            backdrop-filter: blur(15px);
-            text-align: center;
-            max-width: 90vw;
-        }
-
-        .modal {
-            position: fixed;
-            inset: 0;
-            background: rgba(0, 0, 0, 0.8);
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            z-index: 2000;
-            backdrop-filter: blur(10px);
-            padding: 20px;
-        }
-
-        .modal-content {
-            background: rgba(16, 21, 44, 0.97);
-            border: 2px solid var(--border-color);
-            border-radius: 16px;
-            padding: 24px;
-            max-width: 500px;
-            width: 100%;
-            text-align: center;
-            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.8);
-            max-height: 90vh;
-            overflow-y: auto;
-            position: relative;
-        }
-
-        .modal h2 { color: var(--gold); margin-bottom: 20px; font-size: clamp(1.4rem, 4vw, 2rem); }
-
-        .form-group { margin: 16px 0; text-align: left; }
-
-        .form-group label {
-            display: block;
-            margin-bottom: 8px;
-            color: var(--text-primary);
-            font-weight: 600;
-        }
-
-        .form-group input, .form-group select {
-            width: 100%;
-            padding: 12px 16px;
-            background: rgba(255, 255, 255, 0.1);
-            border: 1px solid var(--border-color);
-            border-radius: 8px;
-            color: var(--text-primary);
-            font-size: 16px;
-            min-height: 44px;
-        }
-
-        .form-group input:focus, .form-group select:focus {
-            outline: none;
-            border-color: var(--blue);
-        }
-
-        .create-character-btn {
-            background: linear-gradient(135deg, var(--gold), #ffed4e);
-            color: #1a1a2e;
-            border: none;
-            padding: 14px 28px;
-            border-radius: 12px;
-            font-size: clamp(1rem, 3vw, 1.2rem);
-            font-weight: 700;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            margin-top: 16px;
-            min-height: 44px;
-            width: 100%;
-            touch-action: manipulation;
-        }
-
-        .create-character-btn:hover, .create-character-btn:active { transform: translateY(-2px); }
-
-        /* ============ STATUS EFFECTS (combat overlay) ============ */
-        #status-effects-container {
-            position: absolute;
-            top: 60px;
-            left: 10px;
-            z-index: 10;
-            max-width: 200px;
-        }
-
-        #status-toggle-btn {
-            background: rgba(0, 0, 0, 0.8);
-            border: 1px solid var(--border-color);
-            color: var(--text-primary);
-            padding: 6px 10px;
-            border-radius: 6px;
-            cursor: pointer;
-            font-size: 0.85rem;
-            width: 100%;
-            min-height: 44px;
-            touch-action: manipulation;
-        }
-
-        /* ============ CHARACTER SELECTOR GRID ============ */
-        #character-grid {
-            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)) !important;
-            gap: 12px !important;
-        }
-
-        @media (max-width: 480px) {
-            #character-grid { grid-template-columns: 1fr 1fr !important; }
-        }
-
-        /* ============ ANIMATIONS / TOOLTIPS ============ */
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(10px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-
-        @keyframes shake {
-            0%, 100% { transform: translateX(0); }
-            25% { transform: translateX(-4px); }
-            75% { transform: translateX(4px); }
-        }
-
-        #custom-tooltip, #equipment-tooltip {
-            max-width: 90vw;
-            font-size: clamp(0.8rem, 2vw, 0.9rem);
-            padding: 8px 12px;
-        }
-
-        .auto-battle-safe { box-shadow: 0 4px 15px rgba(76, 175, 80, 0.4) !important; }
-        .auto-battle-warning {
-            box-shadow: 0 4px 15px rgba(255, 152, 0, 0.4) !important;
-            animation: warningPulse 2s ease-in-out infinite;
-        }
-
-        @keyframes warningPulse {
-            0%, 100% { box-shadow: 0 4px 15px rgba(255, 152, 0, 0.4); }
-            50% { box-shadow: 0 6px 20px rgba(255, 152, 0, 0.7); }
-        }
-
-        /* ============ MOBILE RESPONSIVE ============ */
-        @media (max-width: 768px) {
-            .combat-screen { padding: 8px 6px calc(var(--nav-height) + 12px) 6px; gap: 8px; }
-
-            .inventory-grid-paginated {
-                grid-template-columns: repeat(5, 56px);
-                grid-template-rows: repeat(8, 56px);
-                width: 300px;
-                height: 484px;
-            }
-
-            .inventory-grid-paginated .inventory-slot { width: 56px !important; height: 56px !important; }
-            .inventory-grid-paginated .item { width: 52px !important; height: 52px !important; }
-            .inventory-grid-paginated .item img { width: 52px !important; height: 52px !important; }
-            .inventory-grid-paginated .item:not(:has(img)) { font-size: 1.8rem !important; }
-
-            .hotbar-section .skill-hotbar { padding: 6px; gap: 4px; }
-            .page-btn { padding: 6px 10px; font-size: 0.9rem; }
-            .inventory-nav { gap: 2px; }
-
-            input, select, textarea { font-size: 16px; }
-
-            #status-effects-container { top: 40px; left: 5px; max-width: 180px; }
-
-            .hud-chip.name { display: none; }
-        }
-    </style>
+    <link rel="stylesheet" href="css/main.css?v=20260706-classes3">
 </head>
 <body>
     <!-- Character Creation Modal -->
-    <div class="modal" id="character-creation-modal" style="display: none;">
+    <div class="modal is-hidden" id="character-creation-modal">
         <div class="modal-content">
             <h2>Create Your Character</h2>
             <form id="character-form">
@@ -1169,8 +23,11 @@
                     <select id="character-class">
                         <option value="swordsman">Swordsman - Balanced melee warrior (Auto-battle focused)</option>
                         <option value="mage">Mage - Powerful spellcaster (Active skill focused)</option>
+                        <option value="rogue">Rogue - Crit economy specialist</option>
+                        <option value="berserker">Berserker - Fury momentum fighter</option>
+                        <option value="summoner">Summoner - Boss-ramping minion class</option>
                     </select>
-                    <div id="class-description" style="color: var(--text-secondary); margin-top: 8px; font-size: 0.9rem; padding: 8px; background: rgba(255,255,255,0.1); border-radius: 4px;">
+                    <div class="class-description" id="class-description">
                         <strong>Swordsman:</strong> A balanced warrior focused on physical combat. Great for auto-battle with steady damage and good defense. Can rebirth into Dragon Knight at level 100.
                     </div>
                 </div>
@@ -1180,34 +37,34 @@
     </div>
 
     <!-- Achievements Modal -->
-    <div class="modal" id="achievements-modal" style="display: none;">
-        <div class="modal-content" style="max-width: 800px; max-height: 90vh; overflow-y: auto;">
-            <h2 style="text-align: center; margin-bottom: 20px;">🏆 Achievements</h2>
+    <div class="modal is-hidden" id="achievements-modal">
+        <div class="modal-content achievements-modal-content">
+            <h2 class="achievements-title">🏆 Achievements</h2>
 
-            <div style="text-align: center; margin-bottom: 20px;">
-                <div id="achievement-progress" style="font-size: 1.2rem; color: var(--gold); font-weight: bold;">
+            <div class="achievement-summary">
+                <div class="achievement-progress-text" id="achievement-progress">
                     0% Complete (0/0)
                 </div>
-                <div style="width: 100%; height: 8px; background: rgba(255,255,255,0.2); border-radius: 4px; margin: 10px 0;">
-                    <div id="achievement-progress-bar" style="width: 0%; height: 100%; background: linear-gradient(90deg, var(--gold), #ffed4e); border-radius: 4px; transition: width 0.5s ease;"></div>
+                <div class="achievement-progress-track">
+                    <div class="achievement-progress-fill" id="achievement-progress-bar"></div>
                 </div>
             </div>
 
-            <div class="achievement-categories" style="display: flex; justify-content: center; gap: 10px; margin-bottom: 20px; flex-wrap: wrap;">
-                <button class="category-btn active" data-category="all" style="background: var(--blue); color: white; border: none; padding: 8px 16px; border-radius: 6px; cursor: pointer; font-weight: 600; min-height: 44px;">All</button>
-                <button class="category-btn" data-category="combat" style="background: rgba(255,255,255,0.1); color: var(--text-primary); border: 1px solid var(--border-color); padding: 8px 16px; border-radius: 6px; cursor: pointer; font-weight: 600; min-height: 44px;">⚔️ Combat</button>
-                <button class="category-btn" data-category="exploration" style="background: rgba(255,255,255,0.1); color: var(--text-primary); border: 1px solid var(--border-color); padding: 8px 16px; border-radius: 6px; cursor: pointer; font-weight: 600; min-height: 44px;">🗺️ Exploration</button>
-                <button class="category-btn" data-category="progression" style="background: rgba(255,255,255,0.1); color: var(--text-primary); border: 1px solid var(--border-color); padding: 8px 16px; border-radius: 6px; cursor: pointer; font-weight: 600; min-height: 44px;">📈 Progression</button>
-                <button class="category-btn" data-category="collection" style="background: rgba(255,255,255,0.1); color: var(--text-primary); border: 1px solid var(--border-color); padding: 8px 16px; border-radius: 6px; cursor: pointer; font-weight: 600; min-height: 44px;">📦 Collection</button>
-                <button class="category-btn" data-category="special" style="background: rgba(255,255,255,0.1); color: var(--text-primary); border: 1px solid var(--border-color); padding: 8px 16px; border-radius: 6px; cursor: pointer; font-weight: 600; min-height: 44px;">⭐ Special</button>
+            <div class="achievement-categories ui-tabs" role="tablist" aria-label="Achievement categories">
+                <button class="category-btn ui-button ui-tab active" data-category="all" role="tab" aria-selected="true">All</button>
+                <button class="category-btn ui-button ui-tab" data-category="combat" role="tab" aria-selected="false">⚔️ Combat</button>
+                <button class="category-btn ui-button ui-tab" data-category="exploration" role="tab" aria-selected="false">🗺️ Exploration</button>
+                <button class="category-btn ui-button ui-tab" data-category="progression" role="tab" aria-selected="false">📈 Progression</button>
+                <button class="category-btn ui-button ui-tab" data-category="collection" role="tab" aria-selected="false">📦 Collection</button>
+                <button class="category-btn ui-button ui-tab" data-category="special" role="tab" aria-selected="false">⭐ Special</button>
             </div>
 
-            <div id="achievements-list" style="display: grid; gap: 12px;">
+            <div class="achievements-list" id="achievements-list">
                 <!-- Achievements will be populated by JavaScript -->
             </div>
 
-            <div style="text-align: center; margin-top: 20px;">
-                <button onclick="closeAchievementsPanel()" style="background: var(--red); color: white; border: none; padding: 12px 24px; border-radius: 8px; cursor: pointer; font-weight: 600; min-height: 44px;">Close</button>
+            <div class="modal-actions">
+                <button class="ui-button ui-button-danger" onclick="closeAchievementsPanel()">Close</button>
             </div>
         </div>
     </div>
@@ -1236,7 +93,7 @@
             <div class="panel vitals-panel">
                 <div class="player-hp-label">HP</div>
                 <div class="player-hp-bar">
-                    <div class="player-hp-fill" id="player-hp-fill" style="width: 100%"></div>
+                    <div class="player-hp-fill fill-full" id="player-hp-fill"></div>
                     <div class="player-hp-text">
                         <span id="player-current-hp">150</span> / <span id="player-max-hp">150</span>
                     </div>
@@ -1244,7 +101,7 @@
 
                 <div class="player-mp-label">MP</div>
                 <div class="player-mp-bar">
-                    <div class="player-mp-fill" id="player-mp-fill" style="width: 100%"></div>
+                    <div class="player-mp-fill fill-full" id="player-mp-fill"></div>
                     <div class="player-mp-text">
                         <span id="player-current-mp">50</span> / <span id="player-max-mp">50</span>
                     </div>
@@ -1252,7 +109,7 @@
 
                 <div class="player-exp-label">EXP</div>
                 <div class="exp-bar">
-                    <div class="exp-fill" id="exp-fill" style="width: 0%"></div>
+                    <div class="exp-fill fill-empty" id="exp-fill"></div>
                 </div>
                 <div class="exp-text">
                     <span id="current-exp">0</span> / <span id="max-exp">100</span> EXP
@@ -1331,6 +188,7 @@
                     <span class="stat-label">Crit Damage:</span>
                     <span class="stat-value" id="player-crit-damage">200%</span>
                 </div>
+                <div class="rebirth-panel" id="rebirth-panel"></div>
 
                 <div class="menu-section-title">Equipment</div>
                 <div class="equipment-slots">
@@ -1355,7 +213,7 @@
                 </div>
 
                 <div class="menu-section-title">Accessories</div>
-                <div class="equipment-slots" style="grid-template-columns: repeat(3, 1fr);">
+                <div class="equipment-slots accessory-slots">
                     <div class="equipment-slot" data-slot="ring1" ondrop="Game.equipment.dropEquipment(event)" ondragover="Game.equipment.allowDrop(event)" ondragleave="Game.equipment.dragLeave(event)">
                         <div class="slot-label">Ring 1</div>
                     </div>
@@ -1372,7 +230,7 @@
                     <div class="upgrade-slot" id="upgrade-slot" ondrop="Game.equipment.dropUpgradeItem(event)" ondragover="Game.equipment.allowDrop(event)" ondragleave="Game.equipment.dragLeave(event)">
                         <div class="slot-label">Tap to Choose Equipment</div>
                     </div>
-                    <div class="upgrade-info" id="upgrade-info" style="display: none;">
+                    <div class="upgrade-info is-hidden" id="upgrade-info">
                         <div class="upgrade-stats" id="upgrade-stats"></div>
                         <div class="upgrade-cost" id="upgrade-cost"></div>
                         <div class="upgrade-chance" id="upgrade-chance"></div>
@@ -1408,23 +266,23 @@
 
                 <!-- Inventory Management Controls -->
                 <div class="inventory-controls">
-                    <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 8px; flex-wrap: wrap;">
-                        <label for="sort-type" style="color: var(--text-primary); font-size: 0.9rem;">Sort by:</label>
-                        <select id="sort-type" onchange="Game.equipment.setSortType(this.value)" style="padding: 8px; border-radius: 6px; min-height: 44px;">
+                    <div class="inventory-sort-row">
+                        <label class="inventory-control-label" for="sort-type">Sort by:</label>
+                        <select class="inventory-sort-select" id="sort-type" onchange="Game.equipment.setSortType(this.value)">
                             <option value="type">Item Type</option>
                             <option value="rarity">Rarity</option>
                             <option value="price">Gold Value</option>
                             <option value="level">Required Level</option>
                         </select>
-                        <button class="action-button" onclick="Game.equipment.sortInventory()" style="flex: 0 1 auto; padding: 8px 12px; font-size: 0.8rem; min-width: auto;">📋 Sort</button>
+                        <button class="action-button compact-action" onclick="Game.equipment.sortInventory()">📋 Sort</button>
                     </div>
-                    <div style="display: flex; align-items: center; gap: 5px;">
-                        <input type="checkbox" id="allow-sell-valuable" onchange="Game.equipment.setAllowSellValuable(this.checked)" style="margin: 0; width: 20px; height: 20px;">
-                        <label for="allow-sell-valuable" style="color: var(--text-secondary); font-size: 0.85rem;">Allow selling Epic+ and upgraded items</label>
+                    <div class="inventory-checkbox-row">
+                        <input class="inventory-checkbox" type="checkbox" id="allow-sell-valuable" onchange="Game.equipment.setAllowSellValuable(this.checked)">
+                        <label for="allow-sell-valuable">Allow selling Epic+ and upgraded items</label>
                     </div>
                 </div>
 
-                <div class="action-buttons" style="width: 100%;">
+                <div class="action-buttons full-width">
                     <button class="action-button sell" onclick="Game.equipment.sellAllItems()">💰 Sell All</button>
                     <button class="action-button" onclick="Game.equipment.usePotion()">🧪 Use Potion (Q)</button>
                     <button class="action-button" onclick="Game.equipment.useMpPotion()">💙 Use MP Potion (E)</button>
@@ -1440,14 +298,14 @@
             </div>
             <div class="menu-sheet-body">
                 <div class="skill-points-display">
-                    <span style="color: var(--gold); font-weight: bold;">Skill Points: </span>
-                    <span id="player-skill-points" style="color: var(--gold); font-weight: bold;">0</span>
+                    <span class="skill-points-label">Skill Points: </span>
+                    <span class="skill-points-value" id="player-skill-points">0</span>
                 </div>
-                <p style="color: var(--text-secondary); font-size: 0.8rem; margin-bottom: 8px; text-align: center;">
+                <p class="skills-help-text">
                     Tap a learned active skill to assign it to the hotbar. Hotbar skills can be clicked or used with number keys in combat.
                 </p>
                 <div id="skills-container">
-                    <p style="color: var(--text-secondary); text-align: center;">Skills loading...</p>
+                    <p class="empty-state-text">Skills loading...</p>
                 </div>
             </div>
         </section>
@@ -1469,18 +327,43 @@
     <div class="message" id="message"></div>
 
     <!-- Load JavaScript Modules -->
-    <script src="js/core/storage.js"></script>
-    <script src="js/data/monsters.js"></script>
-    <script src="js/data/classes.js"></script>
-    <script src="js/data/skills.js"></script>
-    <script src="js/core/formulas.js"></script>
-    <script src="js/core/player.js"></script>
-    <script src="js/core/combat.js"></script>
-    <script src="js/core/equipment.js"></script>
+    <script src="js/core/formulas.js?v=20260706-classes4"></script>
+    <script src="js/core/class-kit.js?v=20260706-classes3"></script>
+    <script src="js/core/storage.js?v=20260706-classes3"></script>
+    <script src="js/data/monsters.js?v=20260706-classes3"></script>
+    <script src="js/data/classes/swordsman.js?v=20260706-classes3"></script>
+    <script src="js/data/classes/mage.js?v=20260706-classes3"></script>
+    <script src="js/data/classes/rogue.js?v=20260706-classes3"></script>
+    <script src="js/data/classes/berserker.js?v=20260706-classes3"></script>
+    <script src="js/data/classes/summoner.js?v=20260706-classes3"></script>
+    <script src="js/data/classes.js?v=20260706-classes3"></script>
+    <script src="js/data/skills.js?v=20260706-classes3"></script>
+    <script src="js/core/player.js?v=20260706-classes4"></script>
+    <script src="js/core/combat.js?v=20260706-classes3"></script>
+    <script src="js/data/items/core.js"></script>
+    <script src="js/data/items/equipment/sword.js"></script>
+    <script src="js/data/items/equipment/helmet.js"></script>
+    <script src="js/data/items/equipment/chestplate.js"></script>
+    <script src="js/data/items/equipment/shield.js"></script>
+    <script src="js/data/items/equipment/boots.js"></script>
+    <script src="js/data/items/equipment/leggings.js"></script>
+    <script src="js/data/items/potions.js?v=20260706-classes2"></script>
+    <script src="js/data/items/accessories.js"></script>
+    <script src="js/data/items/shop.js?v=20260706-classes4"></script>
+    <script src="js/data/items/boss-drops.js"></script>
+    <script src="js/core/equipment/item-factory.js"></script>
+    <script src="js/core/equipment.js?v=20260706-classes4"></script>
+    <script src="js/core/equipment/inventory-view.js"></script>
+    <script src="js/core/equipment/upgrades.js"></script>
+    <script src="js/core/equipment/boss-drops.js"></script>
     <script src="js/core/achievements.js"></script>
-    <script src="js/ui/display.js"></script>
+    <script src="js/ui/primitives.js"></script>
+    <script src="js/ui/notifications.js"></script>
+    <script src="js/ui/tooltips.js"></script>
+    <script src="js/ui/hotbar.js"></script>
+    <script src="js/ui/display.js?v=20260706-classes4"></script>
     <script src="js/ui/menu.js"></script>
-    <script src="js/main.js"></script>
+    <script src="js/main.js?v=20260706-classes2"></script>
     <script src="js/ui/enhanced-combat.js"></script>
 </body>
 </html>
