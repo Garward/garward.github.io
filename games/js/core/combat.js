@@ -101,10 +101,9 @@ class Combat {
             return;
         }
 
-        // Block attacks if battle is not active (unless it's from the battle loop itself)
-        if (!this.battleActive && !skillUsed) {
-            Game.ui.showMessage("Start battle first to attack!");
-            return;
+        // A manual attack starts combat and immediately performs the first swing.
+        if (!this.battleActive) {
+            this.startBattle();
         }
 
         if (!this.currentMonster || this.currentMonster.currentHp <= 0) return;

@@ -77,10 +77,8 @@ class HotbarUI {
             ${onCooldown ? `<div class="cooldown-overlay">${Math.ceil(skill.cooldown / 1000)}</div>` : ''}
         `;
 
-        if (!onCooldown && canUse && battleActive) {
+        if (!onCooldown && canUse) {
             slotDiv.onclick = () => Game.skills.useSkill(skill.id);
-        } else if (!battleActive) {
-            slotDiv.onclick = () => this.display.showMessage("Start battle first to use skills!");
         }
 
         slotDiv.setAttribute('data-tooltip', this.display.getSkillTooltip(skill));

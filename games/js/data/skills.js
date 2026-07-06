@@ -837,10 +837,13 @@ class SkillManager {
         const skill = this.activeSkills.find(s => s.id === skillId);
         if (!skill || skill.currentLevel === 0 || skill.cooldown > 0) return false;
 
-        // Check if battle is active (skills can only be used during active battle)
+        // Skills can open combat; clicking and hotkeys should share the same path.
         if (Game.combat && !Game.combat.battleActive) {
-            Game.ui.showMessage("Start battle first to use skills!");
-            return false;
+            if (!Game.combat.currentMonster || Game.combat.currentMonster.currentHp <= 0) {
+                Game.ui.showMessage("No monster available!");
+                return false;
+            }
+            Game.combat.startBattle();
         }
 
         // Check MP cost

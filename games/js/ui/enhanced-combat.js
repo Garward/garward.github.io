@@ -91,9 +91,6 @@ class EnhancedCombatUI {
 
                 <!-- Combat Controls -->
                 <div class="combat-controls">
-                    <button class="combat-button start-battle-btn" id="enhanced-start-battle-btn">
-                        ⚔️ Start Battle
-                    </button>
                     <button class="combat-button attack-btn" id="enhanced-attack-btn" onclick="attackMonster()">
                         🗡️ Attack
                     </button>
@@ -406,26 +403,6 @@ class EnhancedCombatUI {
                 -webkit-tap-highlight-color: transparent;
             }
 
-            .start-battle-btn {
-                background: linear-gradient(135deg, #4caf50, #388e3c);
-                color: white;
-            }
-
-            .start-battle-btn:hover {
-                transform: translateY(-2px);
-                box-shadow: 0 6px 20px rgba(76, 175, 80, 0.4);
-            }
-
-            .start-battle-btn.active {
-                background: linear-gradient(135deg, #ff9800, #f57c00);
-            }
-
-            .start-battle-btn:disabled {
-                opacity: 0.6;
-                cursor: not-allowed;
-                transform: none;
-            }
-
             .attack-btn {
                 background: linear-gradient(135deg, #ff6b6b, #ff4444);
                 color: white;
@@ -540,18 +517,6 @@ class EnhancedCombatUI {
 
     // Bind events to the enhanced combat area
     bindEvents() {
-        // Start Battle button event
-        const startBattleBtn = document.getElementById('enhanced-start-battle-btn');
-        if (startBattleBtn && Game.combat) {
-            startBattleBtn.onclick = null;
-            startBattleBtn.addEventListener('click', (e) => {
-                e.preventDefault();
-                e.stopPropagation();
-                Game.combat.startBattle();
-                this.updateBattleButtons();
-            });
-        }
-
         // Auto battle button event
         const autoBattleBtn = document.getElementById('enhanced-auto-battle-btn');
         if (autoBattleBtn && Game.ui) {
@@ -790,35 +755,17 @@ updateLocationDisplay() {
 
     // Update battle button states
     updateBattleButtons() {
-        const startBattleBtn = document.getElementById('enhanced-start-battle-btn');
         const attackBtn = document.getElementById('enhanced-attack-btn');
 
         if (!Game.combat) return;
 
         const battleActive = Game.combat.battleActive || false;
 
-        // Update Start Battle button
-        if (startBattleBtn) {
-            if (battleActive) {
-                startBattleBtn.textContent = '⚔️ Battle Active';
-                startBattleBtn.classList.add('active');
-                startBattleBtn.disabled = true;
-            } else {
-                startBattleBtn.textContent = '⚔️ Start Battle';
-                startBattleBtn.classList.remove('active');
-                startBattleBtn.disabled = false;
-            }
-        }
-
-        // Update Attack button
+        // Update Attack button. A manual attack starts combat when inactive.
         if (attackBtn) {
-            if (battleActive) {
-                attackBtn.disabled = false;
-                attackBtn.style.opacity = '1';
-            } else {
-                attackBtn.disabled = true;
-                attackBtn.style.opacity = '0.6';
-            }
+            attackBtn.disabled = false;
+            attackBtn.style.opacity = '1';
+            attackBtn.textContent = battleActive ? '🗡️ Attack' : '⚔️ Start / Attack';
         }
     }
 

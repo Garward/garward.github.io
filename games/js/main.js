@@ -1098,13 +1098,9 @@ window.debugCombatState = () => {
     console.log(`   Location: ${Game.player.state.currentLocation}`);
 
     console.log("\n🎮 UI State:");
-    const startBtn = document.getElementById('enhanced-start-battle-btn');
     const attackBtn = document.getElementById('enhanced-attack-btn');
-    if (startBtn) {
-        console.log(`   Start Button: ${startBtn.disabled ? 'Disabled' : 'Enabled'} - "${startBtn.textContent}"`);
-    }
     if (attackBtn) {
-        console.log(`   Attack Button: ${attackBtn.disabled ? 'Disabled' : 'Enabled'}`);
+        console.log(`   Attack Button: ${attackBtn.disabled ? 'Disabled' : 'Enabled'} - "${attackBtn.textContent}"`);
     }
 };
 
