@@ -6,6 +6,18 @@ Professional portfolio showcasing systematic optimization projects and AI-assist
 Rapid web development through AI-assisted prototyping
 [Gloamreach Clicker](games/index.html)
 
+## Publishing Game Updates
+
+Make game changes in `/home/garward/Games/Dev/ClickerRPG/`, then sync the web-only files into this Pages repo:
+
+```bash
+scripts/sync-game.sh
+git status --short
+git add -A
+git commit -m "Update Gloamreach game"
+git push origin main
+```
+
 ## ✨ Features
 
 - 📱 Mobile-optimized for all devices
